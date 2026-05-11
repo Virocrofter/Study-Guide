@@ -8,6 +8,7 @@ const clientPromise = client.connect();
 
 export const authConfig = {
   adapter: MongoDBAdapter(clientPromise),
+  secret: process.env.AUTH_SECRET,
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
