@@ -4,7 +4,7 @@ import { assets } from "../../assets/assets.js";
 import { AppContext } from "../../context/AppContext.jsx";
 
 const Navbar = () => {
-  const { navigate, isEducator, backendUrl, session, signInWithGoogle, signOut } =
+  const { navigate, isEducator, session, signInWithGoogle, signOut } =
     useContext(AppContext);
 
   const location = useLocation();
@@ -28,9 +28,7 @@ const Navbar = () => {
               onClick={() => (isEducator ? navigate("/educator") : null)}
               className="cursor-pointer"
               title={
-                isEducator
-                  ? "Go to educator dashboard"
-                  : "Role is controlled by your backend (Auth.js session user.role)"
+                isEducator ? "Educator Dashboard" : "Login as educator to access dashboard"
               }
             >
               {isEducator ? "Educator Dashboard" : "Student"}
@@ -56,10 +54,12 @@ const Navbar = () => {
         )}
       </div>
 
-      {/* Mobile */}
       <div className="md:hidden flex items-center gap-2 sm:gap-5 text-gray-500">
         {session?.user ? (
-          <button onClick={signOut} className="bg-gray-900 text-white px-4 py-2 rounded-full">
+          <button
+            onClick={signOut}
+            className="bg-gray-900 text-white px-4 py-2 rounded-full"
+          >
             Sign out
           </button>
         ) : (
@@ -73,3 +73,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

@@ -11,6 +11,8 @@ import authRouter, { authConfig } from "./routes/auth.js";
 import courseRouter from "./routes/courseRoutes.js";
 import educatorRouter from "./routes/educatorRoutes.js";
 import userRouter from "./routes/userRoutes.js";
+
+// Stripe webhook controller (keep your existing controller file, but ensure it only exports stripeWebhooks)
 import { stripeWebhooks } from "./controllers/webhooks.js";
 
 const app = express();
@@ -18,17 +20,26 @@ const app = express();
 connectDB();
 connectCloudinay();
 
-// Required on Vercel / proxies for correct host/proto
+// Vercel/proxies
 app.set("trust proxy", true);
 
-// IMPORTANT: do NOT include backticks/quotes in origins
+// IMPORTANT: NO backticks/quotes in origins.
+// For credentials (cookies) you must use explicit origins (not "*").
+const allowedOrigins = new Set([
+  "https://study-guide-frontend-gray.vercel.app",
+  "http://localhost:5173",
+]);
+
 app.use(
   cors({
-    // Wrap origins in quotes and place them in an array
-    origin: [
-      "https://study-guide-frontend-gray.vercel.app", 
-      "http://localhost:5173"
-    ],
+    origin(origin, callback) {
+      // allow server-to-server / curl / same-origin
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.has(origin)) return callback(null, true);
+      // optional: allow any other Vercel frontend preview
+      if (origin.endsWith(".vercel.app")) return callback(null, true);
+      return callback(new Error("CORS Not Allowed"));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [
@@ -41,13 +52,11 @@ app.use(
   })
 );
 
+// Preflight
+app.options("*", cors({ origin: true, credentials: true }));
 
 // Stripe webhook MUST be raw body, mounted BEFORE express.json()
-app.post(
-  "/api/webhooks/stripe",
-  express.raw({ type: "application/json" }),
-  stripeWebhooks
-);
+app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 
 app.use(express.json());
 
@@ -60,12 +69,21 @@ app.use("/api/auth/error", (req, res) => {
 // Mount Auth.js EXACTLY like docs recommend (wildcard)
 app.use("/api/auth/*", authRouter);
 
-// Hydrate session for downstream middleware/controllers
+// Hydrate Auth.js session + provide a Clerk-like req.auth() shim
 app.use(async (req, res, next) => {
   try {
-    res.locals.session = await getSession(req, authConfig);
+    const session = await getSession(req, authConfig);
+    res.locals.session = session || null;
+
+    const authFn = () => ({ userId: session?.user?.id });
+    // Support old code style: req.auth.userId
+    authFn.userId = session?.user?.id;
+    req.auth = authFn;
   } catch {
     res.locals.session = null;
+    const authFn = () => ({ userId: null });
+    authFn.userId = null;
+    req.auth = authFn;
   }
   next();
 });

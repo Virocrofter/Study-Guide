@@ -14,7 +14,7 @@ export const AppContextProvider = (props) => {
   const currency = (import.meta.env.VITE_CURRENCY || "").replace(/[`'"]/g, "");
   const navigate = useNavigate();
 
-  // Cookie sessions: ALWAYS send cookies to the backend.
+  // Cookie sessions: always send cookies
   useMemo(() => {
     axios.defaults.withCredentials = true;
   }, []);
@@ -22,16 +22,12 @@ export const AppContextProvider = (props) => {
   const [allCourses, setAllCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [userData, setUserData] = useState(null);
-
-  // Auth.js session (cookie-based)
   const [session, setSession] = useState(null);
   const [isEducator, setIsEducator] = useState(false);
 
   const fetchSession = async () => {
     try {
-      const { data } = await axios.get(backendUrl + "/api/auth/session", {
-        withCredentials: true,
-      });
+      const { data } = await axios.get(backendUrl + "/api/auth/session");
       setSession(data || null);
       setIsEducator(data?.user?.role === "educator");
     } catch {
@@ -59,21 +55,12 @@ export const AppContextProvider = (props) => {
   };
 
   const fetchUserData = async () => {
-    // only call when logged in
     if (!session?.user) return;
 
     try {
-      const { data } = await axios.get(backendUrl + "/api/user/data", {
-        withCredentials: true,
-      });
-
-      if (data.success) {
-        setUserData(data.user);
-      } else if (data.isSyncing) {
-        setTimeout(fetchUserData, 1500);
-      } else {
-        toast.error(data.message);
-      }
+      const { data } = await axios.get(backendUrl + "/api/user/data");
+      if (data.success) setUserData(data.user);
+      else toast.error(data.message);
     } catch (error) {
       toast.error(error.response?.data?.message || error.message);
     }
@@ -83,9 +70,7 @@ export const AppContextProvider = (props) => {
     if (!session?.user) return;
 
     try {
-      const { data } = await axios.get(backendUrl + "/api/user/enrolled-courses", {
-        withCredentials: true,
-      });
+      const { data } = await axios.get(backendUrl + "/api/user/enrolled-courses");
       if (data.success) setEnrolledCourses(data.enrolledCourses.reverse());
       else toast.error(data.message);
     } catch (error) {
@@ -140,17 +125,17 @@ export const AppContextProvider = (props) => {
   }, [session]);
 
   const value = {
-    currency,
     backendUrl,
+    currency,
     navigate,
 
-    // auth.js session
+    // auth
     session,
     fetchSession,
-    isEducator,
-    setIsEducator,
     signInWithGoogle,
     signOut,
+    isEducator,
+    setIsEducator,
 
     // data
     allCourses,

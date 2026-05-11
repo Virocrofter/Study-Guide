@@ -1,49 +1,20 @@
-import { getSession } from "@auth/express";
-
-// This protects routes for any logged-in user
-export const protectUser = async (req, res, next) => {
-    try {
-        // Auth.js session is typically available in res.locals.session 
-        // if the middleware is mounted in server.js
-        const session = res.locals.session;
-
-        if (!session) {
-            return res.status(401).json({ 
-                success: false, 
-                message: "Please login to continue." 
-            });
-        }
-
-        req.user = session.user;
-        next();
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-// This protects routes specifically for Educators
+// Auth.js cookie-session educator guard (replaces Clerk-based checks)
 export const protectEducator = async (req, res, next) => {
-    try {
-        const session = res.locals.session;
+  try {
+    const role = res.locals.session?.user?.role;
+    const userId = req.auth?.().userId;
 
-        if (!session) {
-            return res.status(401).json({ 
-                success: false, 
-                message: "Unauthorized. Please login." 
-            });
-        }
-
-        // Check the role (Ensure your MongoDB User model has a 'role' field)
-        if (session.user.role !== 'educator') {
-            return res.status(403).json({ 
-                success: false, 
-                message: "Access denied. Educator account required." 
-            });
-        }
-
-        req.user = session.user;
-        next();
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized. Please log in." });
     }
+
+    if (role !== "educator") {
+      return res.status(403).json({ success: false, message: "Access Denied. Educator required." });
+    }
+
+    next();
+  } catch (error) {
+    return res.status(401).json({ success: false, message: "Session expired or invalid user" });
+  }
 };
+
