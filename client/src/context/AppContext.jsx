@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import humanizeDuration from "humanize-duration";
 import axios from "axios";
@@ -10,40 +10,41 @@ const sanitizeEnvUrl = (value) =>
   (value || "").trim().replace(/[`'"]/g, "").replace(/\/$/, "");
 
 export const AppContextProvider = (props) => {
-  // IMPORTANT: prevents accidental backticks/quotes breaking requests
   const backendUrl = sanitizeEnvUrl(import.meta.env.VITE_BACKEND_URL);
   const currency = (import.meta.env.VITE_CURRENCY || "").replace(/[`'"]/g, "");
-
   const navigate = useNavigate();
 
-  const [allCourses, setAllCourses] = useState([]);
-  const [isEducator, setIsEducator] = useState(false);
-  const [enrolledCourses, setEnrolledCourses] = useState([]);
-  const [session, setSession] = useState(null); // Auth.js session
-  const [userData, setUserData] = useState(null); // Your API's user payload (if you keep /api/user/data)
+  // Cookie sessions: ALWAYS send cookies to the backend.
+  useMemo(() => {
+    axios.defaults.withCredentials = true;
+  }, []);
 
-  // Auth.js: cookie-based session (withCredentials: true)
+  const [allCourses, setAllCourses] = useState([]);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [userData, setUserData] = useState(null);
+
+  // Auth.js session (cookie-based)
+  const [session, setSession] = useState(null);
+  const [isEducator, setIsEducator] = useState(false);
+
   const fetchSession = async () => {
     try {
       const { data } = await axios.get(backendUrl + "/api/auth/session", {
         withCredentials: true,
       });
       setSession(data || null);
-
-      // If you store roles in the Auth.js session callback:
       setIsEducator(data?.user?.role === "educator");
-    } catch (err) {
+    } catch {
       setSession(null);
       setIsEducator(false);
     }
   };
 
-  const signInWithGoogle = async () => {
-    // Auth.js Express supports provider routes under /api/auth
+  const signInWithGoogle = () => {
     window.location.href = backendUrl + "/api/auth/signin/google";
   };
 
-  const signOut = async () => {
+  const signOut = () => {
     window.location.href = backendUrl + "/api/auth/signout";
   };
 
@@ -58,7 +59,7 @@ export const AppContextProvider = (props) => {
   };
 
   const fetchUserData = async () => {
-    // Only fetch if logged in (Auth.js session exists)
+    // only call when logged in
     if (!session?.user) return;
 
     try {
@@ -79,6 +80,8 @@ export const AppContextProvider = (props) => {
   };
 
   const fetchUserEnrolledCourses = async () => {
+    if (!session?.user) return;
+
     try {
       const { data } = await axios.get(backendUrl + "/api/user/enrolled-courses", {
         withCredentials: true,
@@ -93,7 +96,7 @@ export const AppContextProvider = (props) => {
   const calculateRating = (course) => {
     if (!course.courseRatings || course.courseRatings.length === 0) return 0;
     let totalRating = 0;
-    course.courseRatings.forEach((r) => (totalRating += r.rating));
+    course.courseRatings.forEach((rating) => (totalRating += rating.rating));
     return Math.floor(totalRating / course.courseRatings.length);
   };
 
@@ -121,15 +124,11 @@ export const AppContextProvider = (props) => {
 
   useEffect(() => {
     fetchAllCourses();
-  }, []);
-
-  useEffect(() => {
-    // Initial auth hydrate
     fetchSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    // When session changes, hydrate user-related data
     if (session?.user) {
       fetchUserData();
       fetchUserEnrolledCourses();
@@ -137,29 +136,35 @@ export const AppContextProvider = (props) => {
       setUserData(null);
       setEnrolledCourses([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   const value = {
     currency,
-    allCourses,
+    backendUrl,
     navigate,
-    calculateRating,
+
+    // auth.js session
+    session,
+    fetchSession,
     isEducator,
     setIsEducator,
+    signInWithGoogle,
+    signOut,
+
+    // data
+    allCourses,
+    fetchAllCourses,
+    userData,
+    setUserData,
+    enrolledCourses,
+    fetchUserEnrolledCourses,
+
+    // helpers
+    calculateRating,
     calculateNoOfLectures,
     calculateCourseDuration,
     calculateChapterTime,
-    enrolledCourses,
-    fetchUserEnrolledCourses,
-    backendUrl,
-    userData,
-    setUserData,
-    fetchAllCourses,
-    // Auth.js helpers
-    session,
-    fetchSession,
-    signInWithGoogle,
-    signOut,
   };
 
   return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;

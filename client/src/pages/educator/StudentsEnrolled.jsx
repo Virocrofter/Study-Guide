@@ -1,24 +1,19 @@
 import React, { useContext, useEffect, useState } from "react";
 import Loading from "../../components/student/Loading";
 import { AppContext } from "../../context/AppContext";
-// FIX: Using named import { assets } to avoid the "default export" error
 import { assets } from "../../assets/assets";
 import axios from "axios";
 import { toast } from "react-toastify";
 
 const StudentsEnrolled = () => {
-  const { backendUrl, getToken, isEducator } = useContext(AppContext);
+  const { backendUrl, isEducator } = useContext(AppContext);
   const [enrolledStudents, setEnrolledStudents] = useState(null);
 
   const fetchEnrolledStudents = async () => {
     try {
-      const token = await getToken();
-      const { data } = await axios.get(
-        `${backendUrl}/api/educator/enrolled-students`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const { data } = await axios.get(`${backendUrl}/api/educator/enrolled-students`, {
+        withCredentials: true,
+      });
 
       if (data.success) {
         setEnrolledStudents(data.enrolledStudents);
@@ -33,14 +28,10 @@ const StudentsEnrolled = () => {
   };
 
   useEffect(() => {
-    if (isEducator) {
-      fetchEnrolledStudents();
-    }
+    if (isEducator) fetchEnrolledStudents();
   }, [isEducator]);
 
-  if (enrolledStudents === null) {
-    return <Loading />;
-  }
+  if (enrolledStudents === null) return <Loading />;
 
   return (
     <div className="min-h-screen flex flex-col items-start justify-start md:p-8 p-4 pt-8">
@@ -49,14 +40,10 @@ const StudentsEnrolled = () => {
         <table className="table-auto w-full overflow-hidden">
           <thead className="text-gray-900 border-b border-gray-500/20 text-sm text-left bg-gray-50">
             <tr>
-              <th className="px-4 py-3 font-semibold text-center hidden sm:table-cell">
-                #
-              </th>
+              <th className="px-4 py-3 font-semibold text-center hidden sm:table-cell">#</th>
               <th className="px-4 py-3 font-semibold">Student Name</th>
               <th className="px-4 py-3 font-semibold">Course Title</th>
-              <th className="px-4 py-3 font-semibold text-center hidden sm:table-cell">
-                Date
-              </th>
+              <th className="px-4 py-3 font-semibold text-center hidden sm:table-cell">Date</th>
             </tr>
           </thead>
           <tbody className="text-gray-700">
@@ -79,9 +66,7 @@ const StudentsEnrolled = () => {
                       {item.student?.name || "Unknown Student"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 truncate text-sm">
-                    {item.courseTitle}
-                  </td>
+                  <td className="px-4 py-3 truncate text-sm">{item.courseTitle}</td>
                   <td className="px-4 py-3 hidden sm:table-cell text-center text-sm">
                     {item.createdAt
                       ? new Date(item.createdAt).toLocaleDateString(undefined, {

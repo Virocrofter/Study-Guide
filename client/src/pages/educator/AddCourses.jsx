@@ -7,6 +7,7 @@ import { AppContext } from "../../context/AppContext";
 import { toast } from "react-toastify";
 
 const AddCourses = () => {
+  // Cookie session auth: no Bearer token
   const { backendUrl } = useContext(AppContext);
   const quillRef = useRef(null);
   const editorRef = useRef(null);
@@ -44,15 +45,16 @@ const AddCourses = () => {
 
       const formData = new FormData();
       formData.append("courseData", JSON.stringify(courseData));
-      // MUST match server: upload.single("thumbnailImage")
-      formData.append("thumbnailImage", image);
+      formData.append("thumbnail", image);
 
-      const { data } = await axios.post(`${backendUrl}/api/educator/add-course`, formData, {
-        withCredentials: true, // Auth.js cookie session
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const { data } = await axios.post(
+        `${backendUrl}/api/course/add-course`,
+        formData,
+        {
+          withCredentials: true,
+          // IMPORTANT: let Axios set the boundary; don't force Content-Type manually
+        }
+      );
 
       if (data.success) {
         toast.success(data.message);
@@ -61,9 +63,7 @@ const AddCourses = () => {
         setDiscount(0);
         setImage(null);
         setChapters([]);
-        if (quillRef.current) {
-          quillRef.current.root.innerHTML = "";
-        }
+        if (quillRef.current) quillRef.current.root.innerHTML = "";
       } else {
         toast.error(data.message);
       }
@@ -173,7 +173,11 @@ const AddCourses = () => {
           <div className="flex flex-row items-center gap-3">
             <p>Course Thumbnail</p>
             <label htmlFor="thumbnailImage" className="flex items-center gap-3">
-              <img src={assets.file_upload_icon} alt="" className="p-3 bg-blue-500 rounded cursor-pointer" />
+              <img
+                src={assets.file_upload_icon}
+                alt=""
+                className="p-3 bg-blue-500 rounded cursor-pointer"
+              />
               <input
                 id="thumbnailImage"
                 onChange={(e) => setImage(e.target.files[0])}
@@ -181,7 +185,9 @@ const AddCourses = () => {
                 accept="image/*"
                 hidden
               />
-              {image && <img className="max-h-10" src={URL.createObjectURL(image)} alt="" />}
+              {image && (
+                <img className="max-h-10" src={URL.createObjectURL(image)} alt="" />
+              )}
             </label>
           </div>
         </div>
@@ -205,7 +211,10 @@ const AddCourses = () => {
           {chapters.map((chapter, chapterIndex) => (
             <div key={chapter.chapterId} className="bg-white border rounded-lg mb-4">
               <div className="flex justify-between items-center p-4 border-b bg-gray-50">
-                <div className="flex items-center" onClick={() => handleChapter("toggle", chapter.chapterId)}>
+                <div
+                  className="flex items-center"
+                  onClick={() => handleChapter("toggle", chapter.chapterId)}
+                >
                   <img
                     src={assets.dropdown_icon}
                     width={14}
@@ -235,14 +244,17 @@ const AddCourses = () => {
                       className="flex justify-between items-center mb-2 text-sm bg-gray-50 p-2 rounded"
                     >
                       <span>
-                        {lectureIndex + 1}. {lecture.lectureTitle} - {lecture.lectureDuration} mins -{" "}
+                        {lectureIndex + 1}. {lecture.lectureTitle} - {lecture.lectureDuration} mins
+                        -{" "}
                         <a href={lecture.lectureUrl} target="_blank" className="text-blue-500">
                           Link
                         </a>{" "}
-                        - {lecture.isPreviewFree ? "Free Prview" : "Paid"}
+                        - {lecture.isPreviewFree ? "Free Preview" : "Paid"}
                       </span>
                       <img
-                        onClick={() => handleLecture("remove", chapter.chapterId, lectureIndex)}
+                        onClick={() =>
+                          handleLecture("remove", chapter.chapterId, lectureIndex)
+                        }
                         src={assets.cross_icon}
                         alt=""
                         className="cursor-pointer w-3"
@@ -284,7 +296,9 @@ const AddCourses = () => {
                   type="text"
                   className="mt-1 block w-full border rounded py-2 px-3 focus:ring-2 focus:ring-blue-400 outline-none"
                   value={lectureDetails.lectureTitle}
-                  onChange={(e) => setlectureDetails({ ...lectureDetails, lectureTitle: e.target.value })}
+                  onChange={(e) =>
+                    setlectureDetails({ ...lectureDetails, lectureTitle: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -293,7 +307,9 @@ const AddCourses = () => {
                   type="number"
                   className="mt-1 block w-full border rounded py-2 px-3 focus:ring-2 focus:ring-blue-400 outline-none"
                   value={lectureDetails.lectureDuration}
-                  onChange={(e) => setlectureDetails({ ...lectureDetails, lectureDuration: e.target.value })}
+                  onChange={(e) =>
+                    setlectureDetails({ ...lectureDetails, lectureDuration: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -302,7 +318,9 @@ const AddCourses = () => {
                   type="text"
                   className="mt-1 block w-full border rounded py-2 px-3 focus:ring-2 focus:ring-blue-400 outline-none"
                   value={lectureDetails.lectureUrl}
-                  onChange={(e) => setlectureDetails({ ...lectureDetails, lectureUrl: e.target.value })}
+                  onChange={(e) =>
+                    setlectureDetails({ ...lectureDetails, lectureUrl: e.target.value })
+                  }
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -311,7 +329,9 @@ const AddCourses = () => {
                   type="checkbox"
                   className="w-4 h-4"
                   checked={lectureDetails.isPreviewFree}
-                  onChange={(e) => setlectureDetails({ ...lectureDetails, isPreviewFree: e.target.checked })}
+                  onChange={(e) =>
+                    setlectureDetails({ ...lectureDetails, isPreviewFree: e.target.checked })
+                  }
                 />
               </div>
             </div>
