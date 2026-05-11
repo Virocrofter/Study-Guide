@@ -1,7 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import humanizeDuration from "humanize-duration";
-import { useAuth, useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -16,13 +15,37 @@ export const AppContextProvider = (props) => {
   const currency = (import.meta.env.VITE_CURRENCY || "").replace(/[`'"]/g, "");
 
   const navigate = useNavigate();
-  const { getToken } = useAuth();
-  const { user } = useUser();
 
   const [allCourses, setAllCourses] = useState([]);
   const [isEducator, setIsEducator] = useState(false);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
-  const [userData, setUserData] = useState(null);
+  const [session, setSession] = useState(null); // Auth.js session
+  const [userData, setUserData] = useState(null); // Your API's user payload (if you keep /api/user/data)
+
+  // Auth.js: cookie-based session (withCredentials: true)
+  const fetchSession = async () => {
+    try {
+      const { data } = await axios.get(backendUrl + "/api/auth/session", {
+        withCredentials: true,
+      });
+      setSession(data || null);
+
+      // If you store roles in the Auth.js session callback:
+      setIsEducator(data?.user?.role === "educator");
+    } catch (err) {
+      setSession(null);
+      setIsEducator(false);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    // Auth.js Express supports provider routes under /api/auth
+    window.location.href = backendUrl + "/api/auth/signin/google";
+  };
+
+  const signOut = async () => {
+    window.location.href = backendUrl + "/api/auth/signout";
+  };
 
   const fetchAllCourses = async () => {
     try {
@@ -35,16 +58,12 @@ export const AppContextProvider = (props) => {
   };
 
   const fetchUserData = async () => {
-    if (!user) return;
-
-    if (user.publicMetadata?.role === "educator") {
-      setIsEducator(true);
-    }
+    // Only fetch if logged in (Auth.js session exists)
+    if (!session?.user) return;
 
     try {
-      const token = await getToken();
       const { data } = await axios.get(backendUrl + "/api/user/data", {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
 
       if (data.success) {
@@ -61,9 +80,8 @@ export const AppContextProvider = (props) => {
 
   const fetchUserEnrolledCourses = async () => {
     try {
-      const token = await getToken();
       const { data } = await axios.get(backendUrl + "/api/user/enrolled-courses", {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       if (data.success) setEnrolledCourses(data.enrolledCourses.reverse());
       else toast.error(data.message);
@@ -106,21 +124,20 @@ export const AppContextProvider = (props) => {
   }, []);
 
   useEffect(() => {
-    const initUser = async () => {
-      if (user && user.id) {
-        try {
-          const token = await getToken();
-          if (token) {
-            await fetchUserData();
-            await fetchUserEnrolledCourses();
-          }
-        } catch {
-          // token not ready yet
-        }
-      }
-    };
-    initUser();
-  }, [user, getToken]);
+    // Initial auth hydrate
+    fetchSession();
+  }, []);
+
+  useEffect(() => {
+    // When session changes, hydrate user-related data
+    if (session?.user) {
+      fetchUserData();
+      fetchUserEnrolledCourses();
+    } else {
+      setUserData(null);
+      setEnrolledCourses([]);
+    }
+  }, [session]);
 
   const value = {
     currency,
@@ -137,8 +154,12 @@ export const AppContextProvider = (props) => {
     backendUrl,
     userData,
     setUserData,
-    getToken,
     fetchAllCourses,
+    // Auth.js helpers
+    session,
+    fetchSession,
+    signInWithGoogle,
+    signOut,
   };
 
   return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;
