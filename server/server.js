@@ -30,30 +30,30 @@ const allowedOrigins = new Set([
   "http://localhost:5173",
 ]);
 
-app.use(
-  cors({
-    origin(origin, callback) {
-      // allow server-to-server / curl / same-origin
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.has(origin)) return callback(null, true);
-      // optional: allow any other Vercel frontend preview
-      if (origin.endsWith(".vercel.app")) return callback(null, true);
-      return callback(new Error("CORS Not Allowed"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-CSRF-Token",
-      "Stripe-Signature",
-      "stripe-signature",
-    ],
-  })
-);
+const corsOptions = {
+  origin(origin, callback) {
+    // allow server-to-server / curl / same-origin
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.has(origin)) return callback(null, true);
+    // optional: allow any other Vercel frontend preview
+    if (origin.endsWith(".vercel.app")) return callback(null, true);
+    return callback(new Error("CORS Not Allowed"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-CSRF-Token",
+    "Stripe-Signature",
+    "stripe-signature",
+  ],
+};
 
-// Preflight
-app.options(/.*/, cors({ origin: true, credentials: true }));
+app.use(cors(corsOptions));
+
+// Preflight (Express 5: use regex, not "*")
+app.options(/.*/, cors(corsOptions));
 
 // Stripe webhook MUST be raw body, mounted BEFORE express.json()
 app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
@@ -66,7 +66,7 @@ app.use("/api/auth/error", (req, res) => {
   return res.status(400).json({ success: false, error });
 });
 
-// Mount Auth.js EXACTLY like docs recommend (wildcard)
+// Mount Auth.js (Express 5: avoid wildcard paths)
 app.use("/api/auth", authRouter);
 
 // Hydrate Auth.js session + provide a Clerk-like req.auth() shim
