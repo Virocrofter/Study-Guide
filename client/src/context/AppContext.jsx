@@ -49,9 +49,7 @@ export const AppContextProvider = (props) => {
       if (data.success) {
         setUserData(data.user);
         // Check role from your own MongoDB User model
-        if (data.user.role === "educator") {
-          setIsEducator(true);
-        }
+        setIsEducator(data.user.role === "educator");
       } else {
         toast.error(data.message);
       }
