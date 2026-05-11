@@ -24,7 +24,7 @@ app.set("trust proxy", true);
 // IMPORTANT: do NOT include backticks/quotes in origins
 app.use(
   cors({
-    origin: ["https://study-guide-frontend-gray.vercel.app", "http://localhost:5173"],
+    origin:https://study-guide-frontend-gray.vercel.app, http://localhost:5173,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [
