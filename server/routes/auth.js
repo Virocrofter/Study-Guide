@@ -14,13 +14,9 @@ export const authConfig = {
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
     }),
   ],
-  // CRITICAL: This must match the mounting point in server.js
-  // and AUTH_URL must be ONLY the domain (no /api/auth)
   basePath: "/api/auth",
   trustHost: true,
-  session: {
-    strategy: "database",
-  },
+  session: { strategy: "database" },
   callbacks: {
     async session({ session, user }) {
       if (session.user) {

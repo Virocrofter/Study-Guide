@@ -34,14 +34,14 @@ app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), stri
 
 app.use(express.json());
 
-// BLOCK this route before Auth.js (Auth.js Express does not support "error" action)
-app.get("/api/auth/error", (req, res) => {
+// Catch Auth.js error route BEFORE mounting Auth.js
+app.use("/api/auth/error", (req, res) => {
   const error = req.query?.error || "Unknown";
   return res.status(400).json({ success: false, error });
 });
 
-// Mount Auth.js (no wildcard here)
-app.use("/api/auth", authRouter);
+// Mount Auth.js EXACTLY like docs recommend (wildcard)
+app.use("/api/auth/*", authRouter);
 
 // Hydrate session for downstream middleware/controllers
 app.use(async (req, res, next) => {
@@ -49,7 +49,6 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// API routes
 app.use("/api/course", courseRouter);
 app.use("/api/educator", educatorRouter);
 app.use("/api/user", userRouter);
