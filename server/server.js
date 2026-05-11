@@ -29,15 +29,18 @@ app.use(
   })
 );
 
-/**
- * Stripe MUST receive a raw body for signature verification.
- * This route must be mounted BEFORE express.json().
- */
+// Stripe webhook MUST be raw body, mounted BEFORE express.json()
 app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 
 app.use(express.json());
 
-// Auth.js routes
+// BLOCK this route before Auth.js (Auth.js Express does not support "error" action)
+app.get("/api/auth/error", (req, res) => {
+  const error = req.query?.error || "Unknown";
+  return res.status(400).json({ success: false, error });
+});
+
+// Mount Auth.js (no wildcard here)
 app.use("/api/auth", authRouter);
 
 // Hydrate session for downstream middleware/controllers
@@ -53,7 +56,6 @@ app.use("/api/user", userRouter);
 
 app.get("/", (req, res) => res.send("StudyGuide API is active."));
 
-// For local development; Vercel handles listening in production.
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 8080;
   app.listen(PORT, () => console.log(`Server at http://localhost:${PORT}`));

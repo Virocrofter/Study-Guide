@@ -15,21 +15,21 @@ export const authConfig = {
     }),
   ],
   // CRITICAL: This must match the mounting point in server.js
-  basePath: "/api/auth", 
+  // and AUTH_URL must be ONLY the domain (no /api/auth)
+  basePath: "/api/auth",
   trustHost: true,
   session: {
-    strategy: "database", 
+    strategy: "database",
   },
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
-        session.user.role = user.role || 'student';
+        session.user.role = user.role || "student";
       }
       return session;
     },
   },
 };
 
-// Export the middleware handler
 export default ExpressAuth(authConfig);
