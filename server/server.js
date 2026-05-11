@@ -53,7 +53,7 @@ app.use(
 );
 
 // Preflight
-app.options("*", cors({ origin: true, credentials: true }));
+app.options(/.*/, cors({ origin: true, credentials: true }));
 
 // Stripe webhook MUST be raw body, mounted BEFORE express.json()
 app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
@@ -67,7 +67,7 @@ app.use("/api/auth/error", (req, res) => {
 });
 
 // Mount Auth.js EXACTLY like docs recommend (wildcard)
-app.use("/api/auth/*", authRouter);
+app.use("/api/auth", authRouter);
 
 // Hydrate Auth.js session + provide a Clerk-like req.auth() shim
 app.use(async (req, res, next) => {

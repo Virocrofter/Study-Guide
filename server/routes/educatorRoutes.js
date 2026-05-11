@@ -1,3 +1,4 @@
+import { protectEducator } from "../middleware/authMiddleware.js";
 import express from "express";
 import upload from "../configs/multer.js";
 import {
