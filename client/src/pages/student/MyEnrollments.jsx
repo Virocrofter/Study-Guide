@@ -1,10 +1,7 @@
-import React, { useContext, useEffect, useState} from "react";
+import React, { useContext, useEffect } from "react";
 import { AppContext } from "../../context/AppContext";
 import { Line } from "rc-progress";
 import Footer from "../../components/student/Footer";
-import axios from "axios";
-import { data } from "react-router-dom";
-import { toast } from "react-toastify";
 
 const MyEnrollments = () => {
   const {
@@ -13,50 +10,10 @@ const MyEnrollments = () => {
     navigate,
     userData,
     fetchUserEnrolledCourses,
-    backendUrl,
-    getToken,
   } = useContext(AppContext);
 
-  const [progressArray, setProgressArray] = useState([]);
-
-  const calculateNoOfLectures = (course) => {
-    let totalLectures = 0;
-    course.courseContent?.forEach((chapter) => {
-      if (Array.isArray(chapter.chapterContent)) {
-        totalLectures += chapter.chapterContent.length;
-      }
-    });
-    return totalLectures;
-  };
-
-const getCourseprogress = async () => {
-    try {
-      const token = await getToken();
-      const { data } = await axios.post(
-        `${backendUrl}/api/user/course-progress`, // Ensure this matches your GET/POST route
-        { courseId: id }, // Use 'id' from useParams
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      if (data.success) {
-        setProgressArray(data.progressData);
-      }
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
   useEffect(() => {
-    if (userData) {
-      fetchUserEnrolledCourses();
-    }
-  }, [userData]);
-
-useEffect(() => {
-    // Only fetch if Clerk has loaded the userData
-    if (userData) {
-      fetchUserEnrolledCourses();
-    }
+    if (userData) fetchUserEnrolledCourses();
   }, [userData]);
 
   return (
@@ -73,63 +30,56 @@ useEffect(() => {
             </tr>
           </thead>
           <tbody className="text-gray-700">
-            {enrolledCourses &&
-              enrolledCourses.map((course, index) => {
-                // Calculate total lectures from courseContent
-                const totalLectures =
-                  course.courseContent?.reduce(
-                    (acc, chapter) =>
-                      acc + (chapter.chapterContent?.length || 0),
-                    0,
-                  ) || 0;
+            {enrolledCourses?.map((course, index) => {
+              const totalLectures =
+                course.courseContent?.reduce(
+                  (acc, chapter) => acc + (chapter.chapterContent?.length || 0),
+                  0
+                ) || 0;
 
-                // Get completed count from the backend field 'lectureCompleted'
-                const completedLectures = course.lectureCompleted?.length || 0;
+              const completedLectures = course.lectureCompleted?.length || 0;
 
-                const progressPct =
-                  totalLectures > 0
-                    ? Math.floor((completedLectures * 100) / totalLectures)
-                    : 0;
+              const progressPct =
+                totalLectures > 0
+                  ? Math.floor((completedLectures * 100) / totalLectures)
+                  : 0;
 
-                return (
-                  <tr key={index} className="border-b border-gray-500/20">
-                    <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3">
-                      <img
-                        src={course.courseThumbnail}
-                        alt=""
-                        className="w-14 sm:w-24 md:w-28"
+              return (
+                <tr key={index} className="border-b border-gray-500/20">
+                  <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3">
+                    <img
+                      src={course.courseThumbnail}
+                      alt=""
+                      className="w-14 sm:w-24 md:w-28"
+                    />
+                    <div className="flex-1">
+                      <p className="mb-1 max-sm:text-sm">{course.courseTitle}</p>
+                      <Line
+                        strokeWidth={2}
+                        percent={progressPct}
+                        strokeColor="#2563eb"
+                        trailColor="#d1d5db"
+                        className="rounded-full"
                       />
-                      <div className="flex-1">
-                        <p className="mb-1 max-sm:text-sm">
-                          {course.courseTitle}
-                        </p>
-                        <Line
-                          strokeWidth={2}
-                          percent={progressPct}
-                          strokeColor="#2563eb"
-                          trailColor="#d1d5db"
-                          className="rounded-full"
-                        />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 max-sm:text-sm">
-                      {calculateCourseDuration(course)}
-                    </td>
-                    <td className="px-4 py-3 max-sm:hidden">
-                      {completedLectures} / {totalLectures}{" "}
-                      <span>Lectures</span>
-                    </td>
-                    <td className="px-4 py-3 max-sm:text-right">
-                      <button
-                        className="px-3 sm:px-5 py-1.5 sm:py-2 bg-blue-600 max-sm:text-xs text-white rounded cursor-pointer"
-                        onClick={() => navigate("/player/" + course._id)}
-                      >
-                        {progressPct === 100 ? "Completed" : "On Going"}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 max-sm:text-sm">
+                    {calculateCourseDuration(course)}
+                  </td>
+                  <td className="px-4 py-3 max-sm:hidden">
+                    {completedLectures} / {totalLectures} <span>Lectures</span>
+                  </td>
+                  <td className="px-4 py-3 max-sm:text-right">
+                    <button
+                      className="px-3 sm:px-5 py-1.5 sm:py-2 bg-blue-600 max-sm:text-xs text-white rounded cursor-pointer"
+                      onClick={() => navigate("/player/" + course._id)}
+                    >
+                      {progressPct === 100 ? "Completed" : "On Going"}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

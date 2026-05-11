@@ -1,20 +1,34 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../context/AppContext";
 import Loading from "../../components/student/Loading";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const MyCourses = () => {
-  // 1. Get fetchAllCourses from context to ensure we can trigger a refresh if needed
-  const { currency, allCourses, fetchAllCourses } = useContext(AppContext);
+  const { currency, backendUrl, getToken, isEducator } = useContext(AppContext);
   const [courses, setCourses] = useState(null);
 
-  useEffect(() => {
-    // 2. If allCourses is empty, trigger the fetch from context
-    if (allCourses && allCourses.length > 0) {
-      setCourses(allCourses);
-    } else {
-      fetchAllCourses(); 
+  const fetchEducatorCourses = async () => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.get(`${backendUrl}/api/educator/courses`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.success) {
+        setCourses(data.courses);
+      } else {
+        toast.error(data.message);
+        setCourses([]);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message);
+      setCourses([]);
     }
-  }, [allCourses, fetchAllCourses]); // 3. IMPORTANT: Watch for changes here
+  };
+
+  useEffect(() => {
+    if (isEducator) fetchEducatorCourses();
+  }, [isEducator]);
 
   return courses ? (
     <div className="h-screen flex flex-col items-start justify-between md:p-8 mdpb0 p-4 py-8 pb-0">
@@ -24,7 +38,7 @@ const MyCourses = () => {
           <table className="md:table-auto table-fixed w-full overflow-hidden">
             <thead className="text-gray-900 border-b border-gray-500/20 text-sm text-left">
               <tr>
-                <th className="px-4 py-3 font-semibold truncate">All Courses</th>
+                <th className="px-4 py-3 font-semibold truncate">My Courses</th>
                 <th className="px-4 py-3 font-semibold truncate">Earnings</th>
                 <th className="px-4 py-3 font-semibold truncate">Students</th>
                 <th className="px-4 py-3 font-semibold truncate">Published On</th>
@@ -34,14 +48,8 @@ const MyCourses = () => {
               {courses.map((course) => (
                 <tr key={course._id} className="border-b border-gray-500/20">
                   <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3 truncate">
-                    <img
-                      src={course.courseThumbnail}
-                      alt="Course Image"
-                      className="w-16"
-                    />
-                    <span className="truncate hidden md:block">
-                      {course.courseTitle}
-                    </span>
+                    <img src={course.courseThumbnail} alt="" className="w-16" />
+                    <span className="truncate hidden md:block">{course.courseTitle}</span>
                   </td>
                   <td className="px-4 py-3">
                     {currency}{" "}
@@ -50,12 +58,8 @@ const MyCourses = () => {
                         (course.coursePrice - (course.discount * course.coursePrice) / 100)
                     )}
                   </td>
-                  <td className="px-4 py-3">
-                    {course.enrolledStudents?.length || 0}
-                  </td>
-                  <td className="px-4 py-3">
-                    {new Date(course.createdAt).toLocaleDateString()}
-                  </td>
+                  <td className="px-4 py-3">{course.enrolledStudents?.length || 0}</td>
+                  <td className="px-4 py-3">{new Date(course.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>

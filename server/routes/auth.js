@@ -29,3 +29,4 @@ export const authConfig = {
 };
 
 export default ExpressAuth(authConfig);
+
