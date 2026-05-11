@@ -8,7 +8,6 @@ import {
   getEnrolledStudentsData,
   updateRoleToEducator,
 } from "../controllers/educatorController.js";
-import { protectEducator } from "../middleware/authMiddleware.js";
 
 const educatorRouter = express.Router();
 
