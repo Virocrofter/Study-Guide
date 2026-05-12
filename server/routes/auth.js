@@ -9,15 +9,17 @@ const clientPromise = client.connect();
 export const authConfig = {
   adapter: MongoDBAdapter(clientPromise),
   secret: process.env.AUTH_SECRET,
+  trustHost: true,
+
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
     }),
   ],
-  basePath: "/api/auth",
-  trustHost: true,
+
   session: { strategy: "database" },
+
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
@@ -30,4 +32,3 @@ export const authConfig = {
 };
 
 export default ExpressAuth(authConfig);
-

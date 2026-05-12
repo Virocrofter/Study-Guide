@@ -1,4 +1,4 @@
-import { createContext, useEffect, useMemo, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import humanizeDuration from "humanize-duration";
 import axios from "axios";
@@ -9,13 +9,43 @@ export const AppContext = createContext();
 const sanitizeEnvUrl = (value) =>
   (value || "").trim().replace(/[`'"]/g, "").replace(/\/$/, "");
 
+const postNavigate = (url, fields = {}) => {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = url;
+
+  Object.entries(fields).forEach(([name, value]) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = String(value);
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+  form.remove();
+};
+
+const signInWithGoogle = () => {
+  postNavigate(`${backendUrl}/api/auth/signin/google`, {
+    callbackUrl: window.location.origin,
+  });
+};
+
+const signOut = () => {
+  postNavigate(`${backendUrl}/api/auth/signout`, {
+    callbackUrl: window.location.origin,
+  });
+};
+
 export const AppContextProvider = (props) => {
   const backendUrl = sanitizeEnvUrl(import.meta.env.VITE_BACKEND_URL);
   const currency = (import.meta.env.VITE_CURRENCY || "").replace(/[`'"]/g, "");
   const navigate = useNavigate();
 
   // Cookie sessions: always send cookies
-  useMemo(() => {
+  useEffect(() => {
     axios.defaults.withCredentials = true;
   }, []);
 
@@ -26,6 +56,8 @@ export const AppContextProvider = (props) => {
   const [isEducator, setIsEducator] = useState(false);
 
   const fetchSession = async () => {
+    if (!backendUrl) return;
+
     try {
       const { data } = await axios.get(backendUrl + "/api/auth/session");
       setSession(data || null);
@@ -36,15 +68,24 @@ export const AppContextProvider = (props) => {
     }
   };
 
+  // IMPORTANT: Auth.js (@auth/express) expects POST for these actions
   const signInWithGoogle = () => {
-    window.location.href = backendUrl + "/api/auth/signin/google";
+    if (!backendUrl) return toast.error("Missing VITE_BACKEND_URL");
+    postNavigate(`${backendUrl}/api/auth/signin/google`, {
+      callbackUrl: window.location.origin,
+    });
   };
 
   const signOut = () => {
-    window.location.href = backendUrl + "/api/auth/signout";
+    if (!backendUrl) return toast.error("Missing VITE_BACKEND_URL");
+    postNavigate(`${backendUrl}/api/auth/signout`, {
+      callbackUrl: window.location.origin,
+    });
   };
 
   const fetchAllCourses = async () => {
+    if (!backendUrl) return;
+
     try {
       const { data } = await axios.get(backendUrl + "/api/course/all");
       if (data.success) setAllCourses(data.courses);
@@ -55,7 +96,7 @@ export const AppContextProvider = (props) => {
   };
 
   const fetchUserData = async () => {
-    if (!session?.user) return;
+    if (!session?.user || !backendUrl) return;
 
     try {
       const { data } = await axios.get(backendUrl + "/api/user/data");
@@ -67,7 +108,7 @@ export const AppContextProvider = (props) => {
   };
 
   const fetchUserEnrolledCourses = async () => {
-    if (!session?.user) return;
+    if (!session?.user || !backendUrl) return;
 
     try {
       const { data } = await axios.get(backendUrl + "/api/user/enrolled-courses");

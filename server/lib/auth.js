@@ -7,16 +7,19 @@ const client = new MongoClient(process.env.MONGODB_URI);
 const clientPromise = client.connect();
 
 export const authConfig = {
+  secret: process.env.AUTH_SECRET, // important in production
+  trustHost: true,
+
   adapter: MongoDBAdapter(clientPromise),
+  session: { strategy: "database" },
+
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
     }),
   ],
-  basePath: "/api/auth",
-  trustHost: true,
-  session: { strategy: "database" },
+
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
