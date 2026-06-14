@@ -1,15 +1,46 @@
 import { ExpressAuth } from "@auth/express";
 import Google from "@auth/express/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
-import { MongoClient } from "mongodb";
+import { MongoClient, ServerApiVersion } from "mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URI);
-export const clientPromise = client.connect();
+// ─── VALIDATE ENV VARS ───
+if (!process.env.MONGODB_URI) {
+  throw new Error('Missing environment variable: "MONGODB_URI"');
+}
+if (!process.env.AUTH_SECRET) {
+  throw new Error('Missing environment variable: "AUTH_SECRET"');
+}
+if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) {
+  throw new Error('Missing Google OAuth credentials in environment variables');
+}
 
+const uri = process.env.MONGODB_URI;
+const options = {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+};
+
+// ─── CACHED CLIENT (CRITICAL FOR VERCEL SERVERLESS) ───
+let client;
+let clientPromise;
+
+if (process.env.NODE_ENV === "development") {
+  let globalWithMongo = globalThis;
+  if (!globalWithMongo._mongoClientPromise) {
+    client = new MongoClient(uri, options);
+    globalWithMongo._mongoClientPromise = client.connect();
+  }
+  clientPromise = globalWithMongo._mongoClientPromise;
+} else {
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
+}
+
+// ─── COOKIE CONFIG ───
 const useSecureCookies = process.env.NODE_ENV === "production";
-
-// In production (frontend domain != backend domain on Vercel),
-// cookies must be SameSite=None; Secure so they are sent on cross-site POST.
 const cookiePrefix = useSecureCookies ? "__Secure-" : "";
 const csrfPrefix = useSecureCookies ? "__Host-" : "";
 

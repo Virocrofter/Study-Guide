@@ -2,6 +2,14 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 
+// ─── EARLY ENV CHECK ───
+console.log("🔧 Starting server...");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("AUTH_SECRET set?", !!process.env.AUTH_SECRET);
+console.log("MONGODB_URI set?", !!process.env.MONGODB_URI);
+console.log("GOOGLE_ID set?", !!process.env.AUTH_GOOGLE_ID);
+console.log("GOOGLE_SECRET set?", !!process.env.AUTH_GOOGLE_SECRET);
+
 import connectDB from "./configs/mongodb.js";
 import connectCloudinay from "./configs/cloudinary.js";
 
@@ -17,7 +25,6 @@ import { stripeWebhooks } from "./controllers/webhooks.js";
 const app = express();
 
 connectDB();
-connectCloudinay();
 
 // Vercel/proxies
 app.set("trust proxy", true);
