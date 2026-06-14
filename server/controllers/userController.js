@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import User from "../models/User.js";
 import { Purchase } from "../models/Purchase.js";
 import Stripe from "stripe";
@@ -38,6 +39,48 @@ export const getUserData = async (req, res) => {
     return res.json({ success: true, user });
   } catch (error) {
     console.error("User Data Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// POST /api/user/become-educator
+// Sets role="educator" for the Auth.js adapter user (session role) and, if present, the app User doc.
+export const becomeEducator = async (req, res) => {
+  try {
+    await connectDB();
+
+    const userId = req.auth?.().userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    // 1) Update Auth.js adapter user role (used by session callback + protectEducator middleware)
+    const usersCollection = mongoose.connection.db.collection("users");
+
+    let updated = false;
+    if (mongoose.isValidObjectId(userId)) {
+      const r = await usersCollection.updateOne(
+        { _id: new mongoose.Types.ObjectId(userId) },
+        { $set: { role: "educator" } }
+      );
+      updated = r.modifiedCount > 0 || r.matchedCount > 0;
+    }
+
+    // If ObjectId path didn't match (or id isn't an ObjectId), try string _id
+    if (!updated) {
+      const r2 = await usersCollection.updateOne({ _id: userId }, { $set: { role: "educator" } });
+      updated = r2.modifiedCount > 0 || r2.matchedCount > 0;
+    }
+
+    // 2) Best-effort: also update your app user model if it exists
+    try {
+      await User.findByIdAndUpdate(userId, { role: "educator" }, { new: true });
+    } catch {
+      // ignore - depending on how your collections are set up this may not match
+    }
+
+    return res.json({ success: true, message: "You are now an educator" });
+  } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -209,3 +252,4 @@ export const addUserRating = async (req, res) => {
     return res.json({ success: false, message: error.message });
   }
 };
+

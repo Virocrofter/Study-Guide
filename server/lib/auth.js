@@ -4,13 +4,12 @@ import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import { MongoClient } from "mongodb";
 
 const client = new MongoClient(process.env.MONGODB_URI);
-const clientPromise = client.connect();
+export const clientPromise = client.connect();
 
 export const authConfig = {
-  secret: process.env.AUTH_SECRET, // important in production
-  trustHost: true,
-
   adapter: MongoDBAdapter(clientPromise),
+  secret: process.env.AUTH_SECRET,
+  trustHost: true,
   session: { strategy: "database" },
 
   providers: [
@@ -31,4 +30,6 @@ export const authConfig = {
   },
 };
 
+// NOTE: basePath is intentionally omitted because server mounts this router at `/api/auth`
 export default ExpressAuth(authConfig);
+

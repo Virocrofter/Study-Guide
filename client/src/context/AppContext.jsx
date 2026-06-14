@@ -9,6 +9,10 @@ export const AppContext = createContext();
 const sanitizeEnvUrl = (value) =>
   (value || "").trim().replace(/[`'"]/g, "").replace(/\/$/, "");
 
+/**
+ * Auth.js (@auth/express) expects POST for sign-in/sign-out actions.
+ * Those POSTs must include a csrfToken.
+ */
 const postNavigate = (url, fields = {}) => {
   const form = document.createElement("form");
   form.method = "POST";
@@ -27,39 +31,29 @@ const postNavigate = (url, fields = {}) => {
   form.remove();
 };
 
-const signInWithGoogle = () => {
-  postNavigate(`${backendUrl}/api/auth/signin/google`, {
-    callbackUrl: window.location.origin,
-  });
-};
-
-const signOut = () => {
-  postNavigate(`${backendUrl}/api/auth/signout`, {
-    callbackUrl: window.location.origin,
-  });
-};
-
 export const AppContextProvider = (props) => {
   const backendUrl = sanitizeEnvUrl(import.meta.env.VITE_BACKEND_URL);
   const currency = (import.meta.env.VITE_CURRENCY || "").replace(/[`'"]/g, "");
   const navigate = useNavigate();
 
-  // Cookie sessions: always send cookies
-  useEffect(() => {
-    axios.defaults.withCredentials = true;
-  }, []);
-
+  // State Management
   const [allCourses, setAllCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [userData, setUserData] = useState(null);
   const [session, setSession] = useState(null);
   const [isEducator, setIsEducator] = useState(false);
 
+  // Global Axios config for cookie sessions
+  useEffect(() => {
+    axios.defaults.withCredentials = true;
+  }, []);
+
+  // --- Auth Actions ---
+
   const fetchSession = async () => {
     if (!backendUrl) return;
-
     try {
-      const { data } = await axios.get(backendUrl + "/api/auth/session");
+      const { data } = await axios.get(`${backendUrl}/api/auth/session`);
       setSession(data || null);
       setIsEducator(data?.user?.role === "educator");
     } catch {
@@ -68,26 +62,71 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // IMPORTANT: Auth.js (@auth/express) expects POST for these actions
-  const signInWithGoogle = () => {
-    if (!backendUrl) return toast.error("Missing VITE_BACKEND_URL");
-    postNavigate(`${backendUrl}/api/auth/signin/google`, {
-      callbackUrl: window.location.origin,
-    });
+  const getCsrfToken = async () => {
+    if (!backendUrl) return null;
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/auth/csrf`);
+      return data?.csrfToken || null;
+    } catch (error) {
+      return null;
+    }
   };
 
-  const signOut = () => {
-    if (!backendUrl) return toast.error("Missing VITE_BACKEND_URL");
-    postNavigate(`${backendUrl}/api/auth/signout`, {
-      callbackUrl: window.location.origin,
-    });
+  const signInWithGoogle = async () => {
+    try {
+      if (!backendUrl) return toast.error("Missing VITE_BACKEND_URL");
+      const csrfToken = await getCsrfToken();
+      if (!csrfToken) return toast.error("Could not get CSRF token");
+
+      postNavigate(`${backendUrl}/api/auth/signin/google`, {
+        csrfToken,
+        callbackUrl: window.location.origin,
+      });
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
+
+  const signOut = async () => {
+    try {
+      if (!backendUrl) return toast.error("Missing VITE_BACKEND_URL");
+      const csrfToken = await getCsrfToken();
+      if (!csrfToken) return toast.error("Could not get CSRF token");
+
+      postNavigate(`${backendUrl}/api/auth/signout`, {
+        csrfToken,
+        callbackUrl: window.location.origin,
+      });
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const becomeEducator = async () => {
+    try {
+      if (!session?.user) {
+        toast.info("Please sign in first");
+        return signInWithGoogle();
+      }
+
+      const { data } = await axios.post(`${backendUrl}/api/user/become-educator`, {});
+
+      if (!data?.success) return toast.error(data?.message || "Could not upgrade account");
+
+      toast.success(data.message || "You are now an educator");
+      await fetchSession();
+      navigate("/educator");
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message);
+    }
+  };
+
+  // --- Data Fetching ---
 
   const fetchAllCourses = async () => {
     if (!backendUrl) return;
-
     try {
-      const { data } = await axios.get(backendUrl + "/api/course/all");
+      const { data } = await axios.get(`${backendUrl}/api/course/all`);
       if (data.success) setAllCourses(data.courses);
       else toast.error(data.message);
     } catch (error) {
@@ -97,9 +136,8 @@ export const AppContextProvider = (props) => {
 
   const fetchUserData = async () => {
     if (!session?.user || !backendUrl) return;
-
     try {
-      const { data } = await axios.get(backendUrl + "/api/user/data");
+      const { data } = await axios.get(`${backendUrl}/api/user/data`);
       if (data.success) setUserData(data.user);
       else toast.error(data.message);
     } catch (error) {
@@ -109,9 +147,8 @@ export const AppContextProvider = (props) => {
 
   const fetchUserEnrolledCourses = async () => {
     if (!session?.user || !backendUrl) return;
-
     try {
-      const { data } = await axios.get(backendUrl + "/api/user/enrolled-courses");
+      const { data } = await axios.get(`${backendUrl}/api/user/enrolled-courses`);
       if (data.success) setEnrolledCourses(data.enrolledCourses.reverse());
       else toast.error(data.message);
     } catch (error) {
@@ -119,10 +156,11 @@ export const AppContextProvider = (props) => {
     }
   };
 
+  // --- Helper Calculators ---
+
   const calculateRating = (course) => {
     if (!course.courseRatings || course.courseRatings.length === 0) return 0;
-    let totalRating = 0;
-    course.courseRatings.forEach((rating) => (totalRating += rating.rating));
+    const totalRating = course.courseRatings.reduce((acc, curr) => acc + curr.rating, 0);
     return Math.floor(totalRating / course.courseRatings.length);
   };
 
@@ -148,10 +186,10 @@ export const AppContextProvider = (props) => {
     return totalLectures;
   };
 
+  // Lifecycle
   useEffect(() => {
     fetchAllCourses();
     fetchSession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -162,31 +200,25 @@ export const AppContextProvider = (props) => {
       setUserData(null);
       setEnrolledCourses([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   const value = {
     backendUrl,
     currency,
     navigate,
-
-    // auth
     session,
     fetchSession,
     signInWithGoogle,
     signOut,
+    becomeEducator,
     isEducator,
     setIsEducator,
-
-    // data
     allCourses,
     fetchAllCourses,
     userData,
     setUserData,
     enrolledCourses,
     fetchUserEnrolledCourses,
-
-    // helpers
     calculateRating,
     calculateNoOfLectures,
     calculateCourseDuration,

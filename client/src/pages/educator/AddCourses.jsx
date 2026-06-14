@@ -7,7 +7,6 @@ import { AppContext } from "../../context/AppContext";
 import { toast } from "react-toastify";
 
 const AddCourses = () => {
-  // Cookie session auth: no Bearer token
   const { backendUrl } = useContext(AppContext);
   const quillRef = useRef(null);
   const editorRef = useRef(null);
@@ -45,14 +44,13 @@ const AddCourses = () => {
 
       const formData = new FormData();
       formData.append("courseData", JSON.stringify(courseData));
-      formData.append("thumbnail", image);
+      formData.append("thumbnailImage", image);
 
       const { data } = await axios.post(
-        `${backendUrl}/api/course/add-course`,
+        `${backendUrl}/api/educator/add-course`,
         formData,
         {
           withCredentials: true,
-          // IMPORTANT: let Axios set the boundary; don't force Content-Type manually
         }
       );
 
