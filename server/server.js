@@ -1,14 +1,13 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
+import mongoose from "mongoose";
 
 // ─── EARLY ENV CHECK ───
 console.log("🔧 Starting server...");
 console.log("NODE_ENV:", process.env.NODE_ENV);
 console.log("AUTH_SECRET set?", !!process.env.AUTH_SECRET);
 console.log("MONGODB_URI set?", !!process.env.MONGODB_URI);
-console.log("GOOGLE_ID set?", !!process.env.AUTH_GOOGLE_ID);
-console.log("GOOGLE_SECRET set?", !!process.env.AUTH_GOOGLE_SECRET);
 
 import connectDB from "./configs/mongodb.js";
 import connectCloudinay from "./configs/cloudinary.js";
@@ -24,13 +23,25 @@ import { stripeWebhooks } from "./controllers/webhooks.js";
 
 const app = express();
 
+// ─── CONNECT DB & CLEANUP OLD INDEX ───
 connectDB();
 
-// Vercel/proxies
+(async () => {
+  try {
+    const conn = mongoose.connection;
+    if (conn.readyState === 1) {
+      await conn.collection("users").dropIndex("username_1");
+      console.log("✅ Dropped old username_1 index");
+    }
+  } catch (e) {
+    // Index might not exist — this is fine
+  }
+})();
+
+connectCloudinay();
+
 app.set("trust proxy", true);
 
-// IMPORTANT: For credentials (cookies) you must use explicit origins (not "*").
-// Also: do NOT include backticks/quotes inside the strings.
 const allowedOrigins = new Set([
   "https://study-guide-frontend-gray.vercel.app",
   "http://localhost:5173",
@@ -38,14 +49,9 @@ const allowedOrigins = new Set([
 
 const corsOptions = {
   origin(origin, callback) {
-    // allow server-to-server / curl / same-origin
     if (!origin) return callback(null, true);
-
     if (allowedOrigins.has(origin)) return callback(null, true);
-
-    // optional: allow any other Vercel frontend preview (less secure)
     if (origin.endsWith(".vercel.app")) return callback(null, true);
-
     return callback(new Error(`CORS Not Allowed: ${origin}`));
   },
   credentials: true,
@@ -65,17 +71,13 @@ app.options(/.*/, cors(corsOptions));
 // Stripe webhook MUST be raw body, mounted BEFORE body parsers
 app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 
-// Needed for Auth.js POST actions (like POST /api/auth/signin/google from a form)
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-// DO NOT override Auth.js' own /api/auth/error route
-// app.use("/api/auth/error", (req, res) => { ... });
 
 // Mount Auth.js
 app.use("/api/auth", authRouter);
 
-// Hydrate Auth.js session + provide a req.auth() shim
+// Hydrate Auth.js session
 app.use(async (req, res, next) => {
   try {
     const session = await getSession(req, authConfig);
@@ -84,7 +86,8 @@ app.use(async (req, res, next) => {
     const authFn = () => ({ userId: session?.user?.id });
     authFn.userId = session?.user?.id;
     req.auth = authFn;
-  } catch {
+  } catch (err) {
+    console.error("Session hydration error:", err.message);
     res.locals.session = null;
     const authFn = () => ({ userId: null });
     authFn.userId = null;
@@ -105,4 +108,3 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export default app;
-

@@ -99,6 +99,32 @@ export const authConfig = {
       }
       return session;
     },
+    // ─── CRITICAL FIX: Allow cross-domain redirects to frontend ───
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+
+      try {
+        const urlOrigin = new URL(url).origin;
+        const baseOrigin = new URL(baseUrl).origin;
+
+        // Allows callback URLs on the same origin (backend)
+        if (urlOrigin === baseOrigin) return url;
+
+        // ─── ALLOW YOUR FRONTEND ORIGINS ───
+        const allowedOrigins = [
+          "https://study-guide-frontend-gray.vercel.app", // ← your production frontend
+          "http://localhost:5173",                         // ← local dev
+        ];
+
+        if (allowedOrigins.includes(urlOrigin)) return url;
+      } catch {
+        // Invalid URL format, fall through to default
+      }
+
+      // Default fallback: backend base URL
+      return baseUrl;
+    },
   },
 };
 
