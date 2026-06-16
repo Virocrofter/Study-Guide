@@ -3,43 +3,47 @@ import cors from "cors";
 import "dotenv/config";
 import mongoose from "mongoose";
 
-// ─── EARLY ENV CHECK ───
 console.log("🔧 Starting server...");
 console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("AUTH_SECRET set?", !!process.env.AUTH_SECRET);
-console.log("MONGODB_URI set?", !!process.env.MONGODB_URI);
 
 import connectDB from "./configs/mongodb.js";
 import connectCloudinay from "./configs/cloudinary.js";
-
 import { getSession } from "@auth/express";
 import authRouter, { authConfig } from "./routes/auth.js";
-
 import courseRouter from "./routes/courseRoutes.js";
 import educatorRouter from "./routes/educatorRoutes.js";
 import userRouter from "./routes/userRoutes.js";
-
 import { stripeWebhooks } from "./controllers/webhooks.js";
 
 const app = express();
 
-// ─── CONNECT DB & CLEANUP OLD INDEX ───
+// ─── CONNECT DB & CLEANUP OLD INDEXES ───
 connectDB();
 
 (async () => {
   try {
-    const conn = mongoose.connection;
-    if (conn.readyState === 1) {
-      await conn.collection("users").dropIndex("username_1");
-      console.log("✅ Dropped old username_1 index");
+    // Wait for connection to be ready
+    await new Promise((resolve) => {
+      if (mongoose.connection.readyState === 1) return resolve();
+      mongoose.connection.once("connected", resolve);
+    });
+
+    const usersCollection = mongoose.connection.collection("users");
+    const indexes = await usersCollection.indexes();
+
+    for (const index of indexes) {
+      // Drop every unique index except MongoDB's default _id_
+      if (index.name !== "_id_" && index.unique) {
+        await usersCollection.dropIndex(index.name);
+        console.log(`✅ Dropped conflicting unique index: ${index.name}`);
+      }
     }
   } catch (e) {
-    // Index might not exist — this is fine
+    console.error("Index cleanup error:", e.message);
   }
 })();
 
 connectCloudinay();
-
 app.set("trust proxy", true);
 
 const allowedOrigins = new Set([
@@ -82,12 +86,10 @@ app.use(async (req, res, next) => {
   try {
     const session = await getSession(req, authConfig);
     res.locals.session = session || null;
-
     const authFn = () => ({ userId: session?.user?.id });
     authFn.userId = session?.user?.id;
     req.auth = authFn;
   } catch (err) {
-    console.error("Session hydration error:", err.message);
     res.locals.session = null;
     const authFn = () => ({ userId: null });
     authFn.userId = null;
