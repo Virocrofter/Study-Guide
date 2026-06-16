@@ -1,15 +1,19 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-    // Let Mongoose use default ObjectId _id (matches Auth.js adapter & Course refs)
+    // CRITICAL: Auth.js gives string IDs, NOT ObjectIds
+    _id: { type: String, required: true },
+    
     name: { type: String, required: true },
-    email: { type: String, required: true }, // ← REMOVED unique: true
+    email: { type: String, required: true },
     imageUrl: { type: String, required: true },
+
     role: { 
         type: String, 
         enum: ['student', 'educator', 'admin'], 
         default: 'student' 
     },
+
     enrolledCourses: [{ 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course'

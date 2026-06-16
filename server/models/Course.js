@@ -33,12 +33,12 @@ const courseSchema = new mongoose.Schema(
     courseContent: [chapterSchema],
     courseRatings: [
       {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        userId: { type: String, ref: "User" },        // ← String, not ObjectId
         rating: { type: Number, min: 1, max: 5 },
       },
     ],
-    educator: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    enrolledStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    educator: { type: String, ref: "User", required: true }, // ← String, not ObjectId
+    enrolledStudents: [{ type: String, ref: "User" }],      // ← String, not ObjectId
   },
   {
     timestamps: true,

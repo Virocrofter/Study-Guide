@@ -12,7 +12,6 @@ export const stripeWebhooks = async (req, res) => {
   try {
     await connectDB();
 
-    // express.raw() gives us a Buffer in req.body
     const event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
 
     if (event.type === "checkout.session.completed") {
@@ -27,12 +26,14 @@ export const stripeWebhooks = async (req, res) => {
           const courseData = await Course.findById(purchaseData.courseId);
 
           if (userData && courseData) {
-            const alreadyInCourse = courseData.enrolledStudents.some((id) => id.equals(userData._id));
+            // Strings use ===, not .equals()
+            const alreadyInCourse = courseData.enrolledStudents.some((id) => id === userData._id);
             if (!alreadyInCourse) {
               courseData.enrolledStudents.push(userData._id);
               await courseData.save();
             }
 
+            // enrolledCourses still holds ObjectIds (Course refs), so .equals() is OK here
             const alreadyInUser = userData.enrolledCourses.some((id) => id.equals(courseData._id));
             if (!alreadyInUser) {
               userData.enrolledCourses.push(courseData._id);
