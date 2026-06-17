@@ -9,7 +9,6 @@ import StudentDashboardLayout from "./pages/student/StudentDashboardLayout";
 import Home from "./pages/student/Home";
 import CourseList from "./pages/student/CourseList";
 import CourseDetails from "./pages/student/CourseDetails";
-import About from "./pages/student/About";
 import Loading from "./components/student/Loading";
 
 // ─── Student Dashboard Pages ───
@@ -46,7 +45,6 @@ const App = () => {
           PUBLIC ROUTES
       ═══════════════════════════════════════════ */}
       <Route path="/" element={<Home />} />
-      <Route path="/about" element={<About />} />
       <Route path="/course-list" element={<CourseList />} />
       <Route path="/course-list/:search" element={<CourseList />} />
       <Route path="/course/:id" element={<CourseDetails />} />
