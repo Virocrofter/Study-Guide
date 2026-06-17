@@ -82,7 +82,54 @@
   box-shadow: 0px 4px 15px 2px rgb(0, 0, 0, 0.1);
 }
 
-/* ===== Safe Edutech Styles (No GPU Crashes) ===== */
+/* ===== Safe Animations (GPU-Composited Only) ===== */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.reveal-up.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.reveal-left.revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.reveal-scale.revealed {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stagger delays */
+.delay-100 { transition-delay: 0.1s; }
+.delay-200 { transition-delay: 0.2s; }
+.delay-300 { transition-delay: 0.3s; }
+.delay-400 { transition-delay: 0.4s; }
+
+/* Subtle float animation (safe - only transform) */
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float-safe {
+  animation: gentle-float 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Gradient text */
 .text-gradient {
   background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
   -webkit-background-clip: text;
@@ -90,15 +137,19 @@
   background-clip: text;
 }
 
-.max-w-course-card {
-  max-width: 424px;
+/* Card hover lift (safe) */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px -12px rgba(37, 99, 235, 0.25);
 }
 
-.shadow-custom-card {
-  box-shadow: 0px 4px 15px 2px rgb(0, 0, 0, 0.1);
-}
+.max-w-course-card { max-width: 424px; }
+.shadow-custom-card { box-shadow: 0px 4px 15px 2px rgb(0, 0, 0, 0.1); }
 
-/* Rich text for Quill */
+/* Rich text */
 .rich-text {font-size: 15px; color: #7A7BBD;} 
 .rich-text p{ margin-bottom: 18px;} 
 .rich-text h1{ font-size: 36px; font-weight: 800; color: #252525; margin: 32px 0;} 

@@ -1,4 +1,5 @@
 import React from "react";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 const steps = [
   {
@@ -35,9 +36,11 @@ const steps = [
 ];
 
 const HowItWorks = () => {
+  const headerRef = useScrollReveal();
+
   return (
     <section className="py-20 md:px-40 px-8 bg-white">
-      <div className="max-w-6xl mx-auto text-center mb-16">
+      <div ref={headerRef} className="reveal-up max-w-6xl mx-auto text-center mb-16">
         <p className="text-blue-600 font-semibold text-sm uppercase tracking-wider mb-2">
           How It Works
         </p>
@@ -50,9 +53,10 @@ const HowItWorks = () => {
         {steps.map((step, index) => (
           <div
             key={index}
-            className="relative group p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-500"
+            className="reveal-up hover-lift group p-8 rounded-2xl bg-slate-50 border border-slate-100"
+            style={{ transitionDelay: `${index * 100}ms` }}
           >
-            <div className={`w-16 h-16 rounded-2xl bg-linear-to-br ${step.color} flex items-center justify-center text-white mb-6 shadow-lg group-hover:scale-110 transition-transform duration-500`}>
+            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-white mb-6 shadow-lg`}>
               {step.icon}
             </div>
             <div className="absolute top-8 right-8 text-6xl font-bold text-slate-100 group-hover:text-blue-100 transition-colors">

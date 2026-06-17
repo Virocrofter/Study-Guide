@@ -1,21 +1,24 @@
 import React, { useContext } from "react";
 import { AppContext } from "../../context/AppContext";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 const ForEducators = () => {
   const { becomeEducator } = useContext(AppContext);
+  const leftRef = useScrollReveal();
+  const rightRef = useScrollReveal();
 
   return (
     <section className="py-20 md:px-40 px-8 bg-slate-900 text-white overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-l from-blue-600/10 to-transparent" />
+      <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-600/10 to-transparent" />
       
       <div className="max-w-7xl mx-auto relative z-10 flex flex-col lg:flex-row items-center gap-16">
-        <div className="flex-1">
+        <div ref={leftRef} className="reveal-left flex-1">
           <p className="text-cyan-400 font-semibold text-sm uppercase tracking-wider mb-4">
             For Educators
           </p>
           <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
             Share Your Expertise. <br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
               Build Your Brand.
             </span>
           </h2>
@@ -27,7 +30,7 @@ const ForEducators = () => {
           <div className="flex flex-col sm:flex-row gap-4 mb-10">
             <button
               onClick={becomeEducator}
-              className="px-8 py-4 bg-linear-to-r from-blue-600 to-cyan-500 rounded-xl font-semibold text-white hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 flex items-center justify-center gap-2"
             >
               Start Teaching Today
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +57,7 @@ const ForEducators = () => {
           </div>
         </div>
 
-        <div className="flex-1 relative">
+        <div ref={rightRef} className="reveal-left delay-200 flex-1 relative">
           <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-700 bg-slate-800">
             <div className="bg-slate-800 p-4 rounded-t-2xl border-b border-slate-700 flex items-center gap-3">
               <div className="flex gap-2">

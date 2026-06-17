@@ -1,11 +1,14 @@
 import React from "react";
 import { dummyTestimonial } from "../../assets/assets";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 const TestinonialSection = () => {
+  const headerRef = useScrollReveal();
+
   return (
     <section className="py-20 md:px-40 px-8 bg-slate-50">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
+        <div ref={headerRef} className="reveal-up text-center mb-16">
           <p className="text-blue-600 font-semibold text-sm uppercase tracking-wider mb-2">
             Testimonials
           </p>
@@ -13,7 +16,7 @@ const TestinonialSection = () => {
             Loved by <span className="text-gradient">50,000+</span> Learners
           </h2>
           <p className="text-slate-500 max-w-2xl mx-auto">
-            Hear from our community about how StudyGuide transformed their careers and helped them master new skills.
+            Hear from our community about how StudyGuide transformed their careers.
           </p>
         </div>
 
@@ -21,7 +24,8 @@ const TestinonialSection = () => {
           {dummyTestimonial.slice(0, 3).map((testimonial, index) => (
             <div
               key={index}
-              className="bg-white rounded-2xl p-8 border border-slate-100 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-500"
+              className="reveal-up bg-white rounded-2xl p-8 border border-slate-100 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300"
+              style={{ transitionDelay: `${index * 100}ms` }}
             >
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, i) => (

@@ -1,9 +1,11 @@
 import React, { useContext } from "react";
 import { AppContext } from "../../context/AppContext";
 import { Link } from "react-router-dom";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 const CourseCard = ({ course }) => {
   const { currency, calculateRating } = useContext(AppContext);
+  const cardRef = useScrollReveal();
 
   const finalPrice = (
     course.coursePrice -
@@ -14,23 +16,23 @@ const CourseCard = ({ course }) => {
 
   return (
     <Link
+      ref={cardRef}
       to={`/course/${course._id}`}
       onClick={() => scrollTo(0, 0)}
-      className="group relative bg-white rounded-2xl overflow-hidden border border-slate-200 hover:border-blue-300 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 ease-out flex flex-col"
+      className="reveal-scale hover-lift group relative bg-white rounded-2xl overflow-hidden border border-slate-200 flex flex-col"
     >
       {/* Thumbnail */}
       <div className="relative overflow-hidden aspect-video">
         <img 
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
           src={course.courseThumbnail} 
           alt={course.courseTitle} 
         />
         {course.discount > 0 && (
-          <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+          <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full">
             {course.discount}% OFF
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       </div>
 
       {/* Content */}

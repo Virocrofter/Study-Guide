@@ -2,14 +2,16 @@ import React, { useContext } from "react";
 import { AppContext } from "../../context/AppContext";
 import { Link } from "react-router-dom";
 import CourseCard from "./CourseCard";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 const CourseSections = () => {
   const { allCourses } = useContext(AppContext);
+  const headerRef = useScrollReveal();
 
   return (
     <section className="py-20 md:px-40 px-8 bg-slate-50">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div ref={headerRef} className="reveal-up flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
             <p className="text-blue-600 font-semibold text-sm uppercase tracking-wider mb-2">
               Featured Courses
