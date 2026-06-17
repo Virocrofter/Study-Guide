@@ -1,26 +1,44 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { useContext } from 'react'
-import { AppContext } from '../../context/AppContext'
-import CourseCard from './CourseCard'
+import React, { useContext } from "react";
+import { AppContext } from "../../context/AppContext";
+import { Link } from "react-router-dom";
+import CourseCard from "./CourseCard";
 
 const CourseSections = () => {
-
-  const {allCourses} = useContext(AppContext);
+  const { allCourses } = useContext(AppContext);
 
   return (
-    <div className='py-16 md:px-40 px-8'> 
-      <h2 className='text-3xl font-medium text-gray-800'>Learn from the best</h2>
-      <p className='text-sm md:text-base text-gray-500 mt-3'>Discover our top-rated courses across various categories. From coding and design to <br /> business and wellness, our courses are crafted to deliver results.</p>
+    <section className="py-20 md:px-40 px-8 bg-slate-50">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+          <div>
+            <p className="text-blue-600 font-semibold text-sm uppercase tracking-wider mb-2">
+              Featured Courses
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
+              Explore Our Top-Rated <br className="hidden md:block" />
+              <span className="text-gradient">Learning Paths</span>
+            </h2>
+          </div>
+          <Link
+            to={"/course-list"}
+            onClick={() => scrollTo(0, 0)}
+            className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:gap-3 transition-all"
+          >
+            View All Courses
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+        </div>
 
-      <div className='grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] px-4 md:px-0 md:my-16 my-10 gap-4'>
-        {allCourses.slice(0,4).map((course, index) => <CourseCard key={index} course={course} />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {allCourses.slice(0, 4).map((course, index) => (
+            <CourseCard key={course._id || index} course={course} />
+          ))}
+        </div>
       </div>
+    </section>
+  );
+};
 
-      <Link to={'/course-list'} onClick={()=> scrollTo(0,0)} 
-      className='text-gray-500 border border-gray-500/30 px-10 py-3 rounded'>Show all courses</Link>
-    </div>
-  )
-}
-
-export default CourseSections
+export default CourseSections;
