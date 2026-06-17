@@ -3,54 +3,38 @@ import Google from "@auth/express/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import { MongoClient, ServerApiVersion } from "mongodb";
 
-// ─── ENV GUARD ───
-if (!process.env.MONGODB_URI) {
-  throw new Error('Missing environment variable: "MONGODB_URI"');
-}
-if (!process.env.AUTH_SECRET) {
-  throw new Error('Missing environment variable: "AUTH_SECRET"');
-}
+if (!process.env.MONGODB_URI) throw new Error('Missing "MONGODB_URI"');
+if (!process.env.AUTH_SECRET) throw new Error('Missing "AUTH_SECRET"');
 if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) {
-  throw new Error('Missing Google OAuth credentials in environment variables');
+  throw new Error("Missing Google OAuth credentials");
 }
 
 const uri = process.env.MONGODB_URI;
-const options = {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-};
+const options = { serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true } };
 
-// ─── CACHED CLIENT (required for Vercel serverless) ───
-let client;
 let clientPromise;
-
 if (process.env.NODE_ENV === "development") {
-  let globalWithMongo = globalThis;
-  if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri, options);
-    globalWithMongo._mongoClientPromise = client.connect().catch((err) => {
-      console.error("MongoDB connection failed:", err.message);
-      throw err;
-    });
+  let g = globalThis;
+  if (!g._mongoClientPromise) {
+    g._mongoClientPromise = new MongoClient(uri, options).connect();
   }
-  clientPromise = globalWithMongo._mongoClientPromise;
+  clientPromise = g._mongoClientPromise;
 } else {
-  client = new MongoClient(uri, options);
-  clientPromise = client.connect().catch((err) => {
-    console.error("MongoDB connection failed:", err.message);
-    throw err;
-  });
+  clientPromise = new MongoClient(uri, options).connect();
 }
 
-// ─── AUTH CONFIG ───
+// ─── FRONTEND URL ───
+const FRONTEND_URL = process.env.FRONTEND_URL || (
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:5173"
+    : "https://study-guide-frontend-gray.vercel.app"
+);
+
 export const authConfig = {
   adapter: MongoDBAdapter(clientPromise),
   secret: process.env.AUTH_SECRET,
   trustHost: true,
-  basePath: "/api/auth",     // ← explicit basePath
+  basePath: "/api/auth",
   session: { strategy: "database" },
 
   providers: [
@@ -68,21 +52,21 @@ export const authConfig = {
       }
       return session;
     },
+
     async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // If it's a relative path, send to frontend
+      if (url.startsWith("/")) {
+        return `${FRONTEND_URL}${url}`;
+      }
       try {
         const urlOrigin = new URL(url).origin;
-        const baseOrigin = new URL(baseUrl).origin;
-        if (urlOrigin === baseOrigin) return url;
-        const allowedOrigins = [
-          "https://study-guide-frontend-gray.vercel.app",
-          "http://localhost:5173",
-        ];
-        if (allowedOrigins.includes(urlOrigin)) return url;
+        const allowed = [FRONTEND_URL, "http://localhost:5173", "https://study-guide-frontend-gray.vercel.app"];
+        if (allowed.includes(urlOrigin)) return url;
       } catch {
         // invalid url
       }
-      return baseUrl;
+      // Default: go to frontend dashboard
+      return `${FRONTEND_URL}/dashboard`;
     },
   },
 };

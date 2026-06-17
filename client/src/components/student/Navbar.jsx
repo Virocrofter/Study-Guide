@@ -56,7 +56,7 @@ const Navbar = () => {
             )}
             |{" "}
             {/* CHANGED: My Enrollments → Your Dashboard, links to /student */}
-            <Link to="/student" className="text-gray-600 hover:text-gray-900 font-medium">
+            <Link to="/dashboard" className="text-gray-600 hover:text-gray-900 font-medium">
               Your Dashboard
             </Link>
             <button
@@ -93,7 +93,7 @@ const Navbar = () => {
 
         {session?.user ? (
           <div className="flex items-center gap-3">
-            <Link to="/student" className="text-sm text-gray-600 hover:text-gray-900">
+            <Link to="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
               Dashboard
             </Link>
             <button

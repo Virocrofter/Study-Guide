@@ -80,7 +80,7 @@ export const AppContextProvider = (props) => {
 
       postNavigate(`${backendUrl}/api/auth/signin/google`, {
         csrfToken,
-        callbackUrl: window.location.origin,
+        callbackUrl: `${window.location.origin}/dashboard`,
       });
     } catch (error) {
       toast.error(error.message);
