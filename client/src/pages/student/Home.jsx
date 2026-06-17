@@ -1,4 +1,5 @@
 import React from 'react'
+import Navbar from '../../components/student/Navbar'
 import Hero from '../../components/student/Hero'
 import Companies from '../../components/student/Companies'
 import CourseSections from '../../components/student/CourseSections'
@@ -11,6 +12,7 @@ import Footer from '../../components/student/Footer'
 const Home = () => {
   return (
     <div className='flex flex-col w-full bg-white'>
+      <Navbar />
       <Hero />
       <Companies />
       <CourseSections />
