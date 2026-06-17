@@ -1,8 +1,8 @@
 import Achievement from "../models/Achievement.js";
-import StudySession from "../models/StudySession.js";
 import { CourseProgress } from "../models/CourseProgress.js";
 import { Purchase } from "../models/Purchase.js";
 import { QuizSubmission } from "../models/QuizSubmission.js";
+import StudySession from "../models/StudySession.js";
 import { createNotification } from "./notificationController.js";
 
 export const getUserAchievements = async (req, res) => {
@@ -45,7 +45,7 @@ export const checkAndAwardAchievements = async (userId) => {
 
 const award = async (userId, badge, points) => {
   await Achievement.create({ userId, badge, points });
-  await createNotification(userId, "achievement", "Achievement Unlocked!", `You earned the ${badge.replace(/_/g, " ")} badge.`, "/dashboard/achievements");
+  await createNotification(userId, "achievement", "Achievement Unlocked!", `You earned the ${badge.replace(/_/g, " ")} badge.`, "/dashboard/leaderboard");
 };
 
 const calculateStreak = (sessions) => {
