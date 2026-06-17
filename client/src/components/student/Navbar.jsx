@@ -55,8 +55,9 @@ const Navbar = () => {
               </button>
             )}
             |{" "}
-            <Link to="/my-enrollments" className="text-gray-600 hover:text-gray-900">
-              My Enrollments
+            {/* CHANGED: My Enrollments → Your Dashboard, links to /student */}
+            <Link to="/student" className="text-gray-600 hover:text-gray-900 font-medium">
+              Your Dashboard
             </Link>
             <button
               onClick={signOut}
@@ -84,19 +85,24 @@ const Navbar = () => {
         )}
       </div>
 
-      {/* Mobile (kept simple) */}
+      {/* Mobile */}
       <div className="md:hidden flex items-center gap-2 sm:gap-5 text-gray-500">
         <Link to="/about" className="text-gray-600 hover:text-gray-900">
           About
         </Link>
 
         {session?.user ? (
-          <button
-            onClick={signOut}
-            className="bg-gray-900 text-white px-4 py-2 rounded-full"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-3">
+            <Link to="/student" className="text-sm text-gray-600 hover:text-gray-900">
+              Dashboard
+            </Link>
+            <button
+              onClick={signOut}
+              className="bg-gray-900 text-white px-4 py-2 rounded-full"
+            >
+              Sign out
+            </button>
+          </div>
         ) : (
           <button onClick={signInWithGoogle}>
             <img src={assets.user_icon} alt="" />
@@ -108,4 +114,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
