@@ -37,6 +37,17 @@ const StudentEnrollments = () => {
             const totalLectures = course.courseContent?.reduce((acc, ch) => acc + (ch.chapterContent?.length || 0), 0) || 0;
             const completed = course.lectureCompleted?.length || 0;
 
+            // Determine where the button goes
+            let buttonText = "Continue";
+            let destination = `/player/${course._id}`;
+
+            if (pct === 0) {
+              buttonText = "Start";
+              destination = `/course/${course._id}`; // ← Goes to Course Details
+            } else if (pct === 100) {
+              buttonText = "Review";
+            }
+
             return (
               <div
                 key={course._id}
@@ -65,10 +76,10 @@ const StudentEnrollments = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => navigate(`/player/${course._id}`)}
+                  onClick={() => navigate(destination)}
                   className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition-colors shrink-0"
                 >
-                  {pct === 100 ? "Review" : pct === 0 ? "Start" : "Continue"}
+                  {buttonText}
                 </button>
               </div>
             );

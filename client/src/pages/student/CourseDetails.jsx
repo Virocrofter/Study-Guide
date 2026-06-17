@@ -706,12 +706,16 @@ const CourseDetails = () => {
             )}
           </div>
 
-          {/* Rating Section */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                    {/* Rating Section — Added mb-6 to create space before footer */}
+          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm mb-6">
             <div className="flex items-center gap-6">
               <div>
-                <h3 className="text-xl font-bold text-slate-800 mb-1">Rate this Course</h3>
-                <p className="text-sm text-slate-500">Your feedback helps other learners</p>
+                <h3 className="text-xl font-bold text-slate-800 mb-1">
+                  Rate this Course
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Your feedback helps other learners
+                </p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-center">
@@ -727,7 +731,9 @@ const CourseDetails = () => {
                       </svg>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">{courseData.courseRatings?.length || 0} ratings</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {courseData.courseRatings?.length || 0} ratings
+                  </p>
                 </div>
                 <div className="h-12 w-px bg-slate-200" />
                 <Rating initialRating={0} onRate={handleRate} />
