@@ -1,30 +1,32 @@
 import React, { useContext } from "react";
-import { assets } from "../../assets/assets";
-import { Link } from "react-router-dom";
-import { AppContext } from "../../context/AppContext.jsx";
+import { AppContext } from "../../context/AppContext";
 
 const Navbar = () => {
   const { session, signOut } = useContext(AppContext);
 
   return (
-    <div className="flex items-center justify-between px-4 md:px-8 border-b border-gray-500 py-3">
-      <Link to="/">
-        <img src={assets.logo} alt="Logo" className="w-28 lg:w-32" />
-      </Link>
-      <div className="flex items-center gap-5 text-gray-500 relative">
-        <p>Hi! {session?.user?.name || session?.user?.email || "Developer"}</p>
-        {session?.user ? (
-          <button
-            onClick={signOut}
-            className="bg-gray-900 text-white px-4 py-2 rounded-full"
-          >
-            Sign out
-          </button>
-        ) : null}
+    <div className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-40">
+      <div className="flex items-center gap-4">
+        <h1 className="text-lg font-semibold text-slate-800">Dashboard</h1>
+      </div>
+
+      <div className="flex items-center gap-5">
+        <div className="text-right">
+          <p className="text-sm font-medium text-slate-800">{session?.user?.name || "Educator"}</p>
+          <p className="text-xs text-slate-500">{session?.user?.email || ""}</p>
+        </div>
+        <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">
+          {(session?.user?.name || "E").charAt(0)}
+        </div>
+        <button
+          onClick={signOut}
+          className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          Sign out
+        </button>
       </div>
     </div>
   );
 };
 
 export default Navbar;
-
