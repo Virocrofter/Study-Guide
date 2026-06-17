@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import StudentSidebar from "./StudentSidebar";
+import StudentSidebar from "../../components/student/StudentSidebar";
 import StudentDashboardNavbar from "./StudentDashboardNavbar";
 
 const StudentDashboardLayout = () => {
