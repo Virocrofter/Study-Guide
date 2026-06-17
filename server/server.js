@@ -92,6 +92,19 @@ app.use(async (req, res, next) => {
   next();
 });
 
+app.get("/api/health", (req, res) => {
+  res.json({
+    ok: true,
+    env: {
+      hasAuthSecret: !!process.env.AUTH_SECRET,
+      hasMongoUri: !!process.env.MONGODB_URI,
+      hasGoogleId: !!process.env.AUTH_GOOGLE_ID,
+      hasGoogleSecret: !!process.env.AUTH_GOOGLE_SECRET,
+      nodeEnv: process.env.NODE_ENV,
+    },
+  });
+});
+
 app.use("/api/course", courseRouter);
 app.use("/api/educator", educatorRouter);
 app.use("/api/user", userRouter);
