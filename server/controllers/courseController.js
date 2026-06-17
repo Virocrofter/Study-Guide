@@ -1,11 +1,19 @@
 import { v2 as cloudinary } from 'cloudinary';
 import Course from '../models/Course.js';
+import connectDB from '../configs/mongodb.js';
+
+// DROP THIS INTO your educatorController.js (or wherever addCourse lives)
+// REPLACE the old addCourse function with this one
 
 export const addCourse = async (req, res) => {
     try {
         const { courseData } = req.body;
         const thumbnailFile = req.file;
-        const educatorId = req.auth.userId; 
+        const educatorId = req.auth?.().userId;  // ← FIXED: was req.auth.userId
+
+        if (!educatorId) {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
+        }
 
         if (!thumbnailFile) {
             return res.status(400).json({ success: false, message: 'Thumbnail is missing' });
@@ -52,7 +60,7 @@ export const addCourse = async (req, res) => {
 
 export const getAllCourse = async (req, res) => {
     try {
-        // Using .lean() makes queries faster and prevents some hanging issues
+        await connectDB();
         const courses = await Course.find({}).lean();
         return res.json({ success: true, courses });
     } catch (error) {
@@ -62,16 +70,15 @@ export const getAllCourse = async (req, res) => {
 
 export const getCourseId = async (req, res) => {
     try {
+        await connectDB();
         const { id } = req.params;
 
-        // 1. Validate ID format to prevent MongoDB internal hang/crash
         if (!id || id.length !== 24) {
             return res.status(400).json({ success: false, message: "Invalid Course ID format" });
         }
-        
-        // 2. Populate and execute
+
         const course = await Course.findById(id).populate('educator').lean();
-        
+
         if (!course) {
             return res.status(404).json({ success: false, message: "Course not found" });
         }
@@ -79,7 +86,6 @@ export const getCourseId = async (req, res) => {
         return res.json({ success: true, course });
     } catch (error) {
         console.error("Get Course Error:", error);
-        // 3. ALWAYS send a response in the catch block
         return res.status(500).json({ success: false, message: error.message });
     }
 };

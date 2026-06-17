@@ -14,6 +14,11 @@ import {
   addMaterial,
   deleteMaterial,
 } from "../controllers/educatorController.js";
+import {
+  getEducatorQuizzes,
+  createQuiz,
+  deleteQuiz,
+} from "../controllers/quizController.js";
 
 const educatorRouter = express.Router();
 
@@ -23,16 +28,21 @@ educatorRouter.get("/courses", protectEducator, getEducatorCourses);
 educatorRouter.get("/dashboard", protectEducator, educatorDashboardData);
 educatorRouter.get("/enrolled-students", protectEducator, getEnrolledStudentsData);
 
-// NEW: Messaging routes
+// Messaging
 educatorRouter.get("/messages/:courseId", protectEducator, getCourseMessages);
 educatorRouter.post("/messages/:courseId", protectEducator, sendMessage);
 
-// NEW: Materials routes
+// Materials
 educatorRouter.get("/materials/:courseId", protectEducator, getCourseMaterials);
 educatorRouter.post("/materials/:courseId", protectEducator, addMaterial);
 educatorRouter.delete("/materials/:materialId", protectEducator, deleteMaterial);
 
-// Add this with your other educator routes:
+// Course structure
 educatorRouter.get("/course-structure/:courseId", protectEducator, getCourseStructure);
+
+// Quizzes — NEW
+educatorRouter.get("/quizzes/:courseId", protectEducator, getEducatorQuizzes);
+educatorRouter.post("/quizzes/:courseId", protectEducator, createQuiz);
+educatorRouter.delete("/quizzes/:quizId", protectEducator, deleteQuiz);
 
 export default educatorRouter;

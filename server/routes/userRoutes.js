@@ -11,6 +11,11 @@ import {
   sendMessage,
   getCourseMaterials,
 } from "../controllers/userController.js";
+import {
+  getUserQuizzes,
+  submitQuiz,
+  getUserSubmissions,
+} from "../controllers/quizController.js";
 import { protectUser } from "../middleware/authMiddleware.js";
 
 const userRouter = express.Router();
@@ -23,9 +28,14 @@ userRouter.post("/get-course-progress", protectUser, getUserCourseProgress);
 userRouter.post("/add-rating", protectUser, addUserRating);
 userRouter.post("/become-educator", protectUser, becomeEducator);
 
-// NEW: Messaging & Materials
+// Messaging & Materials
 userRouter.get("/messages/:courseId", protectUser, getCourseMessages);
 userRouter.post("/messages/:courseId", protectUser, sendMessage);
 userRouter.get("/materials/:courseId", protectUser, getCourseMaterials);
+
+// Quizzes — NEW
+userRouter.get("/quizzes/:courseId", protectUser, getUserQuizzes);
+userRouter.post("/quizzes/:quizId/submit", protectUser, submitQuiz);
+userRouter.get("/quiz-submissions", protectUser, getUserSubmissions);
 
 export default userRouter;
