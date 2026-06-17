@@ -7,6 +7,17 @@ const StudentAnalytics = () => {
   const { enrolledCourses, calculateCourseDuration, userData, fetchUserEnrolledCourses, backendUrl } = useContext(AppContext);
   const navigate = useNavigate();
   const [progressData, setProgressData] = useState([]);
+  
+  const [studyStats, setStudyStats] = useState({
+    flashcards: 0,
+    dueCards: 0,
+    avgMastery: 0,
+    guides: 0,
+    tests: 0,
+    testAttempts: 0,
+    avgTestScore: 0,
+    libraryItems: 0,
+  });
 
   useEffect(() => {
     if (userData) fetchUserEnrolledCourses();
@@ -32,6 +43,53 @@ const StudentAnalytics = () => {
     if (enrolledCourses?.length > 0) fetchAllProgress();
   }, [enrolledCourses, backendUrl]);
 
+  useEffect(() => {
+    const fetchStudyStats = async () => {
+      try {
+        const [cardsRes, guidesRes, testsRes, libRes] = await Promise.all([
+          axios.get(`${backendUrl}/api/user/flashcards`, { withCredentials: true }).catch(() => ({ data: { flashcards: [] } })),
+          axios.get(`${backendUrl}/api/user/study-guides`, { withCredentials: true }).catch(() => ({ data: { guides: [] } })),
+          axios.get(`${backendUrl}/api/user/practice-tests`, { withCredentials: true }).catch(() => ({ data: { tests: [] } })),
+          axios.get(`${backendUrl}/api/user/library`, { withCredentials: true }).catch(() => ({ data: { items: [] } })),
+        ]);
+
+        const flashcards = cardsRes.data.flashcards || [];
+        const guides = guidesRes.data.guides || [];
+        const tests = testsRes.data.tests || [];
+        const libraryItems = libRes.data.items || [];
+
+        const dueCards = flashcards.filter((c) => !c.nextReview || new Date(c.nextReview) <= new Date());
+        const avgMastery = flashcards.length > 0
+          ? Math.round(flashcards.reduce((acc, c) => acc + (c.mastery || 0), 0) / flashcards.length)
+          : 0;
+
+        const totalAttempts = tests.reduce((acc, t) => acc + (t.attempts?.length || 0), 0);
+        const avgTestScore = tests.length > 0
+          ? Math.round(
+              tests.reduce((acc, t) => {
+                const last = t.attempts?.[t.attempts.length - 1];
+                return acc + (last?.percentage || 0);
+              }, 0) / tests.length
+            )
+          : 0;
+
+        setStudyStats({
+          flashcards: flashcards.length,
+          dueCards: dueCards.length,
+          avgMastery,
+          guides: guides.length,
+          tests: tests.length,
+          testAttempts: totalAttempts,
+          avgTestScore,
+          libraryItems: libraryItems.length,
+        });
+      } catch (e) {
+        console.error("Study stats error:", e);
+      }
+    };
+    if (userData) fetchStudyStats();
+  }, [userData, backendUrl]);
+
   const getProgressPct = (course) => {
     const totalLectures = course.courseContent?.reduce(
       (acc, ch) => acc + (ch.chapterContent?.length || 0), 0
@@ -48,7 +106,7 @@ const StudentAnalytics = () => {
     return acc + mins;
   }, 0) || 0;
 
-  const stats = [
+  const courseStats = [
     {
       label: "Courses Enrolled",
       value: totalCourses,
@@ -95,27 +153,109 @@ const StudentAnalytics = () => {
     },
   ];
 
+  const studyBuddyStats = [
+    {
+      label: "Flashcards",
+      value: studyStats.flashcards,
+      sub: `${studyStats.dueCards} due`,
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+        </svg>
+      ),
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+      route: "/student/flash-cards",
+    },
+    {
+      label: "Mastery",
+      value: `${studyStats.avgMastery}%`,
+      sub: "avg proficiency",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      bg: "bg-teal-50",
+      text: "text-teal-700",
+      route: "/student/flash-cards",
+    },
+    {
+      label: "Study Guides",
+      value: studyStats.guides,
+      sub: "created",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      ),
+      bg: "bg-cyan-50",
+      text: "text-cyan-700",
+      route: "/student/study-guides",
+    },
+    {
+      label: "Practice Tests",
+      value: studyStats.tests,
+      sub: `${studyStats.testAttempts} attempts`,
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+      ),
+      bg: "bg-lime-50",
+      text: "text-lime-700",
+      route: "/student/practice-tests",
+    },
+  ];
+
   return (
     <div className="h-full pb-20 space-y-8 max-w-6xl">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-slate-500 mt-1">Track your learning progress and achievements.</p>
+        <p className="text-slate-500 mt-1">Track your learning progress and study habits.</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid md:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <div key={i} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center ${stat.text} mb-4`}>
-              {stat.icon}
+      <div>
+        <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-blue-500" />
+          Course Progress
+        </h2>
+        <div className="grid md:grid-cols-4 gap-6">
+          {courseStats.map((stat, i) => (
+            <div key={i} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center ${stat.text} mb-4`}>
+                {stat.icon}
+              </div>
+              <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+              <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
             </div>
-            <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
-            <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* Continue Learning */}
+      <div>
+        <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          Study Buddy
+        </h2>
+        <div className="grid md:grid-cols-4 gap-6">
+          {studyBuddyStats.map((stat, i) => (
+            <div
+              key={i}
+              onClick={() => navigate(stat.route)}
+              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+            >
+              <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center ${stat.text} mb-4 group-hover:scale-110 transition-transform`}>
+                {stat.icon}
+              </div>
+              <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+              <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
+              <p className="text-xs text-emerald-600 mt-1 font-medium">{stat.sub}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-slate-800">Continue Learning</h2>
@@ -130,23 +270,13 @@ const StudentAnalytics = () => {
               const pct = getProgressPct(course);
               const totalLectures = course.courseContent?.reduce((acc, ch) => acc + (ch.chapterContent?.length || 0), 0) || 0;
               const completed = course.lectureCompleted?.length || 0;
-
-              // Determine button text and destination
               let buttonText = "Continue";
               let destination = `/player/${course._id}`;
-
-              if (pct === 0) {
-                buttonText = "Start Course";
-                destination = `/course/${course._id}`; // ← Goes to Course Details
-              } else if (pct === 100) {
-                buttonText = "Review";
-              }
+              if (pct === 0) { buttonText = "Start Course"; destination = `/course/${course._id}`; }
+              else if (pct === 100) { buttonText = "Review"; }
 
               return (
-                <div
-                  key={course._id}
-                  className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group"
-                >
+                <div key={course._id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group">
                   <div className="relative h-40 overflow-hidden">
                     <img src={course.courseThumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -181,7 +311,6 @@ const StudentAnalytics = () => {
         )}
       </div>
 
-      {/* Recent Activity */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100">
           <h2 className="text-lg font-bold text-slate-800">Recent Activity</h2>

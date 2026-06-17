@@ -107,7 +107,6 @@ const EducatorQuizzes = () => {
         </button>
       </div>
 
-      {/* Course Selector */}
       <div className="flex gap-2 overflow-x-auto pb-2">
         {courses.map((course) => (
           <button
@@ -124,7 +123,6 @@ const EducatorQuizzes = () => {
         ))}
       </div>
 
-      {/* Add Quiz Form */}
       {showAdd && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
           <h3 className="font-bold text-slate-800">New Quiz</h3>
@@ -196,7 +194,6 @@ const EducatorQuizzes = () => {
         </div>
       )}
 
-      {/* Quiz List */}
       <div className="space-y-3">
         {quizzes.map((quiz) => (
           <div key={quiz._id} className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center justify-between">

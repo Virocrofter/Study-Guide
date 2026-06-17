@@ -28,19 +28,15 @@ educatorRouter.get("/courses", protectEducator, getEducatorCourses);
 educatorRouter.get("/dashboard", protectEducator, educatorDashboardData);
 educatorRouter.get("/enrolled-students", protectEducator, getEnrolledStudentsData);
 
-// Messaging
 educatorRouter.get("/messages/:courseId", protectEducator, getCourseMessages);
 educatorRouter.post("/messages/:courseId", protectEducator, sendMessage);
 
-// Materials
 educatorRouter.get("/materials/:courseId", protectEducator, getCourseMaterials);
 educatorRouter.post("/materials/:courseId", protectEducator, addMaterial);
 educatorRouter.delete("/materials/:materialId", protectEducator, deleteMaterial);
 
-// Course structure
 educatorRouter.get("/course-structure/:courseId", protectEducator, getCourseStructure);
 
-// Quizzes — NEW
 educatorRouter.get("/quizzes/:courseId", protectEducator, getEducatorQuizzes);
 educatorRouter.post("/quizzes/:courseId", protectEducator, createQuiz);
 educatorRouter.delete("/quizzes/:quizId", protectEducator, deleteQuiz);

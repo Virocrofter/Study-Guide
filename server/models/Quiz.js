@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const questionSchema = new mongoose.Schema({
   questionText: { type: String, required: true },
   options: [{ type: String, required: true }],
-  correctAnswer: { type: Number, required: true }, // 0-based index
+  correctAnswer: { type: Number, required: true },
 }, { _id: false });
 
 const quizSchema = new mongoose.Schema({

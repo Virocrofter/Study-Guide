@@ -4,7 +4,6 @@ import { QuizSubmission } from "../models/QuizSubmission.js";
 import Course from "../models/Course.js";
 import User from "../models/User.js";
 
-// GET /api/educator/quizzes/:courseId
 export const getEducatorQuizzes = async (req, res) => {
   try {
     await connectDB();
@@ -23,7 +22,6 @@ export const getEducatorQuizzes = async (req, res) => {
   }
 };
 
-// POST /api/educator/quizzes/:courseId
 export const createQuiz = async (req, res) => {
   try {
     await connectDB();
@@ -50,7 +48,6 @@ export const createQuiz = async (req, res) => {
   }
 };
 
-// DELETE /api/educator/quizzes/:quizId
 export const deleteQuiz = async (req, res) => {
   try {
     await connectDB();
@@ -70,7 +67,6 @@ export const deleteQuiz = async (req, res) => {
   }
 };
 
-// GET /api/user/quizzes/:courseId
 export const getUserQuizzes = async (req, res) => {
   try {
     await connectDB();
@@ -102,7 +98,6 @@ export const getUserQuizzes = async (req, res) => {
   }
 };
 
-// POST /api/user/quizzes/:quizId/submit
 export const submitQuiz = async (req, res) => {
   try {
     await connectDB();
@@ -159,7 +154,6 @@ export const submitQuiz = async (req, res) => {
   }
 };
 
-// GET /api/user/quiz-submissions
 export const getUserSubmissions = async (req, res) => {
   try {
     await connectDB();

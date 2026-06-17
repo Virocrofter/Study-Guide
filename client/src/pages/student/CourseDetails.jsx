@@ -25,7 +25,6 @@ const CourseDetails = () => {
   const [materials, setMaterials] = useState([]);
   const [lectureMaterials, setLectureMaterials] = useState({});
 
-  // Quiz state — NEW
   const [quizzes, setQuizzes] = useState([]);
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState({});
@@ -111,7 +110,6 @@ const CourseDetails = () => {
     }
   };
 
-  // Fetch quizzes — NEW
   const fetchQuizzes = async () => {
     if (!isEnrolled || !id) return;
     try {
@@ -225,7 +223,7 @@ const CourseDetails = () => {
     if (isEnrolled) {
       fetchMessages();
       fetchMaterials();
-      fetchQuizzes(); // NEW
+      fetchQuizzes();
       const interval = setInterval(fetchMessages, 5000);
       return () => clearInterval(interval);
     }
@@ -248,7 +246,6 @@ const CourseDetails = () => {
 
   return (
     <div className="min-h-screen bg-[#f0eef4] flex flex-col">
-      {/* Top Bar */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <button
@@ -283,7 +280,6 @@ const CourseDetails = () => {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-10 md:px-14 lg:px-36 mx-auto flex-1 w-full">
-        {/* LEFT SIDEBAR - Chapters */}
         <div className="w-full lg:w-80 shrink-0 space-y-3">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-bold text-slate-800">Chapters</h2>
@@ -353,7 +349,6 @@ const CourseDetails = () => {
             );
           })}
 
-          {/* Sidebar Tool Icons */}
           <div className="flex items-center gap-3 mt-6">
             <button
               onClick={toggleMaterials}
@@ -385,9 +380,7 @@ const CourseDetails = () => {
           </div>
         </div>
 
-        {/* RIGHT AREA - Video + Bottom Panels */}
         <div className="flex-1 flex flex-col gap-6">
-          {/* Video Player */}
           <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200">
             <div className="relative aspect-video bg-black">
               {playerData?.videoId ? (
@@ -414,15 +407,11 @@ const CourseDetails = () => {
             </div>
           </div>
 
-          {/* Bottom Panels Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* LEFT SLOT: Quiz OR Chat (2/3 width) */}
             {showQuiz && (
               <div className="md:col-span-2 bg-[#c8c4d4] rounded-3xl p-6 h-[400px] flex flex-col shadow-sm">
                 <div className="flex items-center justify-between mb-4 shrink-0">
-                  <h3 className="text-xl font-bold text-slate-800">
-                    {activeQuiz ? activeQuiz.title : "Quizzes"}
-                  </h3>
+                  <h3 className="text-xl font-bold text-slate-800">{activeQuiz ? activeQuiz.title : "Quizzes"}</h3>
                   <button
                     onClick={() => { setShowQuiz(false); setActiveQuiz(null); setQuizResult(null); }}
                     className="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-slate-100 transition-colors"
@@ -555,7 +544,7 @@ const CourseDetails = () => {
             )}
 
             {showChat && (
-              <div className="md:col-span-2 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm h-100 flex flex-col">
+              <div className="md:col-span-2 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm h-[400px] flex flex-col">
                 <div className="flex items-center justify-between mb-4 shrink-0">
                   <h3 className="text-xl font-bold text-slate-800">Course Chat</h3>
                   <button onClick={() => setShowChat(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
@@ -597,9 +586,8 @@ const CourseDetails = () => {
               </div>
             )}
 
-            {/* RIGHT SLOT: Materials (1/3 width) */}
             {showMaterials && (
-              <div className={`bg-[#c8c4d4] rounded-3xl p-6 h-100 flex flex-col shadow-sm ${!leftPanelOpen ? "md:col-start-3" : ""}`}>
+              <div className={`bg-[#c8c4d4] rounded-3xl p-6 h-[400px] flex flex-col shadow-sm ${!leftPanelOpen ? "md:col-start-3" : ""}`}>
                 <div className="flex items-center justify-between mb-4 shrink-0">
                   <div>
                     <h3 className="text-xl font-bold text-slate-800">{courseData.courseContent?.[activeChapter]?.chapterTitle || "Materials"}</h3>
@@ -639,7 +627,6 @@ const CourseDetails = () => {
             )}
           </div>
 
-          {/* Rating Section */}
           <div className="bg-white rounded-3xl p-8 pb-8 border border-slate-200 shadow-sm mb-6">
             <div className="flex items-center gap-6">
               <div>

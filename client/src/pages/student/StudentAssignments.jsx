@@ -13,14 +13,12 @@ const StudentAssignments = () => {
 
   const fetchAssignments = async () => {
     try {
-      // Fetch completed submissions
       const { data: subData } = await axios.get(
         `${backendUrl}/api/user/quiz-submissions`,
         { withCredentials: true }
       );
       if (subData.success) setSubmissions(subData.submissions);
 
-      // Fetch pending quizzes from all enrolled courses
       const pending = [];
       for (const course of enrolledCourses || []) {
         try {
@@ -68,7 +66,6 @@ const StudentAssignments = () => {
         <p className="text-slate-500 mt-1">Track your quizzes and assessments.</p>
       </div>
 
-      {/* Pending Quizzes */}
       <div className="mb-8">
         <h2 className="text-lg font-bold text-slate-800 mb-4">Pending Quizzes</h2>
         {pendingQuizzes.length === 0 ? (
@@ -104,7 +101,6 @@ const StudentAssignments = () => {
         )}
       </div>
 
-      {/* Completed Submissions */}
       <div>
         <h2 className="text-lg font-bold text-slate-800 mb-4">Completed</h2>
         {submissions.length === 0 ? (
