@@ -10,21 +10,24 @@ import Rating from "../../components/student/Rating";
 
 const CourseDetails = () => {
   const { id } = useParams();
-
-  // ── State ──────────────────────────────────────────────
   const [courseData, setCourseData] = useState(null);
   const [activeChapter, setActiveChapter] = useState(0);
   const [activeLecture, setActiveLecture] = useState(0);
   const [playerData, setPlayerData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Panel visibility states — only 2 open at once
+  // Quiz & Chat share the left slot (mutually exclusive)
+  // Materials always sits on the far right
   const [showQuiz, setShowQuiz] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showMaterials, setShowMaterials] = useState(true); // Default open
+
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [materials, setMaterials] = useState([]);
   const [lectureMaterials, setLectureMaterials] = useState({});
 
-  // ── Context ────────────────────────────────────────────
   const {
     calculateRating,
     calculateNoOfLectures,
@@ -41,16 +44,14 @@ const CourseDetails = () => {
     (cId) => cId.toString() === id,
   );
 
-  // ── Helpers ────────────────────────────────────────────
   const getYouTubeId = (url) => {
     if (!url) return null;
     const regExp =
-      /^.*(youtu.be\/|v\/|u\/w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return match && match[2].length === 11 ? match[2] : null;
   };
 
-  // ── Data Fetching ──────────────────────────────────────
   const fetchCourseData = async () => {
     try {
       setLoading(true);
@@ -60,12 +61,7 @@ const CourseDetails = () => {
         if (data.course?.courseContent?.[0]?.chapterContent?.[0]) {
           const firstLecture = data.course.courseContent[0].chapterContent[0];
           const videoId = getYouTubeId(firstLecture.lectureUrl);
-          setPlayerData({
-            ...firstLecture,
-            chapter: 1,
-            lecture: 1,
-            videoId,
-          });
+          setPlayerData({ ...firstLecture, chapter: 1, lecture: 1, videoId });
         }
       } else {
         toast.error(data.message || "Course not found");
@@ -98,7 +94,6 @@ const CourseDetails = () => {
         { withCredentials: true },
       );
       if (data.success) {
-        // Group by lectureId for easy lookup
         const grouped = {};
         data.materials.forEach((m) => {
           if (!grouped[m.lectureId]) grouped[m.lectureId] = [];
@@ -112,7 +107,6 @@ const CourseDetails = () => {
     }
   };
 
-  // ── Handlers ───────────────────────────────────────────
   const enrollCourse = async () => {
     try {
       if (!session?.user) return toast.warn("Please sign in first");
@@ -181,7 +175,29 @@ const CourseDetails = () => {
     }
   };
 
-  // ── Effects ────────────────────────────────────────────
+  // Toggle logic — Quiz & Chat share left slot, Materials is independent on right
+  const toggleQuiz = () => {
+    if (!showQuiz) {
+      setShowQuiz(true);
+      setShowChat(false); // Mutual exclusive
+    } else {
+      setShowQuiz(false);
+    }
+  };
+
+  const toggleChat = () => {
+    if (!showChat) {
+      setShowChat(true);
+      setShowQuiz(false); // Mutual exclusive
+    } else {
+      setShowChat(false);
+    }
+  };
+
+  const toggleMaterials = () => {
+    setShowMaterials(!showMaterials);
+  };
+
   useEffect(() => {
     fetchCourseData();
   }, [id]);
@@ -195,7 +211,6 @@ const CourseDetails = () => {
     }
   }, [isEnrolled, id]);
 
-  // ── Early Returns ──────────────────────────────────────
   if (loading) return <Loading />;
   if (!courseData)
     return (
@@ -208,10 +223,13 @@ const CourseDetails = () => {
   ).toFixed(2);
   const rating = calculateRating(courseData);
 
-  // ── Render ─────────────────────────────────────────────
+  // Determine grid layout
+  const leftPanelOpen = showQuiz || showChat;
+  const rightPanelOpen = showMaterials;
+
   return (
     <div className="min-h-screen bg-[#f0eef4] flex flex-col">
-      {/* ===== Top Bar ===== */}
+      {/* Top Bar */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <button
@@ -278,9 +296,8 @@ const CourseDetails = () => {
         </div>
       </div>
 
-      {/* ===== Main Layout ===== */}
-      <div className="flex flex-col lg:flex-row gap-6 p-6 max-w-425 mx-auto flex-1">
-        {/* ── Left Sidebar: Chapters ───────────────────────── */}
+      <div className="flex flex-col lg:flex-row gap-6 p-6 max-w-[1400px] mx-auto flex-1">
+        {/* LEFT SIDEBAR - Chapters */}
         <div className="w-full lg:w-80 shrink-0 space-y-3">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-bold text-slate-800">Chapters</h2>
@@ -416,63 +433,50 @@ const CourseDetails = () => {
             );
           })}
 
-          {/* Sidebar Tools */}
+          {/* Sidebar Tool Icons */}
           <div className="flex items-center gap-3 mt-6">
+            {/* Materials Toggle */}
             <button
-              onClick={() => setShowQuiz(!showQuiz)}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${showQuiz ? "bg-blue-600 text-white" : "bg-white text-slate-600 hover:bg-slate-100"}`}
+              onClick={toggleMaterials}
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                showMaterials ? "bg-blue-600 text-white shadow-lg" : "bg-white text-slate-600 hover:bg-slate-100"
+              }`}
+              title="Materials"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </button>
+
+            {/* Chat Toggle */}
             <button
-              onClick={() => setShowChat(!showChat)}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${showChat ? "bg-blue-600 text-white" : "bg-white text-slate-600 hover:bg-slate-100"}`}
+              onClick={toggleChat}
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                showChat ? "bg-blue-600 text-white shadow-lg" : "bg-white text-slate-600 hover:bg-slate-100"
+              }`}
+              title="Course Chat"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </button>
-            <button className="w-12 h-12 rounded-full bg-white text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
+
+            {/* Quiz Toggle */}
+            <button
+              onClick={toggleQuiz}
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                showQuiz ? "bg-blue-600 text-white shadow-lg" : "bg-white text-slate-600 hover:bg-slate-100"
+              }`}
+              title="Quiz"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
             </button>
           </div>
         </div>
 
-        {/* ── Right Area: Video + Bottom Panels ──────────── */}
+        {/* RIGHT AREA - Video + Bottom Panels */}
         <div className="flex-1 flex flex-col gap-6">
           {/* Video Player */}
           <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200">
@@ -506,18 +510,8 @@ const CourseDetails = () => {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm text-slate-500 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   {calculateCourseDuration(courseData)}
                 </span>
@@ -525,293 +519,199 @@ const CourseDetails = () => {
             </div>
           </div>
 
-          {/* Bottom Panels Grid */}
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Quiz Panel */}
-            <div className="bg-[#c8c4d4] rounded-3xl p-6 relative">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-slate-800">Quiz</h3>
-                <button
-                  onClick={() => setShowQuiz(false)}
-                  className="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-slate-100 transition-colors"
-                >
-                  <svg
-                    className="w-4 h-4 text-slate-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div className="space-y-4">
-                <div className="flex gap-3">
-                  <span className="text-sm font-bold text-slate-500 mt-1">
-                    01
-                  </span>
-                  <p className="text-sm text-slate-700 leading-relaxed">
-                    What is the main topic of this lecture? Select the correct
-                    definition from the options below.
-                  </p>
-                </div>
-                {["A", "B", "C", "D"].map((opt) => (
+          {/* Bottom Panels Grid — Dynamic Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* LEFT SLOT: Quiz OR Chat (2/3 width) */}
+            {showQuiz && (
+              <div className="md:col-span-2 bg-[#c8c4d4] rounded-3xl p-6 h-[400px] flex flex-col shadow-sm">
+                <div className="flex items-center justify-between mb-4 shrink-0">
+                  <h3 className="text-xl font-bold text-slate-800">Quiz</h3>
                   <button
-                    key={opt}
-                    className="w-full text-left p-3 rounded-xl bg-white/60 hover:bg-white text-sm text-slate-700 transition-colors flex items-start gap-3"
+                    onClick={() => setShowQuiz(false)}
+                    className="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-slate-100 transition-colors"
                   >
-                    <span className="font-bold text-slate-500 shrink-0">
-                      {opt}
-                    </span>
-                    <span>
-                      It is the study of the core concepts covered in this
-                      chapter.
-                    </span>
+                    <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Course Chat Panel */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col h-100">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-slate-800">
-                  Course Chat
-                </h3>
-                <button
-                  onClick={() => setShowChat(false)}
-                  className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
-                >
-                  <svg
-                    className="w-4 h-4 text-slate-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2">
-                {chatMessages.length === 0 && (
-                  <p className="text-sm text-slate-400 text-center py-8">
-                    No messages yet. Start the conversation!
-                  </p>
-                )}
-                {chatMessages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`flex gap-3 ${msg.userId === userData?._id ? "flex-row-reverse" : ""}`}
-                  >
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${msg.userId === userData?._id ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}
-                    >
-                      {msg.userName?.charAt(0) || "?"}
-                    </div>
-                    <div
-                      className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.userId === userData?._id ? "bg-blue-600 text-white rounded-br-none" : "bg-slate-100 text-slate-700 rounded-bl-none"}`}
-                    >
-                      <p className="font-semibold text-xs mb-1 opacity-70">
-                        {msg.userName || "Unknown"}
-                      </p>
-                      <p>{msg.text}</p>
-                      <p className="text-xs mt-1 opacity-50">
-                        {new Date(msg.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendChat()}
-                  placeholder={isEnrolled ? "Type Message" : "Enroll to chat"}
-                  disabled={!isEnrolled}
-                  className="flex-1 bg-slate-100 rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                />
-                <button
-                  onClick={sendChat}
-                  disabled={!isEnrolled}
-                  className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800 transition-colors disabled:opacity-50"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex gap-2 mt-3">
-                <button className="flex-1 py-2 rounded-full border border-slate-300 text-sm text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  files
-                </button>
-                <button className="flex-1 py-2 rounded-full border border-slate-300 text-sm text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  Image
-                </button>
-                <button className="flex-1 py-2 rounded-full border border-slate-300 text-sm text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                    />
-                  </svg>
-                  Audio
-                </button>
-              </div>
-            </div>
-
-            {/* Materials Panel */}
-            <div className="bg-[#c8c4d4] rounded-3xl p-6">
-              <h3 className="text-xl font-bold text-slate-800 mb-1">
-                {courseData.courseContent?.[activeChapter]?.chapterTitle || "Materials"}
-              </h3>
-              <p className="text-sm text-slate-500 mb-4">
-                {playerData?.lectureTitle || `Lecture ${activeLecture + 1}`}
-              </p>
-
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {(lectureMaterials[playerData?.lectureId] || []).length > 0 ? (
-                  lectureMaterials[playerData?.lectureId].map((material, idx) => (
-                    <a
-                      key={idx}
-                      href={material.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-3 p-3 rounded-xl bg-white/80 hover:bg-white text-sm transition-colors shadow-sm"
-                    >
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                          material.type === "video"
-                            ? "bg-red-500 text-white"
-                            : material.type === "audio"
-                              ? "bg-green-500 text-white"
-                              : "bg-blue-600 text-white"
-                        }`}
-                      >
-                        {material.type === "video" ? (
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
-                        ) : material.type === "audio" ? (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                            />
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-800 truncate">
-                          {material.title}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {material.fileName || material.duration || "Download"}
-                        </p>
-                      </div>
-                      <svg
-                        className="w-4 h-4 text-slate-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                        />
-                      </svg>
-                    </a>
-                  ))
-                ) : (
-                  <div className="text-center py-6">
-                    <p className="text-sm text-slate-500">
-                      No materials for this lecture.
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                  <div className="flex gap-3">
+                    <span className="text-sm font-bold text-slate-500 mt-1">01</span>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      What is the main topic of this lecture? Select the correct definition from the options below.
                     </p>
                   </div>
-                )}
+                  {["A", "B", "C", "D"].map((opt) => (
+                    <button
+                      key={opt}
+                      className="w-full text-left p-3 rounded-xl bg-white/60 hover:bg-white text-sm text-slate-700 transition-colors flex items-start gap-3"
+                    >
+                      <span className="font-bold text-slate-500 shrink-0">{opt}</span>
+                      <span>It is the study of the core concepts covered in this chapter.</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {showChat && (
+              <div className="md:col-span-2 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm h-[400px] flex flex-col">
+                <div className="flex items-center justify-between mb-4 shrink-0">
+                  <h3 className="text-xl font-bold text-slate-800">Course Chat</h3>
+                  <button
+                    onClick={() => setShowChat(false)}
+                    className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+                  >
+                    <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2">
+                  {chatMessages.length === 0 && (
+                    <p className="text-xs text-slate-400 text-center py-8">No messages yet. Start the conversation!</p>
+                  )}
+                  {chatMessages.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`flex gap-2 ${msg.userId === userData?._id ? "flex-row-reverse" : ""}`}
+                    >
+                      <div
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                          msg.userId === userData?._id ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {msg.userName?.charAt(0) || "?"}
+                      </div>
+                      <div
+                        className={`max-w-[75%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${
+                          msg.userId === userData?._id
+                            ? "bg-blue-600 text-white rounded-br-none"
+                            : "bg-slate-100 text-slate-700 rounded-bl-none"
+                        }`}
+                      >
+                        <p className="font-semibold text-[10px] mb-0.5 opacity-80">{msg.userName || "Unknown"}</p>
+                        <p>{msg.text}</p>
+                        <p className={`text-[10px] mt-1 opacity-50`}>
+                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="shrink-0 flex gap-2">
+                  <input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && sendChat()}
+                    placeholder={isEnrolled ? "Type Message" : "Enroll to chat"}
+                    disabled={!isEnrolled}
+                    className="flex-1 bg-slate-100 rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  />
+                  <button
+                    onClick={sendChat}
+                    disabled={!isEnrolled}
+                    className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800 transition-colors disabled:opacity-50"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="shrink-0 flex gap-2 mt-3">
+                  <button className="flex-1 py-2 rounded-full border border-slate-300 text-sm text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    files
+                  </button>
+                  <button className="flex-1 py-2 rounded-full border border-slate-300 text-sm text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Image
+                  </button>
+                  <button className="flex-1 py-2 rounded-full border border-slate-300 text-sm text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    </svg>
+                    Audio
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* RIGHT SLOT: Materials (1/3 width, always far right) */}
+            {showMaterials && (
+              <div className={`bg-[#c8c4d4] rounded-3xl p-6 h-[400px] flex flex-col shadow-sm ${!leftPanelOpen ? "md:col-start-3" : ""}`}>
+                <div className="flex items-center justify-between mb-4 shrink-0">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-800">
+                      {courseData.courseContent?.[activeChapter]?.chapterTitle || "Materials"}
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      {playerData?.lectureTitle || `Lecture ${activeLecture + 1}`}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowMaterials(false)}
+                    className="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-slate-100 transition-colors"
+                  >
+                    <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                  {(lectureMaterials[playerData?.lectureId] || []).length > 0 ? (
+                    lectureMaterials[playerData?.lectureId].map((material, idx) => (
+                      <a
+                        key={idx}
+                        href={material.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-xl bg-white/80 hover:bg-white text-sm transition-colors shadow-sm"
+                      >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                          material.type === "video" ? "bg-red-500 text-white" :
+                          material.type === "audio" ? "bg-green-500 text-white" :
+                          "bg-blue-600 text-white"
+                        }`}>
+                          {material.type === "video" ? (
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                          ) : material.type === "audio" ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-slate-800 truncate">{material.title}</p>
+                          <p className="text-xs text-slate-500">{material.fileName || material.duration || "Download"}</p>
+                        </div>
+                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    ))
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-sm text-slate-500">No materials for this lecture.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Rating Section */}
           <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
             <div className="flex items-center gap-6">
               <div>
-                <h3 className="text-xl font-bold text-slate-800 mb-1">
-                  Rate this Course
-                </h3>
-                <p className="text-sm text-slate-500">
-                  Your feedback helps other learners
-                </p>
+                <h3 className="text-xl font-bold text-slate-800 mb-1">Rate this Course</h3>
+                <p className="text-sm text-slate-500">Your feedback helps other learners</p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-center">
@@ -827,9 +727,7 @@ const CourseDetails = () => {
                       </svg>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {courseData.courseRatings?.length || 0} ratings
-                  </p>
+                  <p className="text-xs text-slate-500 mt-1">{courseData.courseRatings?.length || 0} ratings</p>
                 </div>
                 <div className="h-12 w-px bg-slate-200" />
                 <Rating initialRating={0} onRate={handleRate} />
