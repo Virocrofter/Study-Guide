@@ -7,7 +7,7 @@ import StudentDashboardLayout from "./pages/student/StudentDashboardLayout";
 
 // ─── Public Pages ───
 import Home from "./pages/student/Home";
-import CourseList from "./pages/student/CourseList";
+import CourseList from "./pages/student/CoursesList";
 import CourseDetails from "./pages/student/CourseDetails";
 import Loading from "./components/student/Loading";
 
