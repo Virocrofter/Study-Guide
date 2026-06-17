@@ -3,42 +3,8 @@ import { FlashCard } from "../models/FlashCard.js";
 import { StudyFolder } from "../models/StudyFolder.js";
 import { StudyGuide } from "../models/StudyGuide.js";
 import { PracticeTest } from "../models/PracticeTest.js";
-import { LibraryItem } from "../models/LibraryItem.js";
 
-export const getLibrary = async (req, res) => {
-  try {
-    await connectDB();
-    const userId = req.auth?.().userId;
-    const items = await LibraryItem.find({ userId }).sort({ createdAt: -1 });
-    return res.json({ success: true, items });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-export const addLibraryItem = async (req, res) => {
-  try {
-    await connectDB();
-    const userId = req.auth?.().userId;
-    const { type, title, description, sourceId, sourceUrl, metadata } = req.body;
-    const item = await LibraryItem.create({ userId, type, title, description, sourceId, sourceUrl, metadata });
-    return res.json({ success: true, item });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-export const removeLibraryItem = async (req, res) => {
-  try {
-    await connectDB();
-    const userId = req.auth?.().userId;
-    const { itemId } = req.params;
-    await LibraryItem.findOneAndDelete({ _id: itemId, userId });
-    return res.json({ success: true, message: "Removed" });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
-  }
-};
+// ─── FLASHCARDS ───
 
 export const getFlashCards = async (req, res) => {
   try {
@@ -128,6 +94,8 @@ export const reviewFlashCard = async (req, res) => {
   }
 };
 
+// ─── FOLDERS ───
+
 export const getFolders = async (req, res) => {
   try {
     await connectDB();
@@ -163,6 +131,8 @@ export const deleteFolder = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ─── STUDY GUIDES ───
 
 export const getStudyGuides = async (req, res) => {
   try {
@@ -218,6 +188,8 @@ export const deleteStudyGuide = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ─── PRACTICE TESTS ───
 
 export const getPracticeTests = async (req, res) => {
   try {

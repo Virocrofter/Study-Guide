@@ -17,9 +17,6 @@ import {
   getUserSubmissions,
 } from "../controllers/quizController.js";
 import {
-  getLibrary,
-  addLibraryItem,
-  removeLibraryItem,
   getFlashCards,
   createFlashCard,
   updateFlashCard,
@@ -56,10 +53,6 @@ userRouter.get("/materials/:courseId", protectUser, getCourseMaterials);
 userRouter.get("/quizzes/:courseId", protectUser, getUserQuizzes);
 userRouter.post("/quizzes/:quizId/submit", protectUser, submitQuiz);
 userRouter.get("/quiz-submissions", protectUser, getUserSubmissions);
-
-userRouter.get("/library", protectUser, getLibrary);
-userRouter.post("/library", protectUser, addLibraryItem);
-userRouter.delete("/library/:itemId", protectUser, removeLibraryItem);
 
 userRouter.get("/flashcards", protectUser, getFlashCards);
 userRouter.post("/flashcards", protectUser, createFlashCard);
