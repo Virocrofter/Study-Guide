@@ -3,7 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 
 // ─── Layouts ───
 import Educator from "./pages/educator/Educator";
-import StudentDashboardLayout from "./pages/student/StudentDashboardLayout";
+import StudentDashboardLayout from "./pages/student-dashboard/StudentDashboardLayout";
 
 // ─── Public Pages ───
 import Home from "./pages/student/Home";
