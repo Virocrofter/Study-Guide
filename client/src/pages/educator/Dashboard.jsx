@@ -84,7 +84,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="h-full pb-20 space-y-8 ml-64 pt-8 px-6">
+    <div className="h-full pb-20 space-y-8 ml-24 pt-8 px-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Overview</h1>
         <p className="text-slate-500 mt-1">Track your teaching performance and student engagement.</p>
@@ -117,7 +117,7 @@ const Dashboard = () => {
             {dashboardData.enrolledStudentsData.length > 0 ? (
               dashboardData.enrolledStudentsData.slice(0, 5).map((item, index) => (
                 <div key={index} className="p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">
                     {(item.student?.name || "S").charAt(0)}
                   </div>
                   <div className="flex-1">
