@@ -12,7 +12,6 @@ const StudentAnalytics = () => {
     if (userData) fetchUserEnrolledCourses();
   }, [userData]);
 
-  // Fetch progress for each course
   useEffect(() => {
     const fetchAllProgress = async () => {
       const progress = [];
@@ -132,11 +131,21 @@ const StudentAnalytics = () => {
               const totalLectures = course.courseContent?.reduce((acc, ch) => acc + (ch.chapterContent?.length || 0), 0) || 0;
               const completed = course.lectureCompleted?.length || 0;
 
+              // Determine button text and destination
+              let buttonText = "Continue";
+              let destination = `/player/${course._id}`;
+
+              if (pct === 0) {
+                buttonText = "Start Course";
+                destination = `/course/${course._id}`; // ← Goes to Course Details
+              } else if (pct === 100) {
+                buttonText = "Review";
+              }
+
               return (
                 <div
                   key={course._id}
-                  onClick={() => navigate(`/player/${course._id}`)}
-                  className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
+                  className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group"
                 >
                   <div className="relative h-40 overflow-hidden">
                     <img src={course.courseThumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -151,8 +160,11 @@ const StudentAnalytics = () => {
                   <div className="p-5">
                     <h3 className="font-bold text-slate-800 mb-1 line-clamp-1">{course.courseTitle}</h3>
                     <p className="text-sm text-slate-500">{completed}/{totalLectures} lectures • {calculateCourseDuration(course)}</p>
-                    <button className="mt-4 w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors">
-                      {pct === 0 ? "Start Course" : pct === 100 ? "Review" : "Continue"}
+                    <button
+                      onClick={() => navigate(destination)}
+                      className="mt-4 w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      {buttonText}
                     </button>
                   </div>
                 </div>
