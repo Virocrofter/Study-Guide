@@ -296,7 +296,7 @@ const CourseDetails = () => {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 p-6 max-w-[1400px] mx-auto flex-1">
+      <div className="flex flex-col lg:flex-row gap-6 p-6 max-w-425 mx-auto flex-1">
         {/* LEFT SIDEBAR - Chapters */}
         <div className="w-full lg:w-80 shrink-0 space-y-3">
           <div className="flex items-center justify-between mb-2">
