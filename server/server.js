@@ -15,6 +15,16 @@ import educatorRouter from "./routes/educatorRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import { stripeWebhooks } from "./controllers/webhooks.js";
 
+// ═══════════════════════════════════════════
+// NEW v2.0 ROUTES
+// ═══════════════════════════════════════════
+import notificationRouter from "./routes/notificationRoutes.js";
+import studyGroupRouter from "./routes/studyGroupRoutes.js";
+import achievementRouter from "./routes/achievementRoutes.js";
+import studySessionRouter from "./routes/studySessionRoutes.js";
+import searchRouter from "./routes/searchRoutes.js";
+import aiAssistantRouter from "./routes/aiAssistantRoutes.js";
+
 const app = express();
 
 connectDB();
@@ -67,7 +77,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
+app.options(/.* /, cors(corsOptions));
 
 app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 
@@ -95,6 +105,8 @@ app.use(async (req, res, next) => {
 app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
+    version: "2.0.0",
+    features: ["notifications", "study-groups", "achievements", "calendar", "search", "ai-assistant"],
     env: {
       hasAuthSecret: !!process.env.AUTH_SECRET,
       hasMongoUri: !!process.env.MONGODB_URI,
@@ -105,11 +117,24 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// ═══════════════════════════════════════════
+// EXISTING ROUTES
+// ═══════════════════════════════════════════
 app.use("/api/course", courseRouter);
 app.use("/api/educator", educatorRouter);
 app.use("/api/user", userRouter);
 
-app.get("/", (req, res) => res.send("StudyGuide API is active."));
+// ═══════════════════════════════════════════
+// NEW v2.0 ROUTES
+// ═══════════════════════════════════════════
+app.use("/api/notifications", notificationRouter);
+app.use("/api/study-groups", studyGroupRouter);
+app.use("/api/achievements", achievementRouter);
+app.use("/api/study-sessions", studySessionRouter);
+app.use("/api/search", searchRouter);
+app.use("/api/ai", aiAssistantRouter);
+
+app.get("/", (req, res) => res.send("StudyGuide API v2.0 is active."));
 
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 8080;

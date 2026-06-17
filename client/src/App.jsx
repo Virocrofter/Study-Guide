@@ -16,11 +16,17 @@ import StudentAnalytics from "./pages/student-dashboard/StudentAnalytics";
 import StudentEnrollments from "./pages/student-dashboard/StudentEnrollments";
 import StudentAssignments from "./pages/student-dashboard/StudentAssignments";
 
-// ─── Study Buddy Pages (NEW) ───
+// ─── Study Buddy Pages ───
 import Library from "./pages/student-dashboard/Library";
 import FlashCards from "./pages/student-dashboard/FlashCards";
 import StudyGuides from "./pages/student-dashboard/StudyGuides";
 import PracticeTests from "./pages/student-dashboard/PracticeTests";
+
+// ─── NEW FEATURES (v2.0) ───
+import StudyGroups from "./pages/student-dashboard/StudyGroups";
+import Leaderboard from "./pages/student-dashboard/Leaderboard";
+import StudyCalendarPage from "./pages/student-dashboard/StudyCalendarPage";
+import AIStudyAssistantPage from "./pages/student-dashboard/AIStudyAssistantPage";
 
 // ─── Educator Pages ───
 import Dashboard from "./pages/educator/Dashboard";
@@ -29,7 +35,7 @@ import MyCourses from "./pages/educator/MyCourses";
 import StudentsEnrolled from "./pages/educator/StudentsEnrolled";
 import EducatorMessages from "./pages/educator/EducatorMessages";
 import EducatorMaterials from "./pages/educator/EducatorMaterials";
-import EducatorQuizzes from "./pages/educator/EducatorQuizzes"; // NEW
+import EducatorQuizzes from "./pages/educator/EducatorQuizzes";
 
 const App = () => {
   const location = useLocation();
@@ -43,58 +49,59 @@ const App = () => {
     <Routes>
       {/* ═══════════════════════════════════════════
           PUBLIC ROUTES
-      ═══════════════════════════════════════════ */}
+          ═══════════════════════════════════════════ */}
       <Route path="/" element={<Home />} />
       <Route path="/course-list" element={<CourseList />} />
-      <Route path="/course-list/:search" element={<CourseList />} />
+      <Route path="/course-list/:input" element={<CourseList />} />
       <Route path="/course/:id" element={<CourseDetails />} />
       <Route path="/loading/:path" element={<Loading />} />
 
       {/* ═══════════════════════════════════════════
           STUDENT DASHBOARD (with sidebar layout)
-      ═══════════════════════════════════════════ */}
-      <Route element={<StudentDashboardLayout />}>
+          ═══════════════════════════════════════════ */}
+      <Route path="/dashboard" element={<StudentDashboardLayout />}>
         {/* Core */}
-        <Route path="/student" element={<StudentAnalytics />} />
-        <Route path="/student/enrollments" element={<StudentEnrollments />} />
-        <Route path="/student/assignments" element={<StudentAssignments />} />
+        <Route path="analytics" element={<StudentAnalytics />} />
+        <Route path="enrollments" element={<StudentEnrollments />} />
+        <Route path="assignments" element={<StudentAssignments />} />
 
-        {/* Study Buddy (NEW) */}
-        <Route path="/student/library" element={<Library />} />
-        <Route path="/student/flash-cards" element={<FlashCards />} />
-        <Route path="/student/flash-cards/folder/:folderId" element={<FlashCards />} />
-        <Route path="/student/study-guides" element={<StudyGuides />} />
-        <Route path="/student/practice-tests" element={<PracticeTests />} />
+        {/* Study Buddy */}
+        <Route path="library" element={<Library />} />
+        <Route path="flashcards" element={<FlashCards />} />
+        <Route path="study-guides" element={<StudyGuides />} />
+        <Route path="practice-tests" element={<PracticeTests />} />
+
+        {/* NEW v2.0 Features */}
+        <Route path="study-groups" element={<StudyGroups />} />
+        <Route path="leaderboard" element={<Leaderboard />} />
+        <Route path="calendar" element={<StudyCalendarPage />} />
+        <Route path="ai-assistant" element={<AIStudyAssistantPage />} />
       </Route>
 
       {/* ═══════════════════════════════════════════
           EDUCATOR DASHBOARD (with sidebar layout)
-      ═══════════════════════════════════════════ */}
-      <Route element={<Educator />}>
-        <Route path="/educator" element={<Dashboard />} />
-        <Route path="/educator/dashboard" element={<Dashboard />} />
-        <Route path="/educator/add-course" element={<AddCourses />} />
-        <Route path="/educator/my-courses" element={<MyCourses />} />
-        <Route path="/educator/students-enrolled" element={<StudentsEnrolled />} />
-        <Route path="/educator/messages" element={<EducatorMessages />} />
-        <Route path="/educator/materials" element={<EducatorMaterials />} />
-        <Route path="/educator/quizzes" element={<EducatorQuizzes />} /> {/* NEW */}
+          ═══════════════════════════════════════════ */}
+      <Route path="/educator" element={<Educator />}>
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="add-course" element={<AddCourses />} />
+        <Route path="my-courses" element={<MyCourses />} />
+        <Route path="students-enrolled" element={<StudentsEnrolled />} />
+        <Route path="messages" element={<EducatorMessages />} />
+        <Route path="materials" element={<EducatorMaterials />} />
+        <Route path="quizzes" element={<EducatorQuizzes />} />
       </Route>
 
       {/* ═══════════════════════════════════════════
           404 / CATCH-ALL
-      ═══════════════════════════════════════════ */}
+          ═══════════════════════════════════════════ */}
       <Route
         path="*"
         element={
-          <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="text-center">
-              <h1 className="text-6xl font-bold text-slate-900 mb-4">404</h1>
-              <p className="text-slate-500 mb-6">Page not found.</p>
-              <a
-                href="/"
-                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
-              >
+              <h1 className="text-6xl font-bold text-gray-300 mb-4">404</h1>
+              <p className="text-gray-600 mb-6">Page not found.</p>
+              <a href="/" className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                 Go Home
               </a>
             </div>
