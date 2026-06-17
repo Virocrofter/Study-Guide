@@ -228,7 +228,7 @@ const CourseDetails = () => {
   const rightPanelOpen = showMaterials;
 
   return (
-    <div className="min-h-screen bg-[#f0eef4] flex flex-col">
+    <div className="min-h-screen  bg-[#f0eef4] flex flex-col">
       {/* Top Bar */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-4">
@@ -296,7 +296,7 @@ const CourseDetails = () => {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 p-6 max-w-425 mx-auto flex-1">
+      <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-10 md:px-14 lg:px-36 mx-auto flex-1 w-full">
         {/* LEFT SIDEBAR - Chapters */}
         <div className="w-full lg:w-80 shrink-0 space-y-3">
           <div className="flex items-center justify-between mb-2">
