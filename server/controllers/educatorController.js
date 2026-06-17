@@ -3,6 +3,8 @@ import connectDB from "../configs/mongodb.js";
 import Course from "../models/Course.js";
 import { v2 as cloudinary } from "cloudinary";
 import { Purchase } from "../models/Purchase.js";
+import { Message } from "../models/Message.js";
+import { Material } from "../models/Material.js";
 
 // Auth.js: store role on the Auth.js "users" collection (MongoDBAdapter)
 export const updateRoleToEducator = async (req, res) => {
@@ -114,5 +116,131 @@ export const getEnrolledStudentsData = async (req, res) => {
     return res.json({ success: true, enrolledStudents });
   } catch (error) {
     return res.json({ success: false, message: error.message });
+  }
+};
+
+// GET /api/educator/messages/:courseId
+export const getCourseMessages = async (req, res) => {
+  try {
+    const educator = req.auth?.().userId;
+    const { courseId } = req.params;
+
+    // Verify educator owns this course
+    const course = await Course.findById(courseId);
+    if (!course || course.educator !== educator) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    const messages = await Message.find({ courseId })
+      .sort({ createdAt: 1 })
+      .limit(200);
+
+    return res.json({ success: true, messages });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// POST /api/educator/messages/:courseId
+export const sendMessage = async (req, res) => {
+  try {
+    const educator = req.auth?.().userId;
+    const { courseId } = req.params;
+    const { text, type, fileUrl, fileName } = req.body;
+
+    const course = await Course.findById(courseId);
+    if (!course || course.educator !== educator) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    const message = await Message.create({
+      courseId,
+      userId: educator,
+      userName: req.body.userName || "Educator",
+      userImage: req.body.userImage || "",
+      text,
+      type: type || "text",
+      fileUrl,
+      fileName,
+    });
+
+    return res.json({ success: true, message: "Message sent", data: message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// GET /api/educator/materials/:courseId
+export const getCourseMaterials = async (req, res) => {
+  try {
+    const educator = req.auth?.().userId;
+    const { courseId } = req.params;
+
+    const course = await Course.findById(courseId);
+    if (!course || course.educator !== educator) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    const materials = await Material.find({ courseId }).sort({ createdAt: -1 });
+    return res.json({ success: true, materials });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// POST /api/educator/materials/:courseId
+export const addMaterial = async (req, res) => {
+  try {
+    const educator = req.auth?.().userId;
+    const { courseId } = req.params;
+    const { title, type, url, fileName, fileSize, duration, lectureId } = req.body;
+
+    const course = await Course.findById(courseId);
+    if (!course || course.educator !== educator) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    const material = await Material.create({
+      courseId,
+      educatorId: educator,
+      title,
+      type,
+      url,
+      fileName,
+      fileSize,
+      duration,
+      lectureId,
+    });
+
+    // Add to course materials array
+    course.materials.push(material._id);
+    await course.save();
+
+    return res.json({ success: true, message: "Material added", material });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// DELETE /api/educator/materials/:materialId
+export const deleteMaterial = async (req, res) => {
+  try {
+    const educator = req.auth?.().userId;
+    const { materialId } = req.params;
+
+    const material = await Material.findById(materialId);
+    if (!material || material.educatorId !== educator) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    // Remove from course
+    await Course.findByIdAndUpdate(material.courseId, {
+      $pull: { materials: materialId },
+    });
+
+    await Material.findByIdAndDelete(materialId);
+    return res.json({ success: true, message: "Material deleted" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

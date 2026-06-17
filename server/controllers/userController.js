@@ -5,6 +5,9 @@ import Stripe from "stripe";
 import Course from "../models/Course.js";
 import { CourseProgress } from "../models/CourseProgress.js";
 import connectDB from "../configs/mongodb.js";
+import { Message } from "../models/Message.js";
+import { Material } from "../models/Material.js";
+
 
 // NOTE: This version assumes Auth.js cookie session.
 // It will auto-create a User document (your app user) from the Auth.js session if missing.
@@ -250,6 +253,81 @@ export const addUserRating = async (req, res) => {
     return res.json({ success: true, message: "Rating added" });
   } catch (error) {
     return res.json({ success: false, message: error.message });
+  }
+};
+
+// GET /api/user/messages/:courseId
+export const getCourseMessages = async (req, res) => {
+  try {
+    await connectDB();
+    const userId = req.auth?.().userId;
+    const { courseId } = req.params;
+
+    // Verify user is enrolled
+    const user = await User.findById(userId);
+    const isEnrolled = user?.enrolledCourses?.some((id) => id.toString() === courseId);
+    if (!isEnrolled) {
+      return res.status(403).json({ success: false, message: "Not enrolled in this course" });
+    }
+
+    const messages = await Message.find({ courseId })
+      .sort({ createdAt: 1 })
+      .limit(200);
+
+    return res.json({ success: true, messages });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// POST /api/user/messages/:courseId
+export const sendMessage = async (req, res) => {
+  try {
+    await connectDB();
+    const userId = req.auth?.().userId;
+    const { courseId } = req.params;
+    const { text, type, fileUrl, fileName, userName, userImage } = req.body;
+
+    const user = await User.findById(userId);
+    const isEnrolled = user?.enrolledCourses?.some((id) => id.toString() === courseId);
+    if (!isEnrolled) {
+      return res.status(403).json({ success: false, message: "Not enrolled" });
+    }
+
+    const message = await Message.create({
+      courseId,
+      userId,
+      userName: userName || user?.name || "Student",
+      userImage: userImage || user?.imageUrl || "",
+      text,
+      type: type || "text",
+      fileUrl,
+      fileName,
+    });
+
+    return res.json({ success: true, message: "Sent", data: message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// GET /api/user/materials/:courseId
+export const getCourseMaterials = async (req, res) => {
+  try {
+    await connectDB();
+    const userId = req.auth?.().userId;
+    const { courseId } = req.params;
+
+    const user = await User.findById(userId);
+    const isEnrolled = user?.enrolledCourses?.some((id) => id.toString() === courseId);
+    if (!isEnrolled) {
+      return res.status(403).json({ success: false, message: "Not enrolled" });
+    }
+
+    const materials = await Material.find({ courseId }).sort({ createdAt: -1 });
+    return res.json({ success: true, materials });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
