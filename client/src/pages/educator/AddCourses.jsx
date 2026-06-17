@@ -115,14 +115,13 @@ const AddCourses = () => {
   };
 
   return (
-    <div className="max-w-4xl pb-20">
+    <div className="h-full pb-20">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Create New Course</h1>
         <p className="text-slate-500 mt-1">Build an engaging learning experience for your students.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title */}
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
           <label className="block text-sm font-semibold text-slate-700 mb-2">Course Title</label>
           <input
@@ -134,13 +133,11 @@ const AddCourses = () => {
           />
         </div>
 
-        {/* Description */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
           <label className="block text-sm font-semibold text-slate-700 mb-2">Description</label>
           <div ref={editorRef} className="bg-slate-50 rounded-xl border border-slate-200" />
         </div>
 
-        {/* Price & Thumbnail */}
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
             <label className="block text-sm font-semibold text-slate-700 mb-2">Price ($)</label>
@@ -166,7 +163,6 @@ const AddCourses = () => {
           </div>
         </div>
 
-        {/* Thumbnail */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
           <label className="block text-sm font-semibold text-slate-700 mb-2">Course Thumbnail</label>
           <div className="flex items-center gap-4">
@@ -181,7 +177,6 @@ const AddCourses = () => {
           </div>
         </div>
 
-        {/* Chapters */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <label className="block text-sm font-semibold text-slate-700">Chapters & Lectures</label>
@@ -223,7 +218,6 @@ const AddCourses = () => {
         </button>
       </form>
 
-      {/* Lecture Popup */}
       {showPopup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">

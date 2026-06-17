@@ -244,3 +244,33 @@ export const deleteMaterial = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// GET /api/educator/course-structure/:courseId
+export const getCourseStructure = async (req, res) => {
+  try {
+    const educator = req.auth?.().userId;
+    const { courseId } = req.params;
+
+    const course = await Course.findById(courseId);
+    if (!course || course.educator !== educator) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    // Flatten chapters + lectures for the dropdown
+    const lectures = [];
+    course.courseContent?.forEach((chapter, chIndex) => {
+      chapter.chapterContent?.forEach((lecture, lIndex) => {
+        lectures.push({
+          lectureId: lecture.lectureId,
+          lectureTitle: lecture.lectureTitle,
+          chapterTitle: chapter.chapterTitle,
+          fullLabel: `${chIndex + 1}.${lIndex + 1} ${lecture.lectureTitle} (${chapter.chapterTitle})`,
+        });
+      });
+    });
+
+    return res.json({ success: true, lectures, courseTitle: course.courseTitle });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

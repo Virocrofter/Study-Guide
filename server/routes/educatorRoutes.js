@@ -1,6 +1,7 @@
 import express from "express";
 import { protectEducator } from "../middleware/authMiddleware.js";
 import upload from "../configs/multer.js";
+import { getCourseStructure } from "../controllers/educatorController.js";
 import {
   addCourse,
   educatorDashboardData,
@@ -30,5 +31,8 @@ educatorRouter.post("/messages/:courseId", protectEducator, sendMessage);
 educatorRouter.get("/materials/:courseId", protectEducator, getCourseMaterials);
 educatorRouter.post("/materials/:courseId", protectEducator, addMaterial);
 educatorRouter.delete("/materials/:materialId", protectEducator, deleteMaterial);
+
+// Add this with your other educator routes:
+educatorRouter.get("/course-structure/:courseId", protectEducator, getCourseStructure);
 
 export default educatorRouter;

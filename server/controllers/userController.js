@@ -318,16 +318,27 @@ export const getCourseMaterials = async (req, res) => {
     const userId = req.auth?.().userId;
     const { courseId } = req.params;
 
-    const user = await User.findById(userId);
-    const isEnrolled = user?.enrolledCourses?.some((id) => id.toString() === courseId);
-    if (!isEnrolled) {
-      return res.status(403).json({ success: false, message: "Not enrolled" });
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const materials = await Material.find({ courseId }).sort({ createdAt: -1 });
+    // Verify user is enrolled
+    const user = await User.findById(userId);
+    const isEnrolled = user?.enrolledCourses?.some(
+      (id) => id.toString() === courseId
+    );
+
+    if (!isEnrolled) {
+      return res.status(403).json({ success: false, message: "Not enrolled in this course" });
+    }
+
+    // Fetch ALL materials for this course including lectureId
+    const materials = await Material.find({ courseId })
+      .select("courseId educatorId title type url fileName fileSize duration lectureId createdAt updatedAt")
+      .sort({ createdAt: -1 });
+
     return res.json({ success: true, materials });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-

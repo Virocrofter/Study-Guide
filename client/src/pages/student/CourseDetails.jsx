@@ -10,6 +10,8 @@ import Rating from "../../components/student/Rating";
 
 const CourseDetails = () => {
   const { id } = useParams();
+
+  // ── State ──────────────────────────────────────────────
   const [courseData, setCourseData] = useState(null);
   const [activeChapter, setActiveChapter] = useState(0);
   const [activeLecture, setActiveLecture] = useState(0);
@@ -19,9 +21,10 @@ const CourseDetails = () => {
   const [showChat, setShowChat] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
-  const [materialsTab, setMaterialsTab] = useState("videos");
   const [materials, setMaterials] = useState([]);
+  const [lectureMaterials, setLectureMaterials] = useState({});
 
+  // ── Context ────────────────────────────────────────────
   const {
     calculateRating,
     calculateNoOfLectures,
@@ -38,14 +41,16 @@ const CourseDetails = () => {
     (cId) => cId.toString() === id,
   );
 
+  // ── Helpers ────────────────────────────────────────────
   const getYouTubeId = (url) => {
     if (!url) return null;
     const regExp =
-      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      /^.*(youtu.be\/|v\/|u\/w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return match && match[2].length === 11 ? match[2] : null;
   };
 
+  // ── Data Fetching ──────────────────────────────────────
   const fetchCourseData = async () => {
     try {
       setLoading(true);
@@ -55,7 +60,12 @@ const CourseDetails = () => {
         if (data.course?.courseContent?.[0]?.chapterContent?.[0]) {
           const firstLecture = data.course.courseContent[0].chapterContent[0];
           const videoId = getYouTubeId(firstLecture.lectureUrl);
-          setPlayerData({ ...firstLecture, chapter: 1, lecture: 1, videoId });
+          setPlayerData({
+            ...firstLecture,
+            chapter: 1,
+            lecture: 1,
+            videoId,
+          });
         }
       } else {
         toast.error(data.message || "Course not found");
@@ -87,12 +97,22 @@ const CourseDetails = () => {
         `${backendUrl}/api/user/materials/${id}`,
         { withCredentials: true },
       );
-      if (data.success) setMaterials(data.materials);
+      if (data.success) {
+        // Group by lectureId for easy lookup
+        const grouped = {};
+        data.materials.forEach((m) => {
+          if (!grouped[m.lectureId]) grouped[m.lectureId] = [];
+          grouped[m.lectureId].push(m);
+        });
+        setLectureMaterials(grouped);
+        setMaterials(data.materials);
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
+  // ── Handlers ───────────────────────────────────────────
   const enrollCourse = async () => {
     try {
       if (!session?.user) return toast.warn("Please sign in first");
@@ -161,6 +181,7 @@ const CourseDetails = () => {
     }
   };
 
+  // ── Effects ────────────────────────────────────────────
   useEffect(() => {
     fetchCourseData();
   }, [id]);
@@ -174,6 +195,7 @@ const CourseDetails = () => {
     }
   }, [isEnrolled, id]);
 
+  // ── Early Returns ──────────────────────────────────────
   if (loading) return <Loading />;
   if (!courseData)
     return (
@@ -186,9 +208,10 @@ const CourseDetails = () => {
   ).toFixed(2);
   const rating = calculateRating(courseData);
 
+  // ── Render ─────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#f0eef4] flex flex-col">
-      {/* Top Bar */}
+      {/* ===== Top Bar ===== */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <button
@@ -255,8 +278,9 @@ const CourseDetails = () => {
         </div>
       </div>
 
+      {/* ===== Main Layout ===== */}
       <div className="flex flex-col lg:flex-row gap-6 p-6 max-w-350 mx-auto flex-1">
-        {/* LEFT SIDEBAR - Chapters */}
+        {/* ── Left Sidebar: Chapters ───────────────────────── */}
         <div className="w-full lg:w-80 shrink-0 space-y-3">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-bold text-slate-800">Chapters</h2>
@@ -448,7 +472,7 @@ const CourseDetails = () => {
           </div>
         </div>
 
-        {/* RIGHT AREA - Video + Bottom Panels */}
+        {/* ── Right Area: Video + Bottom Panels ──────────── */}
         <div className="flex-1 flex flex-col gap-6">
           {/* Video Player */}
           <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200">
@@ -601,10 +625,11 @@ const CourseDetails = () => {
                         {msg.userName || "Unknown"}
                       </p>
                       <p>{msg.text}</p>
-                      <p
-                        className={`text-xs mt-1 opacity-50`}
-                      >
-                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      <p className="text-xs mt-1 opacity-50">
+                        {new Date(msg.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
                   </div>
@@ -694,62 +719,90 @@ const CourseDetails = () => {
             {/* Materials Panel */}
             <div className="bg-[#c8c4d4] rounded-3xl p-6">
               <h3 className="text-xl font-bold text-slate-800 mb-1">
-                {courseData.courseContent?.[activeChapter]?.chapterTitle ||
-                  "Materials"}
+                {courseData.courseContent?.[activeChapter]?.chapterTitle || "Materials"}
               </h3>
               <p className="text-sm text-slate-500 mb-4">
-                Lecture {activeLecture + 1}
+                {playerData?.lectureTitle || `Lecture ${activeLecture + 1}`}
               </p>
 
-              <div className="flex gap-2 mb-4">
-                {["files", "videos", "Audio"].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setMaterialsTab(tab)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      materialsTab === tab
-                        ? "bg-slate-900 text-white"
-                        : "bg-white/60 text-slate-600 hover:bg-white"
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
               <div className="space-y-3 max-h-64 overflow-y-auto">
-                {materials.length === 0 ? (
-                  <p className="text-sm text-slate-500 text-center py-4">
-                    No materials uploaded yet.
-                  </p>
-                ) : (
-                  materials
-                    .filter((m) => m.type === materialsTab || materialsTab === "videos" && m.type === "video" || materialsTab === "Audio" && m.type === "audio" || materialsTab === "files" && m.type === "file")
-                    .map((material, idx) => (
-                      <a
-                        key={idx}
-                        href={material.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-3 p-3 rounded-xl bg-white/60 hover:bg-white text-sm transition-colors"
+                {(lectureMaterials[playerData?.lectureId] || []).length > 0 ? (
+                  lectureMaterials[playerData?.lectureId].map((material, idx) => (
+                    <a
+                      key={idx}
+                      href={material.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-white/80 hover:bg-white text-sm transition-colors shadow-sm"
+                    >
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                          material.type === "video"
+                            ? "bg-red-500 text-white"
+                            : material.type === "audio"
+                              ? "bg-green-500 text-white"
+                              : "bg-blue-600 text-white"
+                        }`}
                       >
-                        <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        {material.type === "video" ? (
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
                           </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-800 truncate">{material.title}</p>
-                          <p className="text-xs text-slate-500">{material.fileName || material.duration || "Download"}</p>
-                        </div>
-                      </a>
-                    ))
+                        ) : material.type === "audio" ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                            />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-slate-800 truncate">
+                          {material.title}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {material.fileName || material.duration || "Download"}
+                        </p>
+                      </div>
+                      <svg
+                        className="w-4 h-4 text-slate-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
+                    </a>
+                  ))
+                ) : (
+                  <div className="text-center py-6">
+                    <p className="text-sm text-slate-500">
+                      No materials for this lecture.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Rating Section - Preserved */}
+          {/* Rating Section */}
           <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
             <div className="flex items-center gap-6">
               <div>

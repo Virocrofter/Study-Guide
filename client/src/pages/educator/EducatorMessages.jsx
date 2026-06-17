@@ -32,7 +32,7 @@ const EducatorMessages = () => {
     try {
       const { data } = await axios.get(
         `${backendUrl}/api/educator/messages/${selectedCourse._id}`,
-        { withCredentials: true }
+        { withCredentials: true },
       );
       if (data.success) setMessages(data.messages);
     } catch (err) {
@@ -50,7 +50,7 @@ const EducatorMessages = () => {
           userName: userData?.name || "Educator",
           userImage: userData?.imageUrl || "",
         },
-        { withCredentials: true }
+        { withCredentials: true },
       );
       if (data.success) {
         setMessages([...messages, data.data]);
@@ -71,14 +71,16 @@ const EducatorMessages = () => {
     return () => clearInterval(interval);
   }, [selectedCourse]);
 
-  if (loading) return <div className="p-10 text-center">Loading...</div>;
+  if (loading) return <div className="h-full flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="h-screen flex flex-col md:p-8 p-4 pt-8 bg-slate-50">
-      <h2 className="text-2xl font-bold text-slate-800 mb-6">Course Messages</h2>
+    <div className="h-full pb-20 flex flex-col gap-6">
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900">Course Messages</h1>
+        <p className="text-slate-500 mt-1">Chat with students enrolled in your courses.</p>
+      </div>
 
       <div className="flex gap-6 flex-1 overflow-hidden">
-        {/* Course Selector */}
         <div className="w-64 shrink-0 space-y-2">
           <p className="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Select Course</p>
           {courses.map((course) => (
@@ -97,7 +99,6 @@ const EducatorMessages = () => {
           ))}
         </div>
 
-        {/* Chat Area */}
         <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
           <div className="p-4 border-b border-slate-100 flex items-center justify-between">
             <div>
@@ -109,16 +110,10 @@ const EducatorMessages = () => {
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-3 ${msg.userId === userData?._id ? "flex-row-reverse" : ""}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                  msg.userId === userData?._id ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"
-                }`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${msg.userId === userData?._id ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>
                   {msg.userName?.charAt(0) || "?"}
                 </div>
-                <div className={`max-w-[70%] p-3 rounded-2xl text-sm ${
-                  msg.userId === userData?._id
-                    ? "bg-blue-600 text-white rounded-br-none"
-                    : "bg-slate-100 text-slate-700 rounded-bl-none"
-                }`}>
+                <div className={`max-w-[70%] p-3 rounded-2xl text-sm ${msg.userId === userData?._id ? "bg-blue-600 text-white rounded-br-none" : "bg-slate-100 text-slate-700 rounded-bl-none"}`}>
                   <p className="font-semibold text-xs mb-1 opacity-70">{msg.userName}</p>
                   <p>{msg.text}</p>
                   <p className="text-xs mt-1 opacity-50">
