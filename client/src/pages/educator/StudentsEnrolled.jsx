@@ -36,7 +36,7 @@ const StudentsEnrolled = () => {
   }
 
   return (
-    <div className="h-full pb-20 space-y-6">
+    <div className="h-full pb-20 ml-24 pt-8 px-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Enrolled Students</h1>
         <p className="text-slate-500 mt-1">All students currently learning from your courses.</p>
