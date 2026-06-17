@@ -1,9 +1,9 @@
 import SearchIndex from "../models/SearchIndex.js";
 import Course from "../models/Course.js";
-import FlashCard from "../models/FlashCard.js";
-import StudyGuide from "../models/StudyGuide.js";
-import Material from "../models/Material.js";
-import Quiz from "../models/Quiz.js";
+import { FlashCard } from "../models/FlashCard.js";
+import { StudyGuide } from "../models/StudyGuide.js";
+import { Material } from "../models/Material.js";
+import { Quiz } from "../models/Quiz.js";
 
 export const globalSearch = async (req, res) => {
   try {

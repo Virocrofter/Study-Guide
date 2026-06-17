@@ -1,6 +1,6 @@
-import FlashCard from "../models/FlashCard.js";
-import StudyGuide from "../models/StudyGuide.js";
-import PracticeTest from "../models/PracticeTest.js";
+import { FlashCard } from "../models/FlashCard.js";
+import { StudyGuide } from "../models/StudyGuide.js";
+import { PracticeTest } from "../models/PracticeTest.js";
 
 // Mock AI generation - replace with OpenAI/Claude API calls in production
 export const generateFlashcards = async (req, res) => {

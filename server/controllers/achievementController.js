@@ -1,8 +1,8 @@
 import Achievement from "../models/Achievement.js";
 import StudySession from "../models/StudySession.js";
-import CourseProgress from "../models/CourseProgress.js";
-import Purchase from "../models/Purchase.js";
-import QuizSubmission from "../models/QuizSubmission.js";
+import { CourseProgress } from "../models/CourseProgress.js";
+import { Purchase } from "../models/Purchase.js";
+import { QuizSubmission } from "../models/QuizSubmission.js";
 import { createNotification } from "./notificationController.js";
 
 export const getUserAchievements = async (req, res) => {
