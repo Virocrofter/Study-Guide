@@ -6,7 +6,7 @@ const ForEducators = () => {
 
   return (
     <section className="py-20 md:px-40 px-8 bg-slate-900 text-white overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-600/10 to-transparent" />
+      <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-l from-blue-600/10 to-transparent" />
       
       <div className="max-w-7xl mx-auto relative z-10 flex flex-col lg:flex-row items-center gap-16">
         <div className="flex-1">
@@ -15,7 +15,7 @@ const ForEducators = () => {
           </p>
           <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
             Share Your Expertise. <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-500">
               Build Your Brand.
             </span>
           </h2>
@@ -27,7 +27,7 @@ const ForEducators = () => {
           <div className="flex flex-col sm:flex-row gap-4 mb-10">
             <button
               onClick={becomeEducator}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-2"
+              className="px-8 py-4 bg-linear-to-r from-blue-600 to-cyan-500 rounded-xl font-semibold text-white hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
             >
               Start Teaching Today
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,8 +55,8 @@ const ForEducators = () => {
         </div>
 
         <div className="flex-1 relative">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-            <div className="bg-slate-800 p-6 rounded-t-2xl border-b border-white/10 flex items-center gap-3">
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-700 bg-slate-800">
+            <div className="bg-slate-800 p-4 rounded-t-2xl border-b border-slate-700 flex items-center gap-3">
               <div className="flex gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-500" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500" />
@@ -64,8 +64,8 @@ const ForEducators = () => {
               </div>
               <p className="text-sm text-slate-400">Educator Dashboard</p>
             </div>
-            <div className="bg-slate-800/50 p-8 space-y-4">
-              <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-xl">
+            <div className="bg-slate-800/50 p-6 space-y-3">
+              <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
                     <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,7 +79,7 @@ const ForEducators = () => {
                 </div>
                 <p className="text-xl font-bold text-white">12</p>
               </div>
-              <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-xl">
+              <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
                     <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,7 +93,7 @@ const ForEducators = () => {
                 </div>
                 <p className="text-xl font-bold text-green-400">$4,250</p>
               </div>
-              <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-xl">
+              <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
                     <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
