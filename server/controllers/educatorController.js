@@ -6,7 +6,6 @@ import { Purchase } from "../models/Purchase.js";
 import { Message } from "../models/Message.js";
 import { Material } from "../models/Material.js";
 
-// Auth.js: store role on the Auth.js "users" collection (MongoDBAdapter)
 export const updateRoleToEducator = async (req, res) => {
   try {
     await connectDB();
@@ -16,8 +15,11 @@ export const updateRoleToEducator = async (req, res) => {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    }
+
     const usersCollection = mongoose.connection.db.collection("users");
-    // Auth.js MongoDBAdapter uses ObjectId _id by default
     await usersCollection.updateOne(
       { _id: new mongoose.Types.ObjectId(userId) },
       { $set: { role: "educator" } }
@@ -29,27 +31,56 @@ export const updateRoleToEducator = async (req, res) => {
   }
 };
 
-// Add new course (educator version)
 export const addCourse = async (req, res) => {
   try {
     const { courseData } = req.body;
-    const imageFile = req.file;
+    const thumbnailFile = req.file;
     const educatorId = req.auth?.().userId;
 
-    if (!imageFile) {
-      return res.json({ success: false, message: "Thumbnail not attached" });
+    if (!educatorId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (!thumbnailFile) {
+      return res.status(400).json({ success: false, message: 'Thumbnail is missing' });
     }
 
     const parsedCourseData = JSON.parse(courseData);
-    parsedCourseData.educator = educatorId;
-    const newCourse = await Course.create(parsedCourseData);
-    const imageUpload = await cloudinary.uploader.upload(imageFile.path);
-    newCourse.courseThumbnail = imageUpload.secure_url;
+    parsedCourseData.isPublished = true;
+
+    if (parsedCourseData.courseContent && Array.isArray(parsedCourseData.courseContent)) {
+      parsedCourseData.courseContent.forEach((chapter) => {
+        if (chapter.chapterContent && Array.isArray(chapter.chapterContent)) {
+          chapter.chapterContent.forEach((lecture, index) => {
+            lecture.lectureOrder = index + 1;
+          });
+        }
+      });
+    }
+
+    const imageUpload = await cloudinary.uploader.upload(thumbnailFile.path, {
+      resource_type: 'image',
+    });
+
+    const newCourseData = {
+      ...parsedCourseData,
+      educator: educatorId,
+      courseThumbnail: imageUpload.secure_url,
+      createdAt: Date.now(),
+    };
+
+    const newCourse = new Course(newCourseData);
     await newCourse.save();
 
-    return res.json({ success: true, message: "Course Added" });
+    return res.json({ 
+      success: true, 
+      message: 'Course Published Successfully',
+      course: newCourse 
+    });
+
   } catch (error) {
-    return res.json({ success: false, message: error.message });
+    console.error("Add Course Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -69,7 +100,7 @@ export const educatorDashboardData = async (req, res) => {
 
     const courses = await Course.find({ educator });
     const totalCourses = courses.length;
-    const courseIds = courses.map((course) => course._id.toString());
+    const courseIds = courses.map((course) => course._id);
 
     const purchases = await Purchase.find({
       courseId: { $in: courseIds },
@@ -98,7 +129,7 @@ export const getEnrolledStudentsData = async (req, res) => {
   try {
     const educator = req.auth?.().userId;
     const courses = await Course.find({ educator });
-    const courseIds = courses.map((course) => course._id.toString());
+    const courseIds = courses.map((course) => course._id);
 
     const purchases = await Purchase.find({
       courseId: { $in: courseIds },
@@ -119,13 +150,11 @@ export const getEnrolledStudentsData = async (req, res) => {
   }
 };
 
-// GET /api/educator/messages/:courseId
 export const getCourseMessages = async (req, res) => {
   try {
     const educator = req.auth?.().userId;
     const { courseId } = req.params;
 
-    // Verify educator owns this course
     const course = await Course.findById(courseId);
     if (!course || course.educator !== educator) {
       return res.status(403).json({ success: false, message: "Not authorized" });
@@ -141,7 +170,6 @@ export const getCourseMessages = async (req, res) => {
   }
 };
 
-// POST /api/educator/messages/:courseId
 export const sendMessage = async (req, res) => {
   try {
     const educator = req.auth?.().userId;
@@ -170,7 +198,6 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-// GET /api/educator/materials/:courseId
 export const getCourseMaterials = async (req, res) => {
   try {
     const educator = req.auth?.().userId;
@@ -188,7 +215,6 @@ export const getCourseMaterials = async (req, res) => {
   }
 };
 
-// POST /api/educator/materials/:courseId
 export const addMaterial = async (req, res) => {
   try {
     const educator = req.auth?.().userId;
@@ -212,7 +238,6 @@ export const addMaterial = async (req, res) => {
       lectureId,
     });
 
-    // Add to course materials array
     course.materials.push(material._id);
     await course.save();
 
@@ -222,7 +247,6 @@ export const addMaterial = async (req, res) => {
   }
 };
 
-// DELETE /api/educator/materials/:materialId
 export const deleteMaterial = async (req, res) => {
   try {
     const educator = req.auth?.().userId;
@@ -233,7 +257,6 @@ export const deleteMaterial = async (req, res) => {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
-    // Remove from course
     await Course.findByIdAndUpdate(material.courseId, {
       $pull: { materials: materialId },
     });
@@ -245,7 +268,6 @@ export const deleteMaterial = async (req, res) => {
   }
 };
 
-// GET /api/educator/course-structure/:courseId
 export const getCourseStructure = async (req, res) => {
   try {
     const educator = req.auth?.().userId;
@@ -256,7 +278,6 @@ export const getCourseStructure = async (req, res) => {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
-    // Flatten chapters + lectures for the dropdown
     const lectures = [];
     course.courseContent?.forEach((chapter, chIndex) => {
       chapter.chapterContent?.forEach((lecture, lIndex) => {

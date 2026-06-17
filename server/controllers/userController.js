@@ -8,9 +8,6 @@ import connectDB from "../configs/mongodb.js";
 import { Message } from "../models/Message.js";
 import { Material } from "../models/Material.js";
 
-
-// NOTE: This version assumes Auth.js cookie session.
-// It will auto-create a User document (your app user) from the Auth.js session if missing.
 export const getUserData = async (req, res) => {
   try {
     await connectDB();
@@ -24,7 +21,6 @@ export const getUserData = async (req, res) => {
 
     let user = await User.findById(userId);
 
-    // If the app user doesn't exist yet, create it from the Auth.js session
     if (!user) {
       const name = sessionUser?.name || "New User";
       const email = sessionUser?.email || `user_${userId}@example.com`;
@@ -46,8 +42,6 @@ export const getUserData = async (req, res) => {
   }
 };
 
-// POST /api/user/become-educator
-// Sets role="educator" for the Auth.js adapter user (session role) and, if present, the app User doc.
 export const becomeEducator = async (req, res) => {
   try {
     await connectDB();
@@ -57,7 +51,6 @@ export const becomeEducator = async (req, res) => {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    // 1) Update Auth.js adapter user role (used by session callback + protectEducator middleware)
     const usersCollection = mongoose.connection.db.collection("users");
 
     let updated = false;
@@ -69,17 +62,15 @@ export const becomeEducator = async (req, res) => {
       updated = r.modifiedCount > 0 || r.matchedCount > 0;
     }
 
-    // If ObjectId path didn't match (or id isn't an ObjectId), try string _id
     if (!updated) {
       const r2 = await usersCollection.updateOne({ _id: userId }, { $set: { role: "educator" } });
       updated = r2.modifiedCount > 0 || r2.matchedCount > 0;
     }
 
-    // 2) Best-effort: also update your app user model if it exists
     try {
       await User.findByIdAndUpdate(userId, { role: "educator" }, { new: true });
     } catch {
-      // ignore - depending on how your collections are set up this may not match
+      // ignore
     }
 
     return res.json({ success: true, message: "You are now an educator" });
@@ -140,7 +131,7 @@ export const purchaseCourse = async (req, res) => {
     }
 
     const purchaseData = {
-      courseId: courseData._id.toString(),
+      courseId: courseData._id,
       userId,
       amount: Number(
         (courseData.coursePrice - (courseData.discount * courseData.coursePrice) / 100).toFixed(2)
@@ -149,7 +140,7 @@ export const purchaseCourse = async (req, res) => {
 
     const newPurchase = await Purchase.create(purchaseData);
     const StripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const currency = process.env.CURRENCY.toLowerCase();
+    const currency = (process.env.CURRENCY || "USD").toLowerCase();
 
     const line_items = [
       {
@@ -187,7 +178,11 @@ export const updateUserCourseProgress = async (req, res) => {
       return res.json({ success: false, message: "Missing courseId or lectureId" });
     }
 
-    let progressData = await CourseProgress.findOne({ userId, courseId });
+    const courseObjectId = mongoose.isValidObjectId(courseId) 
+      ? new mongoose.Types.ObjectId(courseId) 
+      : courseId;
+
+    let progressData = await CourseProgress.findOne({ userId, courseId: courseObjectId });
 
     if (progressData) {
       if (progressData.lectureCompleted.includes(lectureId)) {
@@ -198,7 +193,7 @@ export const updateUserCourseProgress = async (req, res) => {
     } else {
       await CourseProgress.create({
         userId,
-        courseId,
+        courseId: courseObjectId,
         lectureCompleted: [lectureId],
       });
     }
@@ -214,7 +209,12 @@ export const getUserCourseProgress = async (req, res) => {
     await connectDB();
     const userId = req.auth?.().userId;
     const { courseId } = req.body;
-    const progressData = await CourseProgress.findOne({ userId, courseId });
+
+    const courseObjectId = mongoose.isValidObjectId(courseId) 
+      ? new mongoose.Types.ObjectId(courseId) 
+      : courseId;
+
+    const progressData = await CourseProgress.findOne({ userId, courseId: courseObjectId });
     return res.json({ success: true, progressData });
   } catch (error) {
     return res.json({ success: false, message: error.message });
@@ -256,14 +256,12 @@ export const addUserRating = async (req, res) => {
   }
 };
 
-// GET /api/user/messages/:courseId
 export const getCourseMessages = async (req, res) => {
   try {
     await connectDB();
     const userId = req.auth?.().userId;
     const { courseId } = req.params;
 
-    // Verify user is enrolled
     const user = await User.findById(userId);
     const isEnrolled = user?.enrolledCourses?.some((id) => id.toString() === courseId);
     if (!isEnrolled) {
@@ -280,7 +278,6 @@ export const getCourseMessages = async (req, res) => {
   }
 };
 
-// POST /api/user/messages/:courseId
 export const sendMessage = async (req, res) => {
   try {
     await connectDB();
@@ -311,7 +308,6 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-// GET /api/user/materials/:courseId
 export const getCourseMaterials = async (req, res) => {
   try {
     await connectDB();
@@ -322,7 +318,6 @@ export const getCourseMaterials = async (req, res) => {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    // Verify user is enrolled
     const user = await User.findById(userId);
     const isEnrolled = user?.enrolledCourses?.some(
       (id) => id.toString() === courseId
@@ -332,7 +327,6 @@ export const getCourseMaterials = async (req, res) => {
       return res.status(403).json({ success: false, message: "Not enrolled in this course" });
     }
 
-    // Fetch ALL materials for this course including lectureId
     const materials = await Material.find({ courseId })
       .select("courseId educatorId title type url fileName fileSize duration lectureId createdAt updatedAt")
       .sort({ createdAt: -1 });
@@ -342,3 +336,4 @@ export const getCourseMaterials = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+

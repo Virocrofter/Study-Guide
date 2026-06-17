@@ -73,7 +73,7 @@ export const getCourseId = async (req, res) => {
         await connectDB();
         const { id } = req.params;
 
-        if (!id || id.length !== 24) {
+        if (!id || !mongoose.isValidObjectId(id)) {
             return res.status(400).json({ success: false, message: "Invalid Course ID format" });
         }
 

@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const PurchaseSchema = new mongoose.Schema({
     courseId: {
-        type: String, // Changed from ObjectId to String for consistency
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Course',
         required: true
     },
@@ -20,6 +20,6 @@ const PurchaseSchema = new mongoose.Schema({
         enum: ['pending', 'completed', 'failed'], 
         default: 'pending'
     }
-}, { timestamps: true }); // This provides the 'createdAt' date
+}, { timestamps: true });
 
 export const Purchase = mongoose.model('Purchase', PurchaseSchema);

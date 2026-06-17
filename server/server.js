@@ -7,7 +7,7 @@ console.log("🔧 Starting server...");
 console.log("NODE_ENV:", process.env.NODE_ENV);
 
 import connectDB from "./configs/mongodb.js";
-import connectCloudinay from "./configs/cloudinary.js";
+import connectCloudinary from "./configs/cloudinary.js";
 import { getSession } from "@auth/express";
 import authRouter, { authConfig } from "./routes/auth.js";
 import courseRouter from "./routes/courseRoutes.js";
@@ -17,12 +17,10 @@ import { stripeWebhooks } from "./controllers/webhooks.js";
 
 const app = express();
 
-// ─── CONNECT DB & CLEANUP OLD INDEXES ───
 connectDB();
 
 (async () => {
   try {
-    // Wait for connection to be ready
     await new Promise((resolve) => {
       if (mongoose.connection.readyState === 1) return resolve();
       mongoose.connection.once("connected", resolve);
@@ -32,7 +30,6 @@ connectDB();
     const indexes = await usersCollection.indexes();
 
     for (const index of indexes) {
-      // Drop every unique index except MongoDB's default _id_
       if (index.name !== "_id_" && index.unique) {
         await usersCollection.dropIndex(index.name);
         console.log(`✅ Dropped conflicting unique index: ${index.name}`);
@@ -43,7 +40,7 @@ connectDB();
   }
 })();
 
-connectCloudinay();
+connectCloudinary();
 app.set("trust proxy", true);
 
 const allowedOrigins = new Set([
@@ -72,16 +69,13 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 
-// Stripe webhook MUST be raw body, mounted BEFORE body parsers
 app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Mount Auth.js
 app.use("/api/auth", authRouter);
 
-// Hydrate Auth.js session
 app.use(async (req, res, next) => {
   try {
     const session = await getSession(req, authConfig);
