@@ -279,7 +279,7 @@ const CourseDetails = () => {
       </div>
 
       {/* ===== Main Layout ===== */}
-      <div className="flex flex-col lg:flex-row gap-6 p-6 max-w-350 mx-auto flex-1">
+      <div className="flex flex-col lg:flex-row gap-6 p-6 max-w-400 mx-auto flex-1">
         {/* ── Left Sidebar: Chapters ───────────────────────── */}
         <div className="w-full lg:w-80 shrink-0 space-y-3">
           <div className="flex items-center justify-between mb-2">
