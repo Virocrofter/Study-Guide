@@ -706,8 +706,8 @@ const CourseDetails = () => {
             )}
           </div>
 
-                    {/* Rating Section — Added mb-6 to create space before footer */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm mb-6">
+          {/* Rating Section — Added mb-6 to create space before footer */}
+          <div className="bg-white rounded-3xl p-8 pb-8 border border-slate-200 shadow-sm mb-6">
             <div className="flex items-center gap-6">
               <div>
                 <h3 className="text-xl font-bold text-slate-800 mb-1">

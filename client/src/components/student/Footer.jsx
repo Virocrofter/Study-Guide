@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="w-full bg-blue-600 text-white">
+    <footer className="w-full bg-blue-600 text-white mt-auto">
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-10 md:px-14 lg:px-36 py-16">
-        <div className="grid md:grid-cols-4 gap-12">
+      <div className="px-4 sm:px-10 md:px-14 lg:px-36 py-16">
+        <div className="grid md:grid-cols-4 gap-12 max-w-7xl mx-auto">
           {/* Brand */}
           <div className="md:col-span-1">
             <h3 className="text-2xl font-bold mb-4">StudyGuide</h3>
@@ -59,7 +59,7 @@ const Footer = () => {
 
       {/* Bottom Bar */}
       <div className="border-t border-blue-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-10 md:px-14 lg:px-36 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="px-4 sm:px-10 md:px-14 lg:px-36 py-6 flex flex-col md:flex-row justify-between items-center gap-4 max-w-7xl mx-auto">
           <p className="text-sm text-blue-100">
             © 2026 StudyGuide. All rights reserved.
           </p>

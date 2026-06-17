@@ -10,7 +10,7 @@ import Footer from '../../components/student/Footer'
 
 const Home = () => {
   return (
-    <div className='flex flex-col items-center bg-white'>
+    <div className='flex flex-col w-full bg-white'>
       <Hero />
       <Companies />
       <CourseSections />
