@@ -12,21 +12,29 @@ import AddCourses from "./pages/educator/AddCourses";
 import MyCourses from "./pages/educator/MyCourses";
 import StudentsEnrolled from "./pages/educator/StudentsEnrolled";
 import EducatorMessages from "./pages/educator/EducatorMessages";
-import EducatorMaterials from "./pages/educator/EducatorMaterials.jsx";
+import EducatorMaterials from "./pages/educator/EducatorMaterials";
 import Navbar from "./components/student/Navbar";
 import About from "./components/student/About";
 import "quill/dist/quill.snow.css";
 import { ToastContainer } from "react-toastify";
 
+// NEW: Student Dashboard imports
+import StudentDashboardLayout from "./pages/student/StudentDashboardLayout";
+import StudentAnalytics from "./pages/student/StudentAnalytics";
+import StudentEnrollments from "./pages/student/StudentEnrollments";
+import StudentAssignments from "./pages/student/StudentAssignments";
+
 const App = () => {
   const isEducatorRoute = useMatch("/educator/*");
+  const isStudentDashboardRoute = useMatch("/student/*");
 
   return (
     <div className="text-default min-h-screen bg-white">
       <ToastContainer />
-      {!isEducatorRoute && <Navbar />}
+      {!isEducatorRoute && !isStudentDashboardRoute && <Navbar />}
 
       <Routes>
+        {/* Public Student Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/course-list" element={<CoursesList />} />
@@ -36,6 +44,14 @@ const App = () => {
         <Route path="/player/:courseId" element={<Player />} />
         <Route path="/loading/:path" element={<Loading />} />
 
+        {/* NEW: Student Dashboard Routes */}
+        <Route path="/student" element={<StudentDashboardLayout />}>
+          <Route path="/student" element={<StudentAnalytics />} />
+          <Route path="enrollments" element={<StudentEnrollments />} />
+          <Route path="assignments" element={<StudentAssignments />} />
+        </Route>
+
+        {/* Educator Routes */}
         <Route path="/educator" element={<Educator />}>
           <Route path="/educator" element={<Dashboard />} />
           <Route path="add-course" element={<AddCourses />} />
