@@ -1,6 +1,7 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
+import axios from "axios";
 
 const learningMenuItems = [
   {
@@ -81,14 +82,55 @@ const studyBuddyMenuItems = [
 ];
 
 const StudentSidebar = () => {
-  const { session } = useContext(AppContext);
+  const { session, backendUrl } = useContext(AppContext);
   const location = useLocation();
   const [foldersOpen, setFoldersOpen] = useState(false);
+  const [folders, setFolders] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  // Fetch folders on mount
+  useEffect(() => {
+    const fetchFolders = async () => {
+      try {
+        const { data } = await axios.get(`${backendUrl}/api/user/folders`, {
+          withCredentials: true,
+        });
+        if (data.success) setFolders(data.folders);
+      } catch (err) {
+        console.error("Failed to load folders", err);
+      }
+    };
+    if (session?.user) fetchFolders();
+  }, [backendUrl, session]);
 
   const isActive = (path) => {
     if (path === "/student") return location.pathname === "/student";
     if (path === "/course-list") return location.pathname === "/course-list";
     return location.pathname.startsWith(path);
+  };
+
+  const handleCreateFolder = async (e) => {
+    e.preventDefault();
+    if (!newFolderName.trim() || creating) return;
+    setCreating(true);
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/api/user/folders`,
+        { name: newFolderName.trim(), color: "#10b981" },
+        { withCredentials: true }
+      );
+      if (data.success) {
+        setFolders((prev) => [...prev, data.folder]);
+        setNewFolderName("");
+        setShowModal(false);
+      }
+    } catch (err) {
+      console.error("Create folder failed", err);
+    } finally {
+      setCreating(false);
+    }
   };
 
   const renderNavItem = (item, isStudyBuddy = false) => {
@@ -192,6 +234,7 @@ const StudentSidebar = () => {
 
           {foldersOpen && (
             <div className="ml-4 mt-1 space-y-1">
+              {/* Default flash cards link */}
               <NavLink
                 to="/student/flash-cards/folder/default"
                 className={({ isActive }) =>
@@ -207,8 +250,31 @@ const StudentSidebar = () => {
                 </svg>
                 Flash Cards
               </NavLink>
+
+              {/* Dynamic folders */}
+              {folders.map((folder) => (
+                <NavLink
+                  key={folder._id}
+                  to={`/student/flash-cards/folder/${folder._id}`}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-2 rounded-xl text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-emerald-100 text-emerald-800 font-medium"
+                        : "text-slate-500 hover:bg-emerald-50 hover:text-emerald-700"
+                    }`
+                  }
+                >
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: folder.color || "#10b981" }}
+                  />
+                  <span className="truncate">{folder.name}</span>
+                </NavLink>
+              ))}
+
+              {/* New Folder button */}
               <button
-                onClick={() => { /* TODO: open new folder modal */ }}
+                onClick={() => setShowModal(true)}
                 className="flex items-center gap-3 px-4 py-2 rounded-xl text-sm text-slate-500 hover:bg-emerald-50 hover:text-emerald-700 transition-all w-full"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,6 +298,48 @@ const StudentSidebar = () => {
           </div>
         </div>
       </div>
+
+      {/* New Folder Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-slate-200">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">Create New Folder</h3>
+            <form onSubmit={handleCreateFolder} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">Folder Name</label>
+                <input
+                  autoFocus
+                  type="text"
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  placeholder="e.g. Biology 101"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={creating || !newFolderName.trim()}
+                  className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creating ? "Creating..." : "Create Folder"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    setNewFolderName("");
+                  }}
+                  className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
