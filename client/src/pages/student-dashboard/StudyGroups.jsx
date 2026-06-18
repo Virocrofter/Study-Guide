@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import StudyGroupCard from "../../components/student/StudyGroupCard";
+import StudyGroupCard from "../../components/student/StudyGroupCard copy";
 
 const StudyGroups = () => {
   const [groups, setGroups] = useState([]);
