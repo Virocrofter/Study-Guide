@@ -13,6 +13,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.6",
     "humanize-duration": "^3.33.2",
+    "lucide-react": "^1.21.0",
     "quill": "^2.0.2",
     "rc-progress": "^4.0.0",
     "react": "^19.2.0",
