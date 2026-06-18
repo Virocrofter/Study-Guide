@@ -23,7 +23,7 @@ const learningMenuItems = [
     ),
   },
   {
-    name: "Browse Courses",
+    name: "Browse",
     path: "/course-list",
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,7 +122,7 @@ const collaborationMenuItems = [
     ),
   },
   {
-    name: "Study Calendar",
+    name: "Calendar",
     path: "/student/calendar",
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,21 +194,21 @@ const StudentSidebar = () => {
 
   const renderNavItem = (item, isStudyBuddy = false, isCollab = false, isQuestionBase = false) => {
     const active = isActive(item.path);
-    const baseClasses = "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200";
+    const baseClasses = "flex items-center gap-2 px-2.5 py-[5px] rounded-md text-[11px] font-medium transition-all duration-200 leading-tight";
     const activeClasses = isStudyBuddy
-      ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
+      ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
       : isCollab
-      ? "bg-purple-600 text-white shadow-lg shadow-purple-500/25"
+      ? "bg-purple-600 text-white shadow-md shadow-purple-500/20"
       : isQuestionBase
-      ? "bg-orange-600 text-white shadow-lg shadow-orange-500/25"
-      : "bg-blue-600 text-white shadow-lg shadow-blue-500/25";
+      ? "bg-orange-500 text-white shadow-md shadow-orange-500/20"
+      : "bg-blue-600 text-white shadow-md shadow-blue-500/20";
     const inactiveClasses = isStudyBuddy
-      ? "text-slate-600 hover:bg-emerald-50 hover:text-emerald-900"
+      ? "text-slate-500 hover:bg-emerald-50 hover:text-emerald-800"
       : isCollab
-      ? "text-slate-600 hover:bg-purple-50 hover:text-purple-900"
+      ? "text-slate-500 hover:bg-purple-50 hover:text-purple-800"
       : isQuestionBase
-      ? "text-slate-600 hover:bg-orange-50 hover:text-orange-900"
-      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900";
+      ? "text-slate-500 hover:bg-orange-50 hover:text-orange-800"
+      : "text-slate-500 hover:bg-slate-100 hover:text-slate-800";
 
     const isExternal = item.path === "/course-list";
 
@@ -240,66 +240,66 @@ const StudentSidebar = () => {
       >
         {item.icon}
         <span>{item.name}</span>
-        {active && <div className="ml-auto w-1 h-1 rounded-full bg-white" />}
+        {active && <div className="ml-auto w-[5px] h-[5px] rounded-full bg-white" />}
       </NavLink>
     );
   };
 
   return (
-    <div className="w-64 h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-hidden">
-      <div className="p-4 border-b border-slate-100">
-        <h2 className="text-lg font-bold text-slate-900 tracking-tight">My Learning</h2>
-        <p className="text-[10px] text-slate-500 mt-0.5">StudyGuide Student</p>
+    <div className="w-[220px] h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-hidden select-none">
+      <div className="px-3 py-2.5 border-b border-slate-100">
+        <h2 className="text-sm font-bold text-slate-900 tracking-tight">My Learning</h2>
+        <p className="text-[9px] text-slate-400 mt-0">StudyGuide Student</p>
       </div>
 
-      <div className="p-3">
-        <div className="bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl p-3 text-white">
+      <div className="px-2 py-2">
+        <div className="bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg p-2 text-white">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-xs">
+            <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-bold text-[10px]">
               {(session?.user?.name || "S").charAt(0)}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold truncate">{session?.user?.name || "Student"}</p>
-              <p className="text-[10px] text-blue-100 truncate">{session?.user?.email || ""}</p>
+              <p className="text-[11px] font-semibold truncate leading-tight">{session?.user?.name || "Student"}</p>
+              <p className="text-[9px] text-blue-100 truncate leading-tight">{session?.user?.email || ""}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <nav className="px-3 space-y-0.5">
-        {learningMenuItems.map((item) => renderNavItem(item, false, false))}
+      <nav className="px-2 space-y-[1px]">
+        {learningMenuItems.map((item) => renderNavItem(item))}
       </nav>
 
-      <div className="mt-3 px-3">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-2 h-2 rounded-full bg-orange-500" />
-          <p className="text-[10px] font-bold text-orange-900 uppercase tracking-wider">Question Base</p>
+      <div className="mt-2 px-2">
+        <div className="flex items-center gap-1.5 mb-[3px]">
+          <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+          <p className="text-[9px] font-bold text-orange-800 uppercase tracking-wider">Question Base</p>
         </div>
-        <div className="h-px bg-orange-100 mb-1" />
+        <div className="h-px bg-orange-100 mb-[3px]" />
       </div>
 
-      <nav className="px-3 space-y-0.5 pb-1">
+      <nav className="px-2 space-y-[1px] pb-[1px]">
         {questionBaseMenuItems.map((item) => renderNavItem(item, false, false, true))}
       </nav>
 
-      <div className="mt-3 px-3">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-2 h-2 rounded-full bg-emerald-600" />
-          <p className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider">Study Buddy</p>
+      <div className="mt-2 px-2">
+        <div className="flex items-center gap-1.5 mb-[3px]">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <p className="text-[9px] font-bold text-emerald-800 uppercase tracking-wider">Study Buddy</p>
         </div>
-        <div className="h-px bg-emerald-100 mb-1" />
+        <div className="h-px bg-emerald-100 mb-[3px]" />
       </div>
 
-      <nav className="px-3 space-y-0.5 pb-1">
-        {renderNavItem(studyBuddyMenuItems[0], true, false)}
+      <nav className="px-2 space-y-[1px] pb-[1px]">
+        {renderNavItem(studyBuddyMenuItems[0], true)}
 
         <div>
           <button
             onClick={() => setFoldersOpen(!foldersOpen)}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+            className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md text-[11px] font-medium transition-all duration-200 leading-tight ${
               location.pathname.startsWith("/student/flash-cards/folder")
-                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
-                : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-900"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                : "text-slate-500 hover:bg-emerald-50 hover:text-emerald-800"
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -312,14 +312,14 @@ const StudentSidebar = () => {
           </button>
 
           {foldersOpen && (
-            <div className="ml-3 mt-0.5 space-y-0.5">
+            <div className="ml-2 mt-[1px] space-y-[1px]">
               <NavLink
                 to="/student/flash-cards/folder/default"
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-200 ${
+                  `flex items-center gap-2 px-2.5 py-[4px] rounded-md text-[11px] transition-all duration-200 leading-tight ${
                     isActive
                       ? "bg-emerald-100 text-emerald-800 font-medium"
-                      : "text-slate-500 hover:bg-emerald-50 hover:text-emerald-700"
+                      : "text-slate-400 hover:bg-emerald-50 hover:text-emerald-700"
                   }`
                 }
               >
@@ -334,15 +334,15 @@ const StudentSidebar = () => {
                   key={folder._id}
                   to={`/student/flash-cards/folder/${folder._id}`}
                   className={({ isActive }) =>
-                    `flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-200 ${
+                    `flex items-center gap-2 px-2.5 py-[4px] rounded-md text-[11px] transition-all duration-200 leading-tight ${
                       isActive
                         ? "bg-emerald-100 text-emerald-800 font-medium"
-                        : "text-slate-500 hover:bg-emerald-50 hover:text-emerald-700"
+                        : "text-slate-400 hover:bg-emerald-50 hover:text-emerald-700"
                     }`
                   }
                 >
                   <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    className="w-2 h-2 rounded-full shrink-0"
                     style={{ backgroundColor: folder.color || "#10b981" }}
                   />
                   <span className="truncate">{folder.name}</span>
@@ -351,7 +351,7 @@ const StudentSidebar = () => {
 
               <button
                 onClick={() => setShowModal(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:bg-emerald-50 hover:text-emerald-700 transition-all w-full"
+                className="flex items-center gap-2 px-2.5 py-[4px] rounded-md text-[11px] text-slate-400 hover:bg-emerald-50 hover:text-emerald-700 transition-all w-full leading-tight"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -362,53 +362,53 @@ const StudentSidebar = () => {
           )}
         </div>
 
-        {studyBuddyMenuItems.slice(1).map((item) => renderNavItem(item, true, false))}
+        {studyBuddyMenuItems.slice(1).map((item) => renderNavItem(item, true))}
       </nav>
 
-      <div className="mt-3 px-3">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-2 h-2 rounded-full bg-purple-600" />
-          <p className="text-[10px] font-bold text-purple-900 uppercase tracking-wider">Collab & AI</p>
+      <div className="mt-2 px-2">
+        <div className="flex items-center gap-1.5 mb-[3px]">
+          <div className="w-1.5 h-1.5 rounded-full bg-purple-600" />
+          <p className="text-[9px] font-bold text-purple-800 uppercase tracking-wider">Collab & AI</p>
         </div>
-        <div className="h-px bg-purple-100 mb-1" />
+        <div className="h-px bg-purple-100 mb-[3px]" />
       </div>
 
-      <nav className="px-3 space-y-0.5 pb-1">
+      <nav className="px-2 space-y-[1px] pb-[1px]">
         {collaborationMenuItems.map((item) => renderNavItem(item, false, true))}
       </nav>
 
-      <div className="mt-auto p-3 border-t border-slate-100">
-        <div className="bg-slate-50 rounded-xl p-3">
-          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Level</p>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-500" />
-            <span className="text-xs font-medium text-slate-700">Active Learner</span>
+      <div className="mt-auto p-2 border-t border-slate-100">
+        <div className="bg-slate-50 rounded-lg p-2">
+          <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-[2px]">Level</p>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+            <span className="text-[11px] font-medium text-slate-700">Active Learner</span>
           </div>
         </div>
       </div>
 
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-slate-200">
-            <h3 className="text-lg font-bold text-slate-800 mb-4">Create New Folder</h3>
-            <form onSubmit={handleCreateFolder} className="space-y-4">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl border border-slate-200">
+            <h3 className="text-base font-bold text-slate-800 mb-3">Create New Folder</h3>
+            <form onSubmit={handleCreateFolder} className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Folder Name</label>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">Folder Name</label>
                 <input
                   autoFocus
                   type="text"
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
                   placeholder="e.g. Biology 101"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   required
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   type="submit"
                   disabled={creating || !newFolderName.trim()}
-                  className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {creating ? "Creating..." : "Create Folder"}
                 </button>
@@ -418,7 +418,7 @@ const StudentSidebar = () => {
                     setShowModal(false);
                     setNewFolderName("");
                   }}
-                  className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-colors"
+                  className="flex-1 py-2 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-200 transition-colors"
                 >
                   Cancel
                 </button>
