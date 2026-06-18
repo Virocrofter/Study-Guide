@@ -3,6 +3,59 @@ import { AppContext } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+// Demo data so the UI is visible immediately
+const demoJumpBackIn = [
+  {
+    id: "demo-1",
+    title: "General trivia",
+    type: "practice-test",
+    progress: 50,
+    total: 14,
+    completed: 7,
+    accent: "from-blue-500 to-indigo-500",
+  },
+  {
+    id: "demo-2",
+    title: "Biology: DNA",
+    type: "flashcards",
+    progress: 30,
+    total: 20,
+    completed: 6,
+    accent: "from-emerald-400 to-teal-500",
+  },
+];
+
+const demoRecents = [
+  {
+    id: "demo-r1",
+    title: "General trivia",
+    meta: "7 cards • by Quizlet",
+    icon: "flashcard",
+    color: "bg-blue-500/20 text-blue-400",
+  },
+  {
+    id: "demo-r2",
+    title: "Nothing Phone (2a) 12GB/256GB Specs & Features",
+    meta: "18 cards • by you",
+    icon: "flashcard",
+    color: "bg-blue-500/20 text-blue-400",
+  },
+  {
+    id: "demo-r3",
+    title: "Biology: Cell Structure",
+    meta: "Study guide • by you",
+    icon: "guide",
+    color: "bg-violet-500/20 text-violet-400",
+  },
+  {
+    id: "demo-r4",
+    title: "pokemon",
+    meta: "2 cards • by you",
+    icon: "flashcard",
+    color: "bg-blue-500/20 text-blue-400",
+  },
+];
+
 const StudentAnalytics = () => {
   const { enrolledCourses, calculateCourseDuration, userData, fetchUserEnrolledCourses, backendUrl } = useContext(AppContext);
   const navigate = useNavigate();
@@ -11,8 +64,8 @@ const StudentAnalytics = () => {
     flashcards: 0, dueCards: 0, avgMastery: 0, guides: 0, tests: 0,
     testAttempts: 0, avgTestScore: 0, libraryItems: 0,
   });
-  const [jumpBackIn, setJumpBackIn] = useState([]);
-  const [recents, setRecents] = useState([]);
+  const [jumpBackIn, setJumpBackIn] = useState(demoJumpBackIn);
+  const [recents, setRecents] = useState(demoRecents);
 
   useEffect(() => {
     if (userData) fetchUserEnrolledCourses();
@@ -79,7 +132,7 @@ const StudentAnalytics = () => {
           libraryItems: libraryItems.length,
         });
 
-        // Build "Jump back in" from real data
+        // Merge real data into Jump back in
         const jumpItems = [];
         if (tests.length > 0) {
           const lastTest = tests[0];
@@ -96,7 +149,6 @@ const StudentAnalytics = () => {
           });
         }
         if (flashcards.length > 0) {
-          const due = flashcards.filter((c) => !c.nextReview || new Date(c.nextReview) <= new Date());
           const mastery = flashcards.length > 0
             ? Math.round(flashcards.reduce((a, c) => a + (c.mastery || 0), 0) / flashcards.length)
             : 0;
@@ -106,7 +158,7 @@ const StudentAnalytics = () => {
             type: "flashcards",
             progress: mastery,
             total: flashcards.length,
-            completed: flashcards.length - due.length,
+            completed: flashcards.length - dueCards.length,
             accent: "from-emerald-400 to-teal-500",
           });
         }
@@ -121,9 +173,9 @@ const StudentAnalytics = () => {
             accent: "from-violet-500 to-purple-500",
           });
         }
-        setJumpBackIn(jumpItems);
+        if (jumpItems.length > 0) setJumpBackIn(jumpItems);
 
-        // Build recents
+        // Merge real data into Recents
         const recentItems = [];
         if (flashcards.length > 0) {
           recentItems.push({
@@ -161,7 +213,7 @@ const StudentAnalytics = () => {
             color: "bg-amber-500/20 text-amber-400",
           });
         }
-        setRecents(recentItems);
+        if (recentItems.length > 0) setRecents(recentItems);
 
       } catch (e) {
         console.error("Study stats error:", e);
@@ -301,82 +353,77 @@ const StudentAnalytics = () => {
         </div>
 
         {/* ═══════════════════════════════════════════
-            JUMP BACK IN
+            JUMP BACK IN — always renders
             ═══════════════════════════════════════════ */}
-        {jumpBackIn.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-slate-900 mb-4">Jump back in</h3>
-            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
-              {jumpBackIn.map((item) => (
-                <div
-                  key={item.id}
-                  className="min-w-[320px] max-w-[320px] bg-slate-900 rounded-3xl p-6 relative overflow-hidden snap-start cursor-pointer group hover:shadow-xl transition-shadow"
-                  onClick={() => handleContinue(item)}
-                >
-                  {/* Decorative gradient blob */}
-                  <div className={`absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br ${item.accent} opacity-20 blur-2xl`} />
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-slate-900 mb-4">Jump back in</h3>
+          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+            {jumpBackIn.map((item) => (
+              <div
+                key={item.id}
+                className="min-w-[320px] max-w-[320px] bg-slate-900 rounded-3xl p-6 relative overflow-hidden snap-start cursor-pointer group hover:shadow-xl transition-shadow"
+                onClick={() => handleContinue(item)}
+              >
+                <div className={`absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br ${item.accent} opacity-20 blur-2xl`} />
 
-                  <div className="relative z-10">
-                    <div className="flex items-start justify-between mb-6">
-                      <h4 className="text-xl font-bold text-white">{item.title}</h4>
-                      <button className="text-slate-400 hover:text-white transition-colors">
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" /></svg>
-                      </button>
-                    </div>
-
-                    <div className="mb-2">
-                      <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full bg-gradient-to-r ${item.accent}`}
-                          style={{ width: `${item.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                    <p className="text-sm text-slate-400 mb-6">
-                      {item.progress}% of questions completed
-                    </p>
-
-                    <button className="px-6 py-2.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-500 transition-colors">
-                      Continue
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-6">
+                    <h4 className="text-xl font-bold text-white">{item.title}</h4>
+                    <button className="text-slate-400 hover:text-white transition-colors">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" /></svg>
                     </button>
                   </div>
+
+                  <div className="mb-2">
+                    <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${item.accent}`}
+                        style={{ width: `${item.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-sm text-slate-400 mb-6">
+                    {item.progress}% of questions completed
+                  </p>
+
+                  <button className="px-6 py-2.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-500 transition-colors">
+                    Continue
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
         {/* ═══════════════════════════════════════════
-            RECENTS
+            RECENTS — always renders
             ═══════════════════════════════════════════ */}
-        {recents.length > 0 && (
-          <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-4">Recents</h3>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {recents.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => navigate(
-                    item.icon === "flashcard" ? "/student/flash-cards" :
-                    item.icon === "guide" ? "/student/study-guides" :
-                    item.icon === "test" ? "/student/practice-tests" : "/student/library"
-                  )}
-                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer group"
-                >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.color}`}>
-                    {getIcon(item.icon)}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
-                      {item.title}
-                    </p>
-                    <p className="text-xs text-slate-500">{item.meta}</p>
-                  </div>
+        <div>
+          <h3 className="text-xl font-bold text-slate-900 mb-4">Recents</h3>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {recents.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => navigate(
+                  item.icon === "flashcard" ? "/student/flash-cards" :
+                  item.icon === "guide" ? "/student/study-guides" :
+                  item.icon === "test" ? "/student/practice-tests" : "/student/library"
+                )}
+                className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer group"
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.color}`}>
+                  {getIcon(item.icon)}
                 </div>
-              ))}
-            </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-slate-500">{item.meta}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
 
       <div>
