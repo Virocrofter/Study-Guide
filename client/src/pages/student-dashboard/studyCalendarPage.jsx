@@ -130,3 +130,4 @@ const StudyCalendarPage = () => {
 };
 
 export default StudyCalendarPage;
+
