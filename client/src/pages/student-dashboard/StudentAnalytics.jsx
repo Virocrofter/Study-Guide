@@ -132,7 +132,6 @@ const StudentAnalytics = () => {
           libraryItems: libraryItems.length,
         });
 
-        // Merge real data into Jump back in
         const jumpItems = [];
         if (tests.length > 0) {
           const lastTest = tests[0];
@@ -175,7 +174,6 @@ const StudentAnalytics = () => {
         }
         if (jumpItems.length > 0) setJumpBackIn(jumpItems);
 
-        // Merge real data into Recents
         const recentItems = [];
         if (flashcards.length > 0) {
           recentItems.push({
@@ -312,6 +310,9 @@ const StudentAnalytics = () => {
         <p className="text-slate-500 mt-1">Track your learning progress and study habits.</p>
       </div>
 
+      {/* ═══════════════════════════════════════════
+          COURSE PROGRESS
+          ═══════════════════════════════════════════ */}
       <div>
         <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-blue-500" />
@@ -330,102 +331,9 @@ const StudentAnalytics = () => {
         </div>
       </div>
 
-      <div>
-        <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          Study Buddy
-        </h2>
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          {studyBuddyStats.map((stat, i) => (
-            <div
-              key={i}
-              onClick={() => navigate(stat.route)}
-              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group"
-            >
-              <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center ${stat.text} mb-4 group-hover:scale-110 transition-transform`}>
-                {stat.icon}
-              </div>
-              <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
-              <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
-              <p className="text-xs text-emerald-600 mt-1 font-medium">{stat.sub}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* ═══════════════════════════════════════════
-            JUMP BACK IN — always renders
-            ═══════════════════════════════════════════ */}
-        <div className="mb-8">
-          <h3 className="text-xl font-bold text-slate-900 mb-4">Jump back in</h3>
-          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
-            {jumpBackIn.map((item) => (
-              <div
-                key={item.id}
-                className="min-w-[320px] max-w-[320px] bg-slate-900 rounded-3xl p-6 relative overflow-hidden snap-start cursor-pointer group hover:shadow-xl transition-shadow"
-                onClick={() => handleContinue(item)}
-              >
-                <div className={`absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br ${item.accent} opacity-20 blur-2xl`} />
-
-                <div className="relative z-10">
-                  <div className="flex items-start justify-between mb-6">
-                    <h4 className="text-xl font-bold text-white">{item.title}</h4>
-                    <button className="text-slate-400 hover:text-white transition-colors">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" /></svg>
-                    </button>
-                  </div>
-
-                  <div className="mb-2">
-                    <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full bg-gradient-to-r ${item.accent}`}
-                        style={{ width: `${item.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                  <p className="text-sm text-slate-400 mb-6">
-                    {item.progress}% of questions completed
-                  </p>
-
-                  <button className="px-6 py-2.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-500 transition-colors">
-                    Continue
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════
-            RECENTS — always renders
-            ═══════════════════════════════════════════ */}
-        <div>
-          <h3 className="text-xl font-bold text-slate-900 mb-4">Recents</h3>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {recents.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => navigate(
-                  item.icon === "flashcard" ? "/student/flash-cards" :
-                  item.icon === "guide" ? "/student/study-guides" :
-                  item.icon === "test" ? "/student/practice-tests" : "/student/library"
-                )}
-                className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer group"
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.color}`}>
-                  {getIcon(item.icon)}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
-                    {item.title}
-                  </p>
-                  <p className="text-xs text-slate-500">{item.meta}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
+      {/* ═══════════════════════════════════════════
+          CONTINUE LEARNING — moved under Course Progress
+          ═══════════════════════════════════════════ */}
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-slate-800">Continue Learning</h2>
@@ -481,6 +389,102 @@ const StudentAnalytics = () => {
         )}
       </div>
 
+      {/* ═══════════════════════════════════════════
+          STUDY BUDDY
+          ═══════════════════════════════════════════ */}
+      <div>
+        <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          Study Buddy
+        </h2>
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
+          {studyBuddyStats.map((stat, i) => (
+            <div
+              key={i}
+              onClick={() => navigate(stat.route)}
+              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+            >
+              <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center ${stat.text} mb-4 group-hover:scale-110 transition-transform`}>
+                {stat.icon}
+              </div>
+              <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+              <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
+              <p className="text-xs text-emerald-600 mt-1 font-medium">{stat.sub}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-slate-900 mb-4">Jump back in</h3>
+          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+            {jumpBackIn.map((item) => (
+              <div
+                key={item.id}
+                className="min-w-[320px] max-w-[320px] bg-slate-900 rounded-3xl p-6 relative overflow-hidden snap-start cursor-pointer group hover:shadow-xl transition-shadow"
+                onClick={() => handleContinue(item)}
+              >
+                <div className={`absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br ${item.accent} opacity-20 blur-2xl`} />
+
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-6">
+                    <h4 className="text-xl font-bold text-white">{item.title}</h4>
+                    <button className="text-slate-400 hover:text-white transition-colors">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" /></svg>
+                    </button>
+                  </div>
+
+                  <div className="mb-2">
+                    <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${item.accent}`}
+                        style={{ width: `${item.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-sm text-slate-400 mb-6">
+                    {item.progress}% of questions completed
+                  </p>
+
+                  <button className="px-6 py-2.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-500 transition-colors">
+                    Continue
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-xl font-bold text-slate-900 mb-4">Recents</h3>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {recents.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => navigate(
+                  item.icon === "flashcard" ? "/student/flash-cards" :
+                  item.icon === "guide" ? "/student/study-guides" :
+                  item.icon === "test" ? "/student/practice-tests" : "/student/library"
+                )}
+                className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer group"
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.color}`}>
+                  {getIcon(item.icon)}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-slate-500">{item.meta}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════
+          RECENT ACTIVITY
+          ═══════════════════════════════════════════ */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100">
           <h2 className="text-lg font-bold text-slate-800">Recent Activity</h2>
