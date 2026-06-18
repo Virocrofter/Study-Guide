@@ -7,17 +7,12 @@ const StudentAnalytics = () => {
   const { enrolledCourses, calculateCourseDuration, userData, fetchUserEnrolledCourses, backendUrl } = useContext(AppContext);
   const navigate = useNavigate();
   const [progressData, setProgressData] = useState([]);
-  
   const [studyStats, setStudyStats] = useState({
-    flashcards: 0,
-    dueCards: 0,
-    avgMastery: 0,
-    guides: 0,
-    tests: 0,
-    testAttempts: 0,
-    avgTestScore: 0,
-    libraryItems: 0,
+    flashcards: 0, dueCards: 0, avgMastery: 0, guides: 0, tests: 0,
+    testAttempts: 0, avgTestScore: 0, libraryItems: 0,
   });
+  const [jumpBackIn, setJumpBackIn] = useState([]);
+  const [recents, setRecents] = useState([]);
 
   useEffect(() => {
     if (userData) fetchUserEnrolledCourses();
@@ -83,6 +78,91 @@ const StudentAnalytics = () => {
           avgTestScore,
           libraryItems: libraryItems.length,
         });
+
+        // Build "Jump back in" from real data
+        const jumpItems = [];
+        if (tests.length > 0) {
+          const lastTest = tests[0];
+          const lastAttempt = lastTest.attempts?.[lastTest.attempts.length - 1];
+          const pct = lastAttempt ? lastAttempt.percentage : 0;
+          jumpItems.push({
+            id: lastTest._id,
+            title: lastTest.title,
+            type: "practice-test",
+            progress: pct,
+            total: lastTest.questions?.length || 0,
+            completed: lastAttempt ? Math.round((pct / 100) * (lastTest.questions?.length || 1)) : 0,
+            accent: "from-blue-500 to-indigo-500",
+          });
+        }
+        if (flashcards.length > 0) {
+          const due = flashcards.filter((c) => !c.nextReview || new Date(c.nextReview) <= new Date());
+          const mastery = flashcards.length > 0
+            ? Math.round(flashcards.reduce((a, c) => a + (c.mastery || 0), 0) / flashcards.length)
+            : 0;
+          jumpItems.push({
+            id: "flashcards",
+            title: "Flashcards Review",
+            type: "flashcards",
+            progress: mastery,
+            total: flashcards.length,
+            completed: flashcards.length - due.length,
+            accent: "from-emerald-400 to-teal-500",
+          });
+        }
+        if (guides.length > 0) {
+          jumpItems.push({
+            id: guides[0]._id,
+            title: guides[0].title,
+            type: "study-guide",
+            progress: 30,
+            total: guides[0].sections?.length || 0,
+            completed: 1,
+            accent: "from-violet-500 to-purple-500",
+          });
+        }
+        setJumpBackIn(jumpItems);
+
+        // Build recents
+        const recentItems = [];
+        if (flashcards.length > 0) {
+          recentItems.push({
+            id: "fc-recent",
+            title: "Flashcards Review",
+            meta: `${flashcards.length} cards • by you`,
+            icon: "flashcard",
+            color: "bg-blue-500/20 text-blue-400",
+          });
+        }
+        if (guides.length > 0) {
+          recentItems.push({
+            id: guides[0]._id,
+            title: guides[0].title,
+            meta: `Study guide • by you`,
+            icon: "guide",
+            color: "bg-violet-500/20 text-violet-400",
+          });
+        }
+        if (tests.length > 0) {
+          recentItems.push({
+            id: tests[0]._id,
+            title: tests[0].title,
+            meta: `${tests[0].questions?.length || 0} questions • by you`,
+            icon: "test",
+            color: "bg-emerald-500/20 text-emerald-400",
+          });
+        }
+        if (libraryItems.length > 0) {
+          recentItems.push({
+            id: libraryItems[0]._id,
+            title: libraryItems[0].title,
+            meta: `${libraryItems[0].type} • saved`,
+            icon: "library",
+            color: "bg-amber-500/20 text-amber-400",
+          });
+        }
+        setRecents(recentItems);
+
       } catch (e) {
         console.error("Study stats error:", e);
       }
@@ -108,105 +188,70 @@ const StudentAnalytics = () => {
 
   const courseStats = [
     {
-      label: "Courses Enrolled",
-      value: totalCourses,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      ),
-      bg: "bg-blue-50",
-      text: "text-blue-700",
+      label: "Courses Enrolled", value: totalCourses,
+      icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>),
+      bg: "bg-blue-50", text: "text-blue-700",
     },
     {
-      label: "Completed",
-      value: completedCourses,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      bg: "bg-emerald-50",
-      text: "text-emerald-700",
+      label: "Completed", value: completedCourses,
+      icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>),
+      bg: "bg-emerald-50", text: "text-emerald-700",
     },
     {
-      label: "In Progress",
-      value: inProgress,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      bg: "bg-amber-50",
-      text: "text-amber-700",
+      label: "In Progress", value: inProgress,
+      icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>),
+      bg: "bg-amber-50", text: "text-amber-700",
     },
     {
-      label: "Hours Learned",
-      value: Math.round(totalHours / 60),
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      bg: "bg-violet-50",
-      text: "text-violet-700",
+      label: "Hours Learned", value: Math.round(totalHours / 60),
+      icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>),
+      bg: "bg-violet-50", text: "text-violet-700",
     },
   ];
 
   const studyBuddyStats = [
     {
-      label: "Flashcards",
-      value: studyStats.flashcards,
-      sub: `${studyStats.dueCards} due`,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-        </svg>
-      ),
-      bg: "bg-emerald-50",
-      text: "text-emerald-700",
-      route: "/student/flash-cards",
+      label: "Flashcards", value: studyStats.flashcards, sub: `${studyStats.dueCards} due`,
+      icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>),
+      bg: "bg-emerald-50", text: "text-emerald-700", route: "/student/flash-cards",
     },
     {
-      label: "Mastery",
-      value: `${studyStats.avgMastery}%`,
-      sub: "avg proficiency",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      bg: "bg-teal-50",
-      text: "text-teal-700",
-      route: "/student/flash-cards",
+      label: "Mastery", value: `${studyStats.avgMastery}%`, sub: "avg proficiency",
+      icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>),
+      bg: "bg-teal-50", text: "text-teal-700", route: "/student/flash-cards",
     },
     {
-      label: "Study Guides",
-      value: studyStats.guides,
-      sub: "created",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      ),
-      bg: "bg-cyan-50",
-      text: "text-cyan-700",
-      route: "/student/study-guides",
+      label: "Study Guides", value: studyStats.guides, sub: "created",
+      icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>),
+      bg: "bg-cyan-50", text: "text-cyan-700", route: "/student/study-guides",
     },
     {
-      label: "Practice Tests",
-      value: studyStats.tests,
-      sub: `${studyStats.testAttempts} attempts`,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-        </svg>
-      ),
-      bg: "bg-lime-50",
-      text: "text-lime-700",
-      route: "/student/practice-tests",
+      label: "Practice Tests", value: studyStats.tests, sub: `${studyStats.testAttempts} attempts`,
+      icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>),
+      bg: "bg-lime-50", text: "text-lime-700", route: "/student/practice-tests",
     },
   ];
+
+  const getIcon = (type) => {
+    if (type === "flashcard") return (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+    );
+    if (type === "guide") return (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+    );
+    if (type === "test") return (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+    );
+    return (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+    );
+  };
+
+  const handleContinue = (item) => {
+    if (item.type === "practice-test") navigate("/student/practice-tests");
+    else if (item.type === "flashcards") navigate("/student/flash-cards");
+    else if (item.type === "study-guide") navigate("/student/study-guides");
+  };
 
   return (
     <div className="h-full pb-20 space-y-8 max-w-6xl">
@@ -238,7 +283,7 @@ const StudentAnalytics = () => {
           <span className="w-2 h-2 rounded-full bg-emerald-500" />
           Study Buddy
         </h2>
-        <div className="grid md:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
           {studyBuddyStats.map((stat, i) => (
             <div
               key={i}
@@ -254,6 +299,84 @@ const StudentAnalytics = () => {
             </div>
           ))}
         </div>
+
+        {/* ═══════════════════════════════════════════
+            JUMP BACK IN
+            ═══════════════════════════════════════════ */}
+        {jumpBackIn.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-xl font-bold text-slate-900 mb-4">Jump back in</h3>
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+              {jumpBackIn.map((item) => (
+                <div
+                  key={item.id}
+                  className="min-w-[320px] max-w-[320px] bg-slate-900 rounded-3xl p-6 relative overflow-hidden snap-start cursor-pointer group hover:shadow-xl transition-shadow"
+                  onClick={() => handleContinue(item)}
+                >
+                  {/* Decorative gradient blob */}
+                  <div className={`absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br ${item.accent} opacity-20 blur-2xl`} />
+
+                  <div className="relative z-10">
+                    <div className="flex items-start justify-between mb-6">
+                      <h4 className="text-xl font-bold text-white">{item.title}</h4>
+                      <button className="text-slate-400 hover:text-white transition-colors">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" /></svg>
+                      </button>
+                    </div>
+
+                    <div className="mb-2">
+                      <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full bg-gradient-to-r ${item.accent}`}
+                          style={{ width: `${item.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-400 mb-6">
+                      {item.progress}% of questions completed
+                    </p>
+
+                    <button className="px-6 py-2.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-500 transition-colors">
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════
+            RECENTS
+            ═══════════════════════════════════════════ */}
+        {recents.length > 0 && (
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 mb-4">Recents</h3>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {recents.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => navigate(
+                    item.icon === "flashcard" ? "/student/flash-cards" :
+                    item.icon === "guide" ? "/student/study-guides" :
+                    item.icon === "test" ? "/student/practice-tests" : "/student/library"
+                  )}
+                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer group"
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.color}`}>
+                    {getIcon(item.icon)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                      {item.title}
+                    </p>
+                    <p className="text-xs text-slate-500">{item.meta}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div>
@@ -279,7 +402,7 @@ const StudentAnalytics = () => {
                 <div key={course._id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group">
                   <div className="relative h-40 overflow-hidden">
                     <img src={course.courseThumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-3 left-3 right-3">
                       <div className="h-1.5 bg-white/30 rounded-full overflow-hidden">
                         <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct}%` }} />
