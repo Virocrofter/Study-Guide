@@ -1,27 +1,25 @@
-StudentAnalytics.jsx
 import React, { useState, useEffect } from "react";
 import { AppContext } from "../../context/AppContext";
 import { useContext } from "react";
 import { assets } from "../../assets/assets";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import {
-  BookOpen,
-  Clock,
-  Award,
-  TrendingUp,
-  Play,
-  CheckCircle,
-  Zap,
-  FileText,
-  Layers,
-  Pencil,
-  Check,
-  X,
-} from "lucide-react";
 
-// ─── NEW: Follow Your Progress Section ───
-const FollowYourProgress = ({ enrolledCourses }) => {
+const StudentAnalytics = () => {
+  const { enrolledCourses, backendUrl, currency } = useContext(AppContext);
+  const [studyStats, setStudyStats] = useState({
+    totalFlashcards: 0,
+    mastery: 0,
+    studyGuides: 0,
+    practiceTests: 0,
+  });
+  const [flashcards, setFlashcards] = useState([]);
+  const [guides, setGuides] = useState([]);
+  const [tests, setTests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [recents, setRecents] = useState([]);
+
+  // ─── Follow Your Progress State ───
   const [weeklyTarget, setWeeklyTarget] = useState(7);
   const [activeDays, setActiveDays] = useState([true, true, true, false, false, false, false]);
   const [goal, setGoal] = useState("Change my career");
@@ -59,154 +57,6 @@ const FollowYourProgress = ({ enrolledCourses }) => {
     newDays[index] = !newDays[index];
     setActiveDays(newDays);
   };
-
-  const latestCourse = enrolledCourses?.[0];
-
-  return (
-    <div className="mb-8">
-      <h2 className="text-2xl font-bold text-gray-900 mb-5">Follow your progress</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Left Card — Subjects & Motivation */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-8 flex flex-col items-center justify-center text-center min-h-[280px]">
-          <h3 className="text-xl font-semibold text-gray-900 mb-2 self-start w-full text-left">
-            Subjects and languages
-          </h3>
-          <div className="w-full h-px bg-gray-100 mb-8 self-start" />
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <p className="text-lg font-semibold text-gray-900 mb-2">
-              Take action to stay motivated
-            </p>
-            <p className="text-gray-500 mb-6 max-w-md">
-              Move forward in your learning and watch your skills grow.
-            </p>
-            {latestCourse ? (
-              <Link
-                to={`/course/${latestCourse._id}`}
-                className="text-[#4b3f8f] font-semibold underline underline-offset-2 hover:text-[#3a3070] transition-colors"
-              >
-                Continue in {latestCourse.courseTitle}
-              </Link>
-            ) : (
-              <Link
-                to="/course-list"
-                className="text-[#4b3f8f] font-semibold underline underline-offset-2 hover:text-[#3a3070] transition-colors"
-              >
-                Explore courses
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column — Weekly Target + Goal */}
-        <div className="flex flex-col gap-5">
-          {/* Weekly Target */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Weekly target</h3>
-              {editingTarget ? (
-                <div className="flex items-center gap-1">
-                  <button onClick={handleSaveTarget} className="p-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
-                    <Check size={16} />
-                  </button>
-                  <button onClick={handleCancelTarget} className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                    <X size={16} />
-                  </button>
-                </div>
-              ) : (
-                <button onClick={handleEditTarget} className="flex items-center gap-1.5 text-[#4b3f8f] font-medium text-sm hover:text-[#3a3070] transition-colors">
-                  Edit <Pencil size={14} />
-                </button>
-              )}
-            </div>
-
-            {editingTarget ? (
-              <div className="mb-4">
-                <label className="text-sm text-gray-500 mb-1 block">Target days per week</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={7}
-                  value={tempTarget}
-                  onChange={(e) => setTempTarget(parseInt(e.target.value) || 1)}
-                  className="w-20 px-3 py-2 border border-gray-200 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-[#4b3f8f]/20"
-                />
-              </div>
-            ) : (
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-gray-900">{activeCount}</span>
-                <span className="text-gray-500 ml-1">of {weeklyTarget} days</span>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              {days.map((day, index) => (
-                <button
-                  key={index}
-                  onClick={() => toggleDay(index)}
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-semibold transition-all border-2 ${
-                    activeDays[index]
-                      ? "bg-[#4b3f8f] text-white border-[#4b3f8f]"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
-                  }`}
-                  title={fullDays[index]}
-                >
-                  {day}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Your Goal */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-gray-900">Your goal</h3>
-              {editingGoal ? (
-                <div className="flex items-center gap-1">
-                  <button onClick={handleSaveGoal} className="p-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
-                    <Check size={16} />
-                  </button>
-                  <button onClick={handleCancelGoal} className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                    <X size={16} />
-                  </button>
-                </div>
-              ) : (
-                <button onClick={handleEditGoal} className="flex items-center gap-1.5 text-[#4b3f8f] font-medium text-sm hover:text-[#3a3070] transition-colors">
-                  Edit <Pencil size={14} />
-                </button>
-              )}
-            </div>
-            {editingGoal ? (
-              <input
-                type="text"
-                value={tempGoal}
-                onChange={(e) => setTempGoal(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSaveGoal()}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#4b3f8f]/20"
-                autoFocus
-              />
-            ) : (
-              <p className="text-gray-700">{goal}</p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const StudentAnalytics = () => {
-  const { enrolledCourses, backendUrl, currency } = useContext(AppContext);
-  const [studyStats, setStudyStats] = useState({
-    totalFlashcards: 0,
-    mastery: 0,
-    studyGuides: 0,
-    practiceTests: 0,
-  });
-  const [flashcards, setFlashcards] = useState([]);
-  const [guides, setGuides] = useState([]);
-  const [tests, setTests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [recents, setRecents] = useState([]);
 
   const demoJumpBackIn = [
     {
@@ -309,11 +159,36 @@ const StudentAnalytics = () => {
 
   const getRecentActivityIcon = (type) => {
     switch (type) {
-      case "flashcard": return <Zap size={16} className="text-amber-500" />;
-      case "quiz": return <Award size={16} className="text-purple-500" />;
-      case "guide": return <FileText size={16} className="text-blue-500" />;
-      case "test": return <Layers size={16} className="text-emerald-500" />;
-      default: return <Clock size={16} className="text-gray-400" />;
+      case "flashcard":
+        return (
+          <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        );
+      case "quiz":
+        return (
+          <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+      case "guide":
+        return (
+          <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        );
+      case "test":
+        return (
+          <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        );
+      default:
+        return (
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
     }
   };
 
@@ -354,11 +229,153 @@ const StudentAnalytics = () => {
   })) || [];
 
   const displayRecents = recents.length > 0 ? recents : demoRecents;
+  const latestCourse = enrolledCourses?.[0];
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      {/* ─── NEW: Follow Your Progress Section ─── */}
-      <FollowYourProgress enrolledCourses={enrolledCourses} studyStats={studyStats} />
+      {/* ─── Follow Your Progress Section ─── */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-5">Follow your progress</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Left Card — Subjects & Motivation */}
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-8 flex flex-col items-center justify-center text-center min-h-[280px]">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2 self-start w-full text-left">
+              Subjects and languages
+            </h3>
+            <div className="w-full h-px bg-gray-100 mb-8 self-start" />
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <p className="text-lg font-semibold text-gray-900 mb-2">
+                Take action to stay motivated
+              </p>
+              <p className="text-gray-500 mb-6 max-w-md">
+                Move forward in your learning and watch your skills grow.
+              </p>
+              {latestCourse ? (
+                <Link
+                  to={`/course/${latestCourse._id}`}
+                  className="text-[#4b3f8f] font-semibold underline underline-offset-2 hover:text-[#3a3070] transition-colors"
+                >
+                  Continue in {latestCourse.courseTitle}
+                </Link>
+              ) : (
+                <Link
+                  to="/course-list"
+                  className="text-[#4b3f8f] font-semibold underline underline-offset-2 hover:text-[#3a3070] transition-colors"
+                >
+                  Explore courses
+                </Link>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column — Weekly Target + Goal */}
+          <div className="flex flex-col gap-5">
+            {/* Weekly Target */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Weekly target</h3>
+                {editingTarget ? (
+                  <div className="flex items-center gap-1">
+                    <button onClick={handleSaveTarget} className="p-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                    <button onClick={handleCancelTarget} className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={handleEditTarget} className="flex items-center gap-1.5 text-[#4b3f8f] font-medium text-sm hover:text-[#3a3070] transition-colors">
+                    Edit
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {editingTarget ? (
+                <div className="mb-4">
+                  <label className="text-sm text-gray-500 mb-1 block">Target days per week</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={7}
+                    value={tempTarget}
+                    onChange={(e) => setTempTarget(parseInt(e.target.value) || 1)}
+                    className="w-20 px-3 py-2 border border-gray-200 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-[#4b3f8f]/20"
+                  />
+                </div>
+              ) : (
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-gray-900">{activeCount}</span>
+                  <span className="text-gray-500 ml-1">of {weeklyTarget} days</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                {days.map((day, index) => (
+                  <button
+                    key={index}
+                    onClick={() => toggleDay(index)}
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-semibold transition-all border-2 ${
+                      activeDays[index]
+                        ? "bg-[#4b3f8f] text-white border-[#4b3f8f]"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                    }`}
+                    title={fullDays[index]}
+                  >
+                    {day}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Your Goal */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-900">Your goal</h3>
+                {editingGoal ? (
+                  <div className="flex items-center gap-1">
+                    <button onClick={handleSaveGoal} className="p-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                    <button onClick={handleCancelGoal} className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={handleEditGoal} className="flex items-center gap-1.5 text-[#4b3f8f] font-medium text-sm hover:text-[#3a3070] transition-colors">
+                    Edit
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {editingGoal ? (
+                <input
+                  type="text"
+                  value={tempGoal}
+                  onChange={(e) => setTempGoal(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSaveGoal()}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#4b3f8f]/20"
+                  autoFocus
+                />
+              ) : (
+                <p className="text-gray-700">{goal}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Course Progress Stats */}
       <div className="mb-8">
@@ -367,7 +384,9 @@ const StudentAnalytics = () => {
           <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                <BookOpen size={20} className="text-blue-600" />
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
               </div>
               <span className="text-2xl font-bold text-gray-900">{enrolledCourses?.length || 0}</span>
             </div>
@@ -376,7 +395,9 @@ const StudentAnalytics = () => {
           <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                <CheckCircle size={20} className="text-green-600" />
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
               <span className="text-2xl font-bold text-gray-900">{completedCourses.length}</span>
             </div>
@@ -385,7 +406,9 @@ const StudentAnalytics = () => {
           <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                <Clock size={20} className="text-amber-600" />
+                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
               <span className="text-2xl font-bold text-gray-900">{inProgressCourses.length}</span>
             </div>
@@ -394,7 +417,9 @@ const StudentAnalytics = () => {
           <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                <TrendingUp size={20} className="text-purple-600" />
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
               </div>
               <span className="text-2xl font-bold text-gray-900">{Math.round(totalHours)}h</span>
             </div>
@@ -423,7 +448,10 @@ const StudentAnalytics = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-500">{progress}% complete</span>
                     <Link to={`/course/${course._id}`} className="flex items-center gap-1 text-sm font-medium text-[#4b3f8f] hover:text-[#3a3070] transition-colors">
-                      <Play size={16} /> {progress > 0 ? "Continue" : "Start"}
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                      {progress > 0 ? "Continue" : "Start"}
                     </Link>
                   </div>
                 </div>
@@ -434,7 +462,10 @@ const StudentAnalytics = () => {
             <div className="md:col-span-3 bg-white rounded-xl border border-gray-200 p-8 text-center">
               <p className="text-gray-500 mb-4">No enrolled courses yet</p>
               <Link to="/course-list" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#4b3f8f] text-white rounded-lg font-medium hover:bg-[#3a3070] transition-colors">
-                <BookOpen size={18} /> Explore Courses
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                Explore Courses
               </Link>
             </div>
           )}
@@ -448,7 +479,9 @@ const StudentAnalytics = () => {
           <Link to="/student/flash-cards" className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
-                <Zap size={20} className="text-emerald-600" />
+                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
               <span className="text-2xl font-bold text-gray-900">{studyStats.totalFlashcards}</span>
             </div>
@@ -457,7 +490,9 @@ const StudentAnalytics = () => {
           <Link to="/student/flash-cards" className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
-                <TrendingUp size={20} className="text-amber-600" />
+                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
               </div>
               <span className="text-2xl font-bold text-gray-900">{studyStats.mastery}%</span>
             </div>
@@ -466,7 +501,9 @@ const StudentAnalytics = () => {
           <Link to="/student/study-guides" className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                <FileText size={20} className="text-blue-600" />
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
               <span className="text-2xl font-bold text-gray-900">{studyStats.studyGuides}</span>
             </div>
@@ -475,7 +512,9 @@ const StudentAnalytics = () => {
           <Link to="/student/practice-tests" className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                <Layers size={20} className="text-purple-600" />
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
               </div>
               <span className="text-2xl font-bold text-gray-900">{studyStats.practiceTests}</span>
             </div>
