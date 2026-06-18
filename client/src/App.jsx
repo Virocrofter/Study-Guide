@@ -25,7 +25,7 @@ import PracticeTests from "./pages/student-dashboard/PracticeTests";
 // ─── NEW FEATURES (v2.0) ───
 import StudyGroups from "./pages/student-dashboard/StudyGroups";
 import Leaderboard from "./pages/student-dashboard/Leaderboard";
-import StudyCalendarPage from "./pages/student-dashboard/studyCalendarPage";
+import StudyCalendarPage from "./pages/student-dashboard/StudyCalendarPage";
 import AIStudyAssistantPage from "./pages/student-dashboard/AIStudyAssistantPage";
 
 // ─── Educator Pages ───
@@ -40,7 +40,6 @@ import EducatorQuizzes from "./pages/educator/EducatorQuizzes";
 const App = () => {
   const location = useLocation();
 
-  // Scroll to top on route change
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
@@ -58,16 +57,18 @@ const App = () => {
 
       {/* ═══════════════════════════════════════════
           STUDENT DASHBOARD (with sidebar layout)
+          Routes match the uploaded sidebar design
           ═══════════════════════════════════════════ */}
-      <Route path="/dashboard" element={<StudentDashboardLayout />}>
+      <Route path="/student" element={<StudentDashboardLayout />}>
         {/* Core */}
-        <Route path="analytics" element={<StudentAnalytics />} />
+        <Route index element={<StudentAnalytics />} />
         <Route path="enrollments" element={<StudentEnrollments />} />
         <Route path="assignments" element={<StudentAssignments />} />
 
         {/* Study Buddy */}
         <Route path="library" element={<Library />} />
-        <Route path="flashcards" element={<FlashCards />} />
+        <Route path="flash-cards" element={<FlashCards />} />
+        <Route path="flash-cards/folder/:folderId" element={<FlashCards />} />
         <Route path="study-guides" element={<StudyGuides />} />
         <Route path="practice-tests" element={<PracticeTests />} />
 

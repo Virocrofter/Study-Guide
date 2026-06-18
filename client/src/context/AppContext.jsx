@@ -11,7 +11,7 @@ const sanitizeEnvUrl = (value) =>
 
 /**
  * Auth.js (@auth/express) expects POST for sign-in/sign-out actions.
- * Those POSTs must include a csrfToken.
+ * These POSTs must include a csrfToken.
  */
 const postNavigate = (url, fields = {}) => {
   const form = document.createElement("form");
@@ -68,6 +68,7 @@ export const AppContextProvider = (props) => {
       const { data } = await axios.get(`${backendUrl}/api/auth/csrf`);
       return data?.csrfToken || null;
     } catch (error) {
+      console.error("CSRF fetch failed:", error.message);
       return null;
     }
   };
@@ -75,12 +76,20 @@ export const AppContextProvider = (props) => {
   const signInWithGoogle = async () => {
     try {
       if (!backendUrl) return toast.error("Missing VITE_BACKEND_URL");
+
       const csrfToken = await getCsrfToken();
-      if (!csrfToken) return toast.error("Could not get CSRF token");
+      if (!csrfToken) {
+        // Fallback: redirect directly to signin page if CSRF fails
+        window.location.href = `${backendUrl}/api/auth/signin/google?callbackUrl=${encodeURIComponent(window.location.origin + "/student")}`;
+        return;
+      }
+
+      // ─── FIXED: redirect to /student dashboard after login ───
+      const callbackUrl = `${window.location.origin}/student`;
 
       postNavigate(`${backendUrl}/api/auth/signin/google`, {
         csrfToken,
-        callbackUrl: `${window.location.origin}/dashboard`,
+        callbackUrl,
       });
     } catch (error) {
       toast.error(error.message);

@@ -27,18 +27,27 @@ import aiAssistantRouter from "./routes/aiAssistantRoutes.js";
 
 const app = express();
 
-connectDB();
+// ─── Connect DB with retry for serverless cold starts ───
+let dbConnected = false;
+const connectWithRetry = async () => {
+  if (dbConnected && mongoose.connection.readyState === 1) return;
+  try {
+    await connectDB();
+    dbConnected = true;
+    console.log("✅ MongoDB connected");
+  } catch (err) {
+    console.error("❌ MongoDB connection failed:", err.message);
+    // Don't throw — let the app start so health checks pass
+  }
+};
+await connectWithRetry();
 
+// ─── Index cleanup (run once after connection) ───
 (async () => {
   try {
-    await new Promise((resolve) => {
-      if (mongoose.connection.readyState === 1) return resolve();
-      mongoose.connection.once("connected", resolve);
-    });
-
+    if (mongoose.connection.readyState !== 1) return;
     const usersCollection = mongoose.connection.collection("users");
     const indexes = await usersCollection.indexes();
-
     for (const index of indexes) {
       if (index.name !== "_id_" && index.unique) {
         await usersCollection.dropIndex(index.name);
@@ -106,6 +115,7 @@ app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
     version: "2.0.0",
+    dbState: mongoose.connection.readyState,
     features: ["notifications", "study-groups", "achievements", "calendar", "search", "ai-assistant"],
     env: {
       hasAuthSecret: !!process.env.AUTH_SECRET,
