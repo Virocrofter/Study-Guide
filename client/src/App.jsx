@@ -25,8 +25,13 @@ import PracticeTests from "./pages/student-dashboard/PracticeTests";
 // ─── NEW FEATURES (v2.0) ───
 import StudyGroups from "./pages/student-dashboard/StudyGroups";
 import Leaderboard from "./pages/student-dashboard/Leaderboard";
-import StudyCalendarPage from "./pages/student-dashboard/studyCalendarPage";
+import StudyCalendarPage from "./pages/student-dashboard/StudyCalendarPage";
 import AIStudyAssistantPage from "./pages/student-dashboard/AIStudyAssistantPage";
+
+// ─── QUESTION BASE (new) ───
+import Questions from "./pages/student-dashboard/Questions";
+import PastQuestions from "./pages/student-dashboard/PastQuestions";
+import HallOfFame from "./pages/student-dashboard/HallOfFame";
 
 // ─── Educator Pages ───
 import Dashboard from "./pages/educator/Dashboard";
@@ -46,47 +51,36 @@ const App = () => {
 
   return (
     <Routes>
-      {/* ═══════════════════════════════════════════
-          REDIRECT OLD /dashboard URLs → /student
-          ═══════════════════════════════════════════ */}
       <Route path="/dashboard" element={<Navigate to="/student" replace />} />
       <Route path="/dashboard/*" element={<Navigate to="/student" replace />} />
 
-      {/* ═══════════════════════════════════════════
-          PUBLIC ROUTES
-          ═══════════════════════════════════════════ */}
       <Route path="/" element={<Home />} />
       <Route path="/course-list" element={<CourseList />} />
       <Route path="/course-list/:input" element={<CourseList />} />
       <Route path="/course/:id" element={<CourseDetails />} />
       <Route path="/loading/:path" element={<Loading />} />
 
-      {/* ═══════════════════════════════════════════
-          STUDENT DASHBOARD (with sidebar layout)
-          ═══════════════════════════════════════════ */}
       <Route path="/student" element={<StudentDashboardLayout />}>
-        {/* Core */}
         <Route index element={<StudentAnalytics />} />
         <Route path="enrollments" element={<StudentEnrollments />} />
         <Route path="assignments" element={<StudentAssignments />} />
 
-        {/* Study Buddy */}
         <Route path="library" element={<Library />} />
         <Route path="flash-cards" element={<FlashCards />} />
         <Route path="flash-cards/folder/:folderId" element={<FlashCards />} />
         <Route path="study-guides" element={<StudyGuides />} />
         <Route path="practice-tests" element={<PracticeTests />} />
 
-        {/* NEW v2.0 Features */}
         <Route path="study-groups" element={<StudyGroups />} />
         <Route path="leaderboard" element={<Leaderboard />} />
         <Route path="calendar" element={<StudyCalendarPage />} />
         <Route path="ai-assistant" element={<AIStudyAssistantPage />} />
+
+        <Route path="questions" element={<Questions />} />
+        <Route path="past-questions" element={<PastQuestions />} />
+        <Route path="hall-of-fame" element={<HallOfFame />} />
       </Route>
 
-      {/* ═══════════════════════════════════════════
-          EDUCATOR DASHBOARD (with sidebar layout)
-          ═══════════════════════════════════════════ */}
       <Route path="/educator" element={<Educator />}>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="add-course" element={<AddCourses />} />
@@ -97,9 +91,6 @@ const App = () => {
         <Route path="quizzes" element={<EducatorQuizzes />} />
       </Route>
 
-      {/* ═══════════════════════════════════════════
-          404 / CATCH-ALL
-          ═══════════════════════════════════════════ */}
       <Route
         path="*"
         element={
