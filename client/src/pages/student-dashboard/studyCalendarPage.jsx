@@ -1,21 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { AppContext } from "../../context/AppContext";
 import StudyCalendar from "../../components/student/StudyCalendar";
 
 const StudyCalendarPage = () => {
+  const { backendUrl } = useContext(AppContext);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", startTime: "", endTime: "", type: "review" });
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
-  const getToken = async () => {
-    try {
-      const { data } = await axios.get(`${backendUrl}/api/auth/session`, { withCredentials: true });
-      return data?.user?.id || null;
-    } catch {
-      return null;
-    }
-  };
 
   const createSession = async (e) => {
     e.preventDefault();
@@ -23,10 +15,7 @@ const StudyCalendarPage = () => {
       return toast.error("Please fill all required fields");
     }
     try {
-      const token = await getToken();
-      if (!token) return toast.error("Please sign in");
       const { data } = await axios.post(`${backendUrl}/api/study-sessions`, form, {
-        headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
       if (data.success) {

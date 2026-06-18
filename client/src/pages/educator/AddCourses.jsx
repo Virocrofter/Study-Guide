@@ -115,7 +115,7 @@ const AddCourses = () => {
   };
 
   return (
-    <div className="h-full pb-20 space-y-8 ml-24 pt-8 px-6">
+    <div className="h-full pb-20 space-y-8 pt-8 px-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Create New Course</h1>
         <p className="text-slate-500 mt-1">Build an engaging learning experience for your students.</p>

@@ -43,7 +43,7 @@ const LeaderboardTable = ({ data, currentUserId, type = "points" }) => {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white text-xs font-bold">
+                    <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white text-xs font-bold">
                       {entry._id?.charAt(0)?.toUpperCase() || "U"}
                     </div>
                     <span className="text-sm font-medium text-gray-900">

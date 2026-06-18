@@ -18,7 +18,7 @@ const ForEducators = () => {
           </p>
           <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
             Share Your Expertise. <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-500">
               Build Your Brand.
             </span>
           </h2>
@@ -30,7 +30,7 @@ const ForEducators = () => {
           <div className="flex flex-col sm:flex-row gap-4 mb-10">
             <button
               onClick={becomeEducator}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 flex items-center justify-center gap-2"
+              className="px-8 py-4 bg-linear-to-r from-blue-600 to-cyan-500 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 flex items-center justify-center gap-2"
             >
               Start Teaching Today
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

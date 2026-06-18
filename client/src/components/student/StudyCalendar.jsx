@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
+import { AppContext } from "../../context/AppContext";
 
 const StudyCalendar = ({ onSelectSession }) => {
+  const { backendUrl } = useContext(AppContext);
   const [sessions, setSessions] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     fetchSessions();
@@ -12,14 +13,14 @@ const StudyCalendar = ({ onSelectSession }) => {
 
   const fetchSessions = async () => {
     try {
-      const token = await fetch("/api/auth/session").then((r) => r.json()).then((s) => s?.token);
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
       const start = new Date(year, month, 1).toISOString();
       const end = new Date(year, month + 1, 0).toISOString();
-      const { data } = await axios.get(`${backendUrl}/api/study-sessions?start=${start}&end=${end}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.get(
+        `${backendUrl}/api/study-sessions?start=${start}&end=${end}`,
+        { withCredentials: true }
+      );
       if (data.success) setSessions(data.sessions);
     } catch (e) {
       console.error(e);

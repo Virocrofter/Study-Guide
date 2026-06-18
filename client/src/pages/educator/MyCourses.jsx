@@ -37,7 +37,7 @@ const MyCourses = () => {
   }
 
   return (
-    <div className="h-full pb-20 ml-24 pt-8 px-6 space-y-6">
+    <div className="h-full pb-20 pt-8 px-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">My Courses</h1>
@@ -74,7 +74,7 @@ const MyCourses = () => {
               <div key={course._id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group">
                 <div className="relative h-48 overflow-hidden">
                   <img src={course.courseThumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-4 left-4 right-4">
                     <span className="px-2 py-1 bg-white/90 rounded-lg text-xs font-bold text-slate-800">
                       {course.courseContent?.length || 0} Chapters

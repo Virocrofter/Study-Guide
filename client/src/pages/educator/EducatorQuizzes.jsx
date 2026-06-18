@@ -92,7 +92,7 @@ const EducatorQuizzes = () => {
   if (loading) return <div className="h-full flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="h-full pb-20 space-y-8 ml-24 pt-8 px-6">
+    <div className="h-full pb-20 space-y-8 pt-8 px-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Quizzes</h1>

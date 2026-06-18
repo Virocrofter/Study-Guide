@@ -131,7 +131,7 @@ const EducatorMaterials = () => {
   });
 
   return (
-    <div className="h-full pb-20 space-y-8 ml-24 pt-8 px-6 flex flex-col gap-6">
+    <div className="h-full pb-20 space-y-8 pt-8 px-6 flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Course Materials</h1>

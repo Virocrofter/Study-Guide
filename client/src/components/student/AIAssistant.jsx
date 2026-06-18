@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { AppContext } from "../../context/AppContext";
 
 const AIAssistant = () => {
+  const { backendUrl } = useContext(AppContext);
   const [text, setText] = useState("");
   const [mode, setMode] = useState("flashcards"); // flashcards | studyguide | practicetest
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   const generate = async () => {
     if (!text.trim() || text.length < 50) {
@@ -16,15 +17,16 @@ const AIAssistant = () => {
     }
     setLoading(true);
     try {
-      const token = await fetch("/api/auth/session").then((r) => r.json()).then((s) => s?.token);
       const endpoints = {
         flashcards: "/api/ai/flashcards",
         studyguide: "/api/ai/study-guide",
         practicetest: "/api/ai/practice-test",
       };
-      const { data } = await axios.post(`${backendUrl}${endpoints[mode]}`, { text }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.post(
+        `${backendUrl}${endpoints[mode]}`,
+        { text },
+        { withCredentials: true }
+      );
       if (data.success) {
         setResult(data);
         toast.success(`Generated ${data.generated || "content"} successfully!`);
@@ -41,7 +43,7 @@ const AIAssistant = () => {
     <div className="max-w-3xl mx-auto">
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-xl">
+          <div className="w-10 h-10 rounded-lg bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-xl">
             🤖
           </div>
           <div>

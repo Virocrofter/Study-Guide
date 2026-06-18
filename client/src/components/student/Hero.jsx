@@ -10,7 +10,7 @@ const Hero = () => {
   return (
     <div className="relative w-full bg-slate-900 text-white overflow-hidden">
       {/* Simple gradient - no blur, no complex patterns */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900" />
+      <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-blue-950 to-slate-900" />
       
       {/* Soft glow orbs - pure color, no blur filter */}
       <div className="absolute top-20 left-10 w-72 h-72 bg-blue-600/20 rounded-full" />
@@ -71,7 +71,7 @@ const Hero = () => {
         {/* Floating Cards - NO backdrop-filter, just semi-transparent bg */}
         <div className="absolute left-4 md:left-20 top-1/3 bg-white/90 rounded-xl p-4 hidden lg:block animate-float-safe shadow-lg border border-white/20">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">
+            <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">
               JS
             </div>
             <div className="text-left">
@@ -83,7 +83,7 @@ const Hero = () => {
 
         <div className="absolute right-4 md:right-20 top-1/2 bg-white/90 rounded-xl p-4 hidden lg:block animate-float-safe shadow-lg border border-white/20" style={{ animationDelay: "2.5s" }}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+            <div className="w-10 h-10 rounded-full bg-linear-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
               UX
             </div>
             <div className="text-left">

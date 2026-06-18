@@ -36,7 +36,7 @@ const StudentsEnrolled = () => {
   }
 
   return (
-    <div className="h-full pb-20 ml-24 pt-8 px-6 space-y-6">
+    <div className="h-full pb-20 pt-8 px-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Enrolled Students</h1>
         <p className="text-slate-500 mt-1">All students currently learning from your courses.</p>
@@ -59,7 +59,7 @@ const StudentsEnrolled = () => {
                   <tr key={index} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">
+                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">
                           {(item.student?.name || "S").charAt(0)}
                         </div>
                         <div>

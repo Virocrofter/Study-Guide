@@ -279,7 +279,7 @@ const StudentAnalytics = () => {
                 <div key={course._id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group">
                   <div className="relative h-40 overflow-hidden">
                     <img src={course.courseThumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-3 left-3 right-3">
                       <div className="h-1.5 bg-white/30 rounded-full overflow-hidden">
                         <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct}%` }} />

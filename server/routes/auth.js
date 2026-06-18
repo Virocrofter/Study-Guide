@@ -52,6 +52,17 @@ const FRONTEND_URL = process.env.FRONTEND_URL || (
     : "https://study-guide-frontend-gray.vercel.app"
 );
 
+const useSecureCookies = process.env.NODE_ENV === "production";
+const cookiePrefix = useSecureCookies ? "__Secure-" : "";
+const csrfPrefix = useSecureCookies ? "__Host-" : "";
+
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: useSecureCookies ? "none" : "lax",
+  path: "/",
+  secure: useSecureCookies,
+};
+
 // ─── AUTH CONFIG ───
 export const authConfig = {
   adapter: MongoDBAdapter(clientPromise),
@@ -60,33 +71,30 @@ export const authConfig = {
   basePath: "/api/auth",
   session: { strategy: "database" },
 
-  // ─── CRITICAL: Cross-origin cookie settings for Vercel ───
   cookies: {
     sessionToken: {
-      name: process.env.NODE_ENV === "production" ? "__Secure-next-auth.session-token" : "next-auth.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "none",
-        path: "/",
-        secure: true,
-      },
+      name: `${cookiePrefix}authjs.session-token`,
+      options: cookieOptions,
     },
     callbackUrl: {
-      name: process.env.NODE_ENV === "production" ? "__Secure-next-auth.callback-url" : "next-auth.callback-url",
-      options: {
-        sameSite: "none",
-        path: "/",
-        secure: true,
-      },
+      name: `${cookiePrefix}authjs.callback-url`,
+      options: { ...cookieOptions, httpOnly: false },
     },
     csrfToken: {
-      name: process.env.NODE_ENV === "production" ? "__Host-next-auth.csrf-token" : "next-auth.csrf-token",
-      options: {
-        httpOnly: true,
-        sameSite: "none",
-        path: "/",
-        secure: true,
-      },
+      name: `${csrfPrefix}authjs.csrf-token`,
+      options: cookieOptions,
+    },
+    pkceCodeVerifier: {
+      name: `${cookiePrefix}authjs.pkce.code_verifier`,
+      options: cookieOptions,
+    },
+    state: {
+      name: `${cookiePrefix}authjs.state`,
+      options: cookieOptions,
+    },
+    nonce: {
+      name: `${cookiePrefix}authjs.nonce`,
+      options: cookieOptions,
     },
   },
 
@@ -114,8 +122,7 @@ export const authConfig = {
     },
 
     async redirect({ url, baseUrl }) {
-      // ─── FORCE: Always redirect to frontend /student after ANY auth action ───
-      // This prevents old /dashboard links or cached callback URLs from breaking login
+      // Always land the user on /student after any auth action
       return `${FRONTEND_URL}/student`;
     },
   },

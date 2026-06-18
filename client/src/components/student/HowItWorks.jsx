@@ -56,7 +56,7 @@ const HowItWorks = () => {
             className="reveal-up hover-lift group p-8 rounded-2xl bg-slate-50 border border-slate-100"
             style={{ transitionDelay: `${index * 100}ms` }}
           >
-            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-white mb-6 shadow-lg`}>
+            <div className={`w-16 h-16 rounded-2xl bg-linear-to-br ${step.color} flex items-center justify-center text-white mb-6 shadow-lg`}>
               {step.icon}
             </div>
             <div className="absolute top-8 right-8 text-6xl font-bold text-slate-100 group-hover:text-blue-100 transition-colors">

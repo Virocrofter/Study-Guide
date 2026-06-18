@@ -232,7 +232,7 @@ const StudentSidebar = () => {
       </div>
 
       <div className="p-4">
-        <div className="bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl p-4 text-white">
+        <div className="bg-linear-to-br from-blue-600 to-cyan-500 rounded-xl p-4 text-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
               {(session?.user?.name || "S").charAt(0)}

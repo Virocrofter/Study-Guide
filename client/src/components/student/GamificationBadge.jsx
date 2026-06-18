@@ -43,7 +43,7 @@ export const GamificationProgress = ({ totalPoints, nextMilestone = 1000 }) => {
       </div>
       <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+          className="h-full bg-linear-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>

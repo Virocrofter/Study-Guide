@@ -69,7 +69,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options(/.* /, cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 

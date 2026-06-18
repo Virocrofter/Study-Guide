@@ -29,7 +29,7 @@ const CourseCard = ({ course }) => {
           alt={course.courseTitle} 
         />
         {course.discount > 0 && (
-          <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+          <div className="absolute top-3 left-3 bg-linear-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full">
             {course.discount}% OFF
           </div>
         )}
@@ -56,7 +56,7 @@ const CourseCard = ({ course }) => {
 
         <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold">
               {course.educator?.name?.charAt(0) || "E"}
             </div>
             <span className="text-sm font-medium text-slate-600">

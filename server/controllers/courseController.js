@@ -1,3 +1,4 @@
+import mongoose from "mongoose"; // ← ADD THIS LINE
 import { v2 as cloudinary } from 'cloudinary';
 import Course from '../models/Course.js';
 import connectDB from '../configs/mongodb.js';

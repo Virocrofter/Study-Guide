@@ -84,7 +84,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="h-full pb-20 space-y-8 ml-24 pt-8 px-6">
+    <div className="h-full pb-20 space-y-8 pt-8 px-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Overview</h1>
         <p className="text-slate-500 mt-1">Track your teaching performance and student engagement.</p>

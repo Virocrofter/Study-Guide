@@ -111,7 +111,7 @@ const MyEnrollments = () => {
                       alt={course.courseTitle}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
 
                     {/* Progress Ring */}
                     <div className="absolute top-4 right-4">
@@ -192,8 +192,8 @@ const MyEnrollments = () => {
                         <div
                           className={`h-full rounded-full transition-all duration-700 ${
                             progressPct === 100
-                              ? "bg-gradient-to-r from-emerald-400 to-emerald-500"
-                              : "bg-gradient-to-r from-blue-500 to-cyan-400"
+                              ? "bg-linear-to-r from-emerald-400 to-emerald-500"
+                              : "bg-linear-to-r from-blue-500 to-cyan-400"
                           }`}
                           style={{ width: `${progressPct}%` }}
                         />
