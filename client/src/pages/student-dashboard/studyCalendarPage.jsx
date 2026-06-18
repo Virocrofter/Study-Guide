@@ -5,13 +5,16 @@ import StudyCalendar from "../../components/student/StudyCalendar";
 
 const StudyCalendarPage = () => {
   const [showModal, setShowModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
   const [form, setForm] = useState({ title: "", description: "", startTime: "", endTime: "", type: "review" });
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-  const handleSelectSession = (sessions) => {
-    // Could show a day detail modal here
-    console.log(sessions);
+  const getToken = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/auth/session`, { withCredentials: true });
+      return data?.user?.id || null;
+    } catch {
+      return null;
+    }
   };
 
   const createSession = async (e) => {
@@ -20,9 +23,11 @@ const StudyCalendarPage = () => {
       return toast.error("Please fill all required fields");
     }
     try {
-      const token = await fetch("/api/auth/session").then((r) => r.json()).then((s) => s?.token);
+      const token = await getToken();
+      if (!token) return toast.error("Please sign in");
       const { data } = await axios.post(`${backendUrl}/api/study-sessions`, form, {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       if (data.success) {
         toast.success("Study session scheduled!");
@@ -49,7 +54,7 @@ const StudyCalendarPage = () => {
         </button>
       </div>
 
-      <StudyCalendar onSelectSession={handleSelectSession} />
+      <StudyCalendar />
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -130,4 +135,3 @@ const StudyCalendarPage = () => {
 };
 
 export default StudyCalendarPage;
-

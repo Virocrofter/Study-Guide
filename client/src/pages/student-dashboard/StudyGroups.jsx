@@ -14,14 +14,29 @@ const StudyGroups = () => {
     fetchGroups();
   }, []);
 
+  const getToken = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/auth/session`, { withCredentials: true });
+      return data?.user?.id || null;
+    } catch {
+      return null;
+    }
+  };
+
   const fetchGroups = async () => {
     try {
-      const token = await fetch("/api/auth/session").then((r) => r.json()).then((s) => s?.token);
+      const token = await getToken();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       const { data } = await axios.get(`${backendUrl}/api/study-groups`, {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       if (data.success) setGroups(data.groups);
     } catch (e) {
+      console.error("Study groups error:", e);
       toast.error("Failed to load study groups");
     } finally {
       setLoading(false);
@@ -32,9 +47,11 @@ const StudyGroups = () => {
     e.preventDefault();
     if (!newGroup.name.trim()) return toast.error("Group name is required");
     try {
-      const token = await fetch("/api/auth/session").then((r) => r.json()).then((s) => s?.token);
+      const token = await getToken();
+      if (!token) return toast.error("Please sign in");
       const { data } = await axios.post(`${backendUrl}/api/study-groups`, newGroup, {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       if (data.success) {
         toast.success("Study group created!");
@@ -49,9 +66,11 @@ const StudyGroups = () => {
 
   const joinGroup = async (id) => {
     try {
-      const token = await fetch("/api/auth/session").then((r) => r.json()).then((s) => s?.token);
+      const token = await getToken();
+      if (!token) return;
       await axios.post(`${backendUrl}/api/study-groups/${id}/join`, {}, {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       toast.success("Joined group!");
       fetchGroups();
@@ -62,9 +81,11 @@ const StudyGroups = () => {
 
   const leaveGroup = async (id) => {
     try {
-      const token = await fetch("/api/auth/session").then((r) => r.json()).then((s) => s?.token);
+      const token = await getToken();
+      if (!token) return;
       await axios.post(`${backendUrl}/api/study-groups/${id}/leave`, {}, {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       toast.success("Left group");
       fetchGroups();
@@ -73,7 +94,19 @@ const StudyGroups = () => {
     }
   };
 
-  const userId = "current-user"; // Replace with actual auth context
+  const getUserId = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/auth/session`, { withCredentials: true });
+      return data?.user?.id || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [userId, setUserId] = useState(null);
+  useEffect(() => {
+    getUserId().then(setUserId);
+  }, []);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -109,7 +142,7 @@ const StudyGroups = () => {
                 onChange={(e) => setNewGroup((p) => ({ ...p, isPublic: e.target.checked }))}
                 className="w-4 h-4 text-blue-600 rounded"
               />
-              <label htmlFor="isPublic" className="text-sm text-gray-700">Public group (anyone can join)</label>
+              <label htmlFor="isPublic" className="text-sm text-gray-700">Public group</label>
             </div>
           </div>
           <textarea

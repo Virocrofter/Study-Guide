@@ -5,16 +5,16 @@ import { MongoClient, ServerApiVersion } from "mongodb";
 
 // ─── ENV GUARD ───
 if (!process.env.MONGODB_URI) {
-  throw new Error('Missing environment variable: "MONGODB_URI"');
+  console.error('Missing environment variable: "MONGODB_URI"');
 }
 if (!process.env.AUTH_SECRET) {
-  throw new Error('Missing environment variable: "AUTH_SECRET"');
+  console.error('Missing environment variable: "AUTH_SECRET"');
 }
 if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) {
-  throw new Error('Missing Google OAuth credentials in environment variables');
+  console.error("Missing Google OAuth credentials");
 }
 
-const uri = process.env.MONGODB_URI;
+const uri = process.env.MONGODB_URI || "";
 const options = {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -33,7 +33,7 @@ if (process.env.NODE_ENV === "development") {
     client = new MongoClient(uri, options);
     globalWithMongo._mongoClientPromise = client.connect().catch((err) => {
       console.error("MongoDB connection failed:", err.message);
-      throw err;
+      return null;
     });
   }
   clientPromise = globalWithMongo._mongoClientPromise;
@@ -41,7 +41,7 @@ if (process.env.NODE_ENV === "development") {
   client = new MongoClient(uri, options);
   clientPromise = client.connect().catch((err) => {
     console.error("MongoDB connection failed:", err.message);
-    throw err;
+    return null;
   });
 }
 
@@ -60,10 +60,47 @@ export const authConfig = {
   basePath: "/api/auth",
   session: { strategy: "database" },
 
+  // ─── CRITICAL: Cross-origin cookie settings for Vercel ───
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production" ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "none",
+        path: "/",
+        secure: true,
+      },
+    },
+    callbackUrl: {
+      name: process.env.NODE_ENV === "production" ? "__Secure-next-auth.callback-url" : "next-auth.callback-url",
+      options: {
+        sameSite: "none",
+        path: "/",
+        secure: true,
+      },
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === "production" ? "__Host-next-auth.csrf-token" : "next-auth.csrf-token",
+      options: {
+        httpOnly: true,
+        sameSite: "none",
+        path: "/",
+        secure: true,
+      },
+    },
+  },
+
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
     }),
   ],
 
@@ -77,31 +114,15 @@ export const authConfig = {
     },
 
     async redirect({ url, baseUrl }) {
-      // Always redirect to the frontend URL after auth
-      // If url is a relative path, append it to frontend
-      if (url.startsWith("/")) {
-        return `${FRONTEND_URL}${url}`;
-      }
-
-      try {
-        const urlOrigin = new URL(url).origin;
-        const allowedOrigins = [
-          FRONTEND_URL,
-          "http://localhost:5173",
-          "https://study-guide-frontend-gray.vercel.app",
-        ];
-
-        // If the URL is already pointing to the frontend, use it as-is
-        if (allowedOrigins.includes(urlOrigin)) {
-          return url;
-        }
-      } catch {
-        // invalid url
-      }
-
-      // Default: redirect to frontend student dashboard
+      // ─── FORCE: Always redirect to frontend /student after ANY auth action ───
+      // This prevents old /dashboard links or cached callback URLs from breaking login
       return `${FRONTEND_URL}/student`;
     },
+  },
+
+  pages: {
+    signIn: `${FRONTEND_URL}/`,
+    error: `${FRONTEND_URL}/`,
   },
 };
 

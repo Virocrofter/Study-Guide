@@ -9,19 +9,38 @@ const Leaderboard = () => {
   const [achievements, setAchievements] = useState([]);
   const [totalPoints, setTotalPoints] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("points"); // points | badges
+  const [tab, setTab] = useState("points");
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  const getToken = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/auth/session`, { withCredentials: true });
+      return data?.user?.id || null;
+    } catch {
+      return null;
+    }
+  };
+
   const fetchData = async () => {
     try {
-      const token = await fetch("/api/auth/session").then((r) => r.json()).then((s) => s?.token);
+      const token = await getToken();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       const [lbRes, achRes] = await Promise.all([
-        axios.get(`${backendUrl}/api/achievements/leaderboard`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${backendUrl}/api/achievements`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${backendUrl}/api/achievements/leaderboard`, {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        }),
+        axios.get(`${backendUrl}/api/achievements`, {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        }),
       ]);
       if (lbRes.data.success) setLeaderboard(lbRes.data.leaderboard);
       if (achRes.data.success) {
@@ -29,13 +48,23 @@ const Leaderboard = () => {
         setTotalPoints(achRes.data.totalPoints);
       }
     } catch (e) {
-      console.error(e);
+      console.error("Leaderboard error:", e);
     } finally {
       setLoading(false);
     }
   };
 
-  const userId = "current-user"; // Replace with actual auth
+  const getUserId = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/auth/session`, { withCredentials: true });
+      return data?.user?.id || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [userId, setUserId] = useState(null);
+  useEffect(() => { getUserId().then(setUserId); }, []);
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -90,11 +119,7 @@ const Leaderboard = () => {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
       ) : (
-        <LeaderboardTable
-          data={leaderboard}
-          currentUserId={userId}
-          type={tab}
-        />
+        <LeaderboardTable data={leaderboard} currentUserId={userId} type={tab} />
       )}
     </div>
   );

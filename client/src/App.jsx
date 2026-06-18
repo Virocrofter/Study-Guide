@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 // ─── Layouts ───
 import Educator from "./pages/educator/Educator";
@@ -25,7 +25,7 @@ import PracticeTests from "./pages/student-dashboard/PracticeTests";
 // ─── NEW FEATURES (v2.0) ───
 import StudyGroups from "./pages/student-dashboard/StudyGroups";
 import Leaderboard from "./pages/student-dashboard/Leaderboard";
-import StudyCalendarPage from "./pages/student-dashboard/studyCalendarPage";
+import StudyCalendarPage from "./pages/student-dashboard/StudyCalendarPage";
 import AIStudyAssistantPage from "./pages/student-dashboard/AIStudyAssistantPage";
 
 // ─── Educator Pages ───
@@ -47,6 +47,12 @@ const App = () => {
   return (
     <Routes>
       {/* ═══════════════════════════════════════════
+          REDIRECT OLD /dashboard URLs → /student
+          ═══════════════════════════════════════════ */}
+      <Route path="/dashboard" element={<Navigate to="/student" replace />} />
+      <Route path="/dashboard/*" element={<Navigate to="/student" replace />} />
+
+      {/* ═══════════════════════════════════════════
           PUBLIC ROUTES
           ═══════════════════════════════════════════ */}
       <Route path="/" element={<Home />} />
@@ -57,7 +63,6 @@ const App = () => {
 
       {/* ═══════════════════════════════════════════
           STUDENT DASHBOARD (with sidebar layout)
-          Routes match the uploaded sidebar design
           ═══════════════════════════════════════════ */}
       <Route path="/student" element={<StudentDashboardLayout />}>
         {/* Core */}

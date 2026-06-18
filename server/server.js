@@ -15,9 +15,7 @@ import educatorRouter from "./routes/educatorRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import { stripeWebhooks } from "./controllers/webhooks.js";
 
-// ═══════════════════════════════════════════
 // NEW v2.0 ROUTES
-// ═══════════════════════════════════════════
 import notificationRouter from "./routes/notificationRoutes.js";
 import studyGroupRouter from "./routes/studyGroupRoutes.js";
 import achievementRouter from "./routes/achievementRoutes.js";
@@ -27,37 +25,22 @@ import aiAssistantRouter from "./routes/aiAssistantRoutes.js";
 
 const app = express();
 
-// ─── Connect DB with retry for serverless cold starts ───
+// ─── Connect DB lazily (don't block server startup) ───
 let dbConnected = false;
-const connectWithRetry = async () => {
-  if (dbConnected && mongoose.connection.readyState === 1) return;
+const ensureDB = async () => {
+  if (dbConnected && mongoose.connection.readyState === 1) return true;
   try {
     await connectDB();
     dbConnected = true;
     console.log("✅ MongoDB connected");
+    return true;
   } catch (err) {
     console.error("❌ MongoDB connection failed:", err.message);
-    // Don't throw — let the app start so health checks pass
+    return false;
   }
 };
-await connectWithRetry();
-
-// ─── Index cleanup (run once after connection) ───
-(async () => {
-  try {
-    if (mongoose.connection.readyState !== 1) return;
-    const usersCollection = mongoose.connection.collection("users");
-    const indexes = await usersCollection.indexes();
-    for (const index of indexes) {
-      if (index.name !== "_id_" && index.unique) {
-        await usersCollection.dropIndex(index.name);
-        console.log(`✅ Dropped conflicting unique index: ${index.name}`);
-      }
-    }
-  } catch (e) {
-    console.error("Index cleanup error:", e.message);
-  }
-})();
+// Start connection in background, don't await
+ensureDB();
 
 connectCloudinary();
 app.set("trust proxy", true);
@@ -111,11 +94,14 @@ app.use(async (req, res, next) => {
   next();
 });
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", async (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const dbStatus = dbState === 1 ? "connected" : dbState === 2 ? "connecting" : "disconnected";
   res.json({
     ok: true,
     version: "2.0.0",
-    dbState: mongoose.connection.readyState,
+    dbStatus,
+    dbState,
     features: ["notifications", "study-groups", "achievements", "calendar", "search", "ai-assistant"],
     env: {
       hasAuthSecret: !!process.env.AUTH_SECRET,
@@ -123,20 +109,17 @@ app.get("/api/health", (req, res) => {
       hasGoogleId: !!process.env.AUTH_GOOGLE_ID,
       hasGoogleSecret: !!process.env.AUTH_GOOGLE_SECRET,
       nodeEnv: process.env.NODE_ENV,
+      frontendUrl: process.env.FRONTEND_URL,
     },
   });
 });
 
-// ═══════════════════════════════════════════
 // EXISTING ROUTES
-// ═══════════════════════════════════════════
 app.use("/api/course", courseRouter);
 app.use("/api/educator", educatorRouter);
 app.use("/api/user", userRouter);
 
-// ═══════════════════════════════════════════
 // NEW v2.0 ROUTES
-// ═══════════════════════════════════════════
 app.use("/api/notifications", notificationRouter);
 app.use("/api/study-groups", studyGroupRouter);
 app.use("/api/achievements", achievementRouter);

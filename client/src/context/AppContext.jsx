@@ -53,7 +53,9 @@ export const AppContextProvider = (props) => {
   const fetchSession = async () => {
     if (!backendUrl) return;
     try {
-      const { data } = await axios.get(`${backendUrl}/api/auth/session`);
+      const { data } = await axios.get(`${backendUrl}/api/auth/session`, {
+        withCredentials: true,
+      });
       setSession(data || null);
       setIsEducator(data?.user?.role === "educator");
     } catch {
@@ -65,7 +67,9 @@ export const AppContextProvider = (props) => {
   const getCsrfToken = async () => {
     if (!backendUrl) return null;
     try {
-      const { data } = await axios.get(`${backendUrl}/api/auth/csrf`);
+      const { data } = await axios.get(`${backendUrl}/api/auth/csrf`, {
+        withCredentials: true,
+      });
       return data?.csrfToken || null;
     } catch (error) {
       console.error("CSRF fetch failed:", error.message);
@@ -75,24 +79,26 @@ export const AppContextProvider = (props) => {
 
   const signInWithGoogle = async () => {
     try {
-      if (!backendUrl) return toast.error("Missing VITE_BACKEND_URL");
-
-      const csrfToken = await getCsrfToken();
-      if (!csrfToken) {
-        // Fallback: redirect directly to signin page if CSRF fails
-        window.location.href = `${backendUrl}/api/auth/signin/google?callbackUrl=${encodeURIComponent(window.location.origin + "/student")}`;
-        return;
+      if (!backendUrl) {
+        return toast.error("Missing VITE_BACKEND_URL");
       }
 
-      // ─── FIXED: redirect to /student dashboard after login ───
+      const csrfToken = await getCsrfToken();
       const callbackUrl = `${window.location.origin}/student`;
 
-      postNavigate(`${backendUrl}/api/auth/signin/google`, {
-        csrfToken,
-        callbackUrl,
-      });
+      if (csrfToken) {
+        // ─── Standard Auth.js flow: POST with CSRF ───
+        postNavigate(`${backendUrl}/api/auth/signin/google`, {
+          csrfToken,
+          callbackUrl,
+        });
+      } else {
+        // ─── Fallback: redirect directly to signin endpoint ───
+        console.warn("CSRF token missing, using fallback redirect");
+        window.location.href = `${backendUrl}/api/auth/signin/google?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+      }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Sign in failed");
     }
   };
 
@@ -100,14 +106,18 @@ export const AppContextProvider = (props) => {
     try {
       if (!backendUrl) return toast.error("Missing VITE_BACKEND_URL");
       const csrfToken = await getCsrfToken();
-      if (!csrfToken) return toast.error("Could not get CSRF token");
+      if (!csrfToken) {
+        // Fallback: redirect to signout
+        window.location.href = `${backendUrl}/api/auth/signout?callbackUrl=${encodeURIComponent(window.location.origin)}`;
+        return;
+      }
 
       postNavigate(`${backendUrl}/api/auth/signout`, {
         csrfToken,
         callbackUrl: window.location.origin,
       });
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Sign out failed");
     }
   };
 
