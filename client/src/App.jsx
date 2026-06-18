@@ -32,6 +32,7 @@ import AIStudyAssistantPage from "./pages/student-dashboard/AIStudyAssistantPage
 import Questions from "./pages/student-dashboard/Questions";
 import PastQuestions from "./pages/student-dashboard/PastQuestions";
 import HallOfFame from "./pages/student-dashboard/HallOfFame";
+import ExamSession from "./pages/student-dashboard/ExamSession";
 
 // ─── Educator Pages ───
 import Dashboard from "./pages/educator/Dashboard";
@@ -79,6 +80,7 @@ const App = () => {
         <Route path="questions" element={<Questions />} />
         <Route path="past-questions" element={<PastQuestions />} />
         <Route path="hall-of-fame" element={<HallOfFame />} />
+        <Route path="exam-session" element={<ExamSession />} />
       </Route>
 
       <Route path="/educator" element={<Educator />}>
