@@ -25,7 +25,7 @@ import PracticeTests from "./pages/student-dashboard/PracticeTests";
 // ─── NEW FEATURES (v2.0) ───
 import StudyGroups from "./pages/student-dashboard/StudyGroups";
 import Leaderboard from "./pages/student-dashboard/Leaderboard";
-import StudyCalendarPage from "./pages/student-dashboard/StudyCalendarPage";
+import StudyCalendarPage from "./pages/student-dashboard/studyCalendarPage";
 import AIStudyAssistantPage from "./pages/student-dashboard/AIStudyAssistantPage";
 
 // ─── QUESTION BASE (new) ───
