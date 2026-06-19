@@ -258,7 +258,7 @@ const MyEnrollments = () => {
 
                     {/* CTA Button */}
                     <button
-                      onClick={() => navigate(`/course/${course._id}`)}
+                      onClick={() => navigate(`/student/player/${course._id}`)}
                       className={`mt-auto w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
                         hasStarted
                           ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/20"
