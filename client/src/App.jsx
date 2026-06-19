@@ -13,7 +13,7 @@ import Loading from "./components/student/Loading";
 
 // ─── Student Dashboard Pages ───
 import StudentAnalytics from "./pages/student-dashboard/StudentAnalytics";
-import StudentEnrollments from "./pages/student-dashboard/StudentEnrollments";
+import MyEnrollments from "./pages/student/MyEnrollments";          // ← CHANGED: was StudentEnrollments
 import StudentAssignments from "./pages/student-dashboard/StudentAssignments";
 import BrowseCourses from "./pages/student-dashboard/CoursesList";
 import CoursePlayer from "./pages/student/CoursePlayer";
@@ -63,9 +63,12 @@ const App = () => {
       <Route path="/course/:id" element={<CourseDetails />} />
       <Route path="/loading/:path" element={<Loading />} />
 
+      {/* Redirect old /player/:id links to dashboard player */}
+      <Route path="/player/:id" element={<Navigate to="/student/player/:id" replace />} />
+
       <Route path="/student" element={<StudentDashboardLayout />}>
         <Route index element={<StudentAnalytics />} />
-        <Route path="enrollments" element={<StudentEnrollments />} />
+        <Route path="enrollments" element={<MyEnrollments />} />     {/* ← CHANGED: was StudentEnrollments */}
         <Route path="assignments" element={<StudentAssignments />} />
         <Route path="browse" element={<BrowseCourses />} />
         <Route path="browse/:input" element={<BrowseCourses />} />

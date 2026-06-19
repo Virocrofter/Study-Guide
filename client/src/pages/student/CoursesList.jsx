@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { useContext } from 'react';
 import { AppContext } from '../../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 import Searchbar from '../../components/student/Searchbar';
 import { useParams} from 'react-router-dom';
 import CourseCard from '../../components/student/CourseCard'
@@ -10,7 +11,8 @@ import Footer from '../../components/student/Footer';
 
 const CoursesList = () => {
 
-  const {navigate, allCourses} = useContext(AppContext);
+  const navigate = useNavigate();
+  const {allCourses} = useContext(AppContext);
   const {input} = useParams();
   const [filteredCourse, setFilteredCourse] = useState([]);
 
