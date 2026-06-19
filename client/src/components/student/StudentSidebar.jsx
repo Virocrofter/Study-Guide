@@ -374,7 +374,6 @@ const StudentSidebar = () => {
         : isQuestionBase
           ? "text-slate-500 hover:bg-orange-50 hover:text-orange-800"
           : "text-slate-500 hover:bg-slate-100 hover:text-slate-800";
-    }
 
     return (
       <NavLink
