@@ -96,7 +96,7 @@ const MyEnrollments = () => {
               No enrollments yet
             </h3>
             <button
-              onClick={() => navigate(`/student/player/${course._id}`)}
+              onClick={() => navigate('/student/browse')}
               className="bg-slate-900 text-white font-semibold text-xs px-6 py-2.5 rounded-xl hover:bg-slate-800 active:scale-[0.98] transition-all"
             >
               Browse Courses
@@ -125,11 +125,8 @@ const MyEnrollments = () => {
                   key={course._id}
                   className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300 flex flex-col"
                 >
-                  {/* Thumbnail */}
-                  <div
-                    className="relative h-48 overflow-hidden cursor-pointer"
-                    onClick={() => navigate(`/student/player/${course._id}`)}  // ✅ FIXED: was `/course/${course._id}`
-                  >
+                  {/* Thumbnail — NOT clickable anymore */}
+                  <div className="relative h-48 overflow-hidden">
                     <img
                       src={course.courseThumbnail}
                       alt={course.courseTitle}
@@ -187,10 +184,8 @@ const MyEnrollments = () => {
 
                   {/* Content */}
                   <div className="p-5 flex flex-col flex-1">
-                    <h3
-                      className="text-lg font-bold text-slate-800 mb-2 line-clamp-1 cursor-pointer group-hover:text-blue-600 transition-colors"
-                      onClick={() => navigate(`/student/player/${course._id}`)}  // ✅ FIXED: was `/course/${course._id}`
-                    >
+                    {/* Title — NOT clickable anymore */}
+                    <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-1">
                       {course.courseTitle}
                     </h3>
 
@@ -256,7 +251,7 @@ const MyEnrollments = () => {
                       </div>
                     </div>
 
-                    {/* CTA Button */}
+                    {/* CTA Button — ONLY clickable element, goes to player */}
                     <button
                       onClick={() => navigate(`/student/player/${course._id}`)}
                       className={`mt-auto w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
