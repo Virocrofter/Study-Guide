@@ -17,6 +17,7 @@ import MyEnrollments from "./pages/student/MyEnrollments";          // ← CHANG
 import StudentAssignments from "./pages/student-dashboard/StudentAssignments";
 import BrowseCourses from "./pages/student-dashboard/CoursesList";
 import CoursePlayer from "./pages/student/CoursePlayer";
+import BrowseCourses from "./pages/student-dashboard/CoursesList";
 
 // ─── Study Buddy Pages ───
 import Library from "./pages/student-dashboard/Library";
