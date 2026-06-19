@@ -25,7 +25,7 @@ const CourseSections = () => {
             </h2>
           </div>
           <Link
-            to={`/course/${course._id}`} // 🟢 Ensure this target is exactly /course/
+            to="/course-list"
             onClick={() => window.scrollTo(0, 0)}
             className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:gap-3 transition-all"
           >
