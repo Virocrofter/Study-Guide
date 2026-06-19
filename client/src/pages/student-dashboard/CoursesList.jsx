@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react'
 import { useContext } from 'react';
 import { AppContext } from '../../context/AppContext';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';  // ← ADDED: useNavigate
 import CourseCard from '../../components/student/CourseCard'
 import { useState } from 'react';
 import Footer from '../../components/student/Footer';
 import Searchbar from '../../components/student/Searchbar';
+import { assets } from '../../assets/assets';  // ← ADDED: assets for search icon
 
 const BrowseCourses = () => {
 
@@ -79,7 +80,7 @@ const BrowseCourses = () => {
 
 // Dashboard-specific searchbar that routes to /student/browse
 const DashboardSearchbar = ({ data }) => {
-  const navigate = useNavigate();
+  const navigate = useNavigate();  // ← This now works because useNavigate is imported above
   const [input, setInput] = useState(data ? data : '')
 
   const onSearchHandler = (e) => {
