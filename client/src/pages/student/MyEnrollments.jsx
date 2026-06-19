@@ -128,7 +128,7 @@ const MyEnrollments = () => {
                   {/* Thumbnail */}
                   <div
                     className="relative h-48 overflow-hidden cursor-pointer"
-                    onClick={() => navigate(`/course/${course._id}`)}
+                    onClick={() => navigate(`/student/player/${course._id}`)}  // ✅ FIXED: was `/course/${course._id}`
                   >
                     <img
                       src={course.courseThumbnail}
@@ -189,7 +189,7 @@ const MyEnrollments = () => {
                   <div className="p-5 flex flex-col flex-1">
                     <h3
                       className="text-lg font-bold text-slate-800 mb-2 line-clamp-1 cursor-pointer group-hover:text-blue-600 transition-colors"
-                      onClick={() => navigate(`/course/${course._id}`)}
+                      onClick={() => navigate(`/student/player/${course._id}`)}  // ✅ FIXED: was `/course/${course._id}`
                     >
                       {course.courseTitle}
                     </h3>
