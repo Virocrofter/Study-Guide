@@ -17,7 +17,7 @@ const CourseCard = ({ course }) => {
   return (
     <Link
       ref={cardRef}
-      to={`/student/player/${course._id}`}
+      to={`/course/${course._id}`}  // ✅ FIXED: was 
       onClick={() => scrollTo(0, 0)}
       className="reveal-scale hover-lift group relative bg-white rounded-2xl overflow-hidden border border-slate-200 flex flex-col"
     >
@@ -49,10 +49,6 @@ const CourseCard = ({ course }) => {
         <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
           {course.courseTitle}
         </h3>
-
-        <p className="text-sm text-slate-500 mb-4 line-clamp-2">
-          {course.courseDescription?.replace(/<<[^>]*>/g, '').slice(0, 100)}...
-        </p>
 
         <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
