@@ -428,128 +428,149 @@ const StudentAnalytics = () => {
         </div>
       </div>
 
-      {/* Continue Learning */}
+      {/* Continue Learning — Flashcard Cards */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-5">Continue Learning</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {enrolledCourses?.slice(0, 3).map((course) => {
-            const progress = getCourseProgress(course);
-            return (
-              <div key={course._id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                <div className="h-40 overflow-hidden">
-                  <img src={getCourseThumbnail(course)} alt={course.courseTitle} className="w-full h-full object-cover" />
-                </div>
-                <div className="p-5">
-                  <h3 className="font-semibold text-gray-900 mb-1 truncate">{course.courseTitle}</h3>
-                  <p className="text-sm text-gray-500 mb-3">{course.educator?.name || "Educator"}</p>
-                  <div className="w-full bg-gray-100 rounded-full h-2 mb-3">
-                    <div className="bg-[#4b3f8f] h-2 rounded-full transition-all" style={{ width: `${progress}%` }} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">{progress}% complete</span>
-                    <Link to={`/course/${course._id}`} className="flex items-center gap-1 text-sm font-medium text-[#4b3f8f] hover:text-[#3a3070] transition-colors">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
+        <div className="bg-[#0f0f23] rounded-2xl p-5 md:p-6">
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            {flashcards
+              .slice()
+              .sort((a, b) => new Date(b.lastReviewed || b.createdAt) - new Date(a.lastReviewed || a.createdAt))
+              .slice(0, 6)
+              .map((card) => (
+                <div
+                  key={card._id}
+                  className="min-w-[280px] md:min-w-[320px] bg-[#1a1a2e] rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden shrink-0"
+                >
+                  {/* Decorative blur orb */}
+                  <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-[#4b3f8f]/10 rounded-full blur-2xl" />
+                  <div className="absolute top-4 right-4">
+                    <button className="text-white/40 hover:text-white/70 transition-colors">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="6" cy="12" r="2" />
+                        <circle cx="12" cy="12" r="2" />
+                        <circle cx="18" cy="12" r="2" />
                       </svg>
-                      {progress > 0 ? "Continue" : "Start"}
+                    </button>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-1 pr-6 truncate">
+                      {card.front?.length > 40 ? card.front.slice(0, 40) + "..." : card.front || "Flashcard"}
+                    </h3>
+                    <p className="text-sm text-white/50 mb-4">
+                      {card.reviewCount || 0} {card.reviewCount === 1 ? "review" : "reviews"} completed
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="w-full bg-white/10 rounded-full h-2.5 mb-3">
+                      <div
+                        className="bg-gradient-to-r from-emerald-400 to-teal-500 h-2.5 rounded-full transition-all"
+                        style={{ width: `${card.mastery || 0}%` }}
+                      />
+                    </div>
+                    <p className="text-sm text-white/60 mb-4">
+                      {card.mastery || 0}% mastery
+                    </p>
+                    <Link
+                      to="/student/flash-cards"
+                      className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all"
+                    >
+                      Continue
                     </Link>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-          {(!enrolledCourses || enrolledCourses.length === 0) && (
-            <div className="md:col-span-3 bg-white rounded-xl border border-gray-200 p-8 text-center">
-              <p className="text-gray-500 mb-4">No enrolled courses yet</p>
-              <Link to="/course-list" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#4b3f8f] text-white rounded-lg font-medium hover:bg-[#3a3070] transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                Explore Courses
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
+              ))}
 
-      {/* Study Buddy Stats */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-5">Study Buddy</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Link to="/student/flash-cards" className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
-                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            {flashcards.length === 0 && (
+              <div className="min-w-[280px] md:min-w-[320px] bg-[#1a1a2e] rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
+                <svg className="w-10 h-10 text-white/20 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
+                <p className="text-white/50 text-sm mb-3">No flashcards yet</p>
+                <Link
+                  to="/student/flash-cards"
+                  className="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all"
+                >
+                  Create Flashcards
+                </Link>
               </div>
-              <span className="text-2xl font-bold text-gray-900">{studyStats.totalFlashcards}</span>
-            </div>
-            <p className="text-sm text-gray-500">Flashcards</p>
-          </Link>
-          <Link to="/student/flash-cards" className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
-                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{studyStats.mastery}%</span>
-            </div>
-            <p className="text-sm text-gray-500">Mastery</p>
-          </Link>
-          <Link to="/student/study-guides" className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{studyStats.studyGuides}</span>
-            </div>
-            <p className="text-sm text-gray-500">Study Guides</p>
-          </Link>
-          <Link to="/student/practice-tests" className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{studyStats.practiceTests}</span>
-            </div>
-            <p className="text-sm text-gray-500">Practice Tests</p>
-          </Link>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Jump Back In */}
+{/* Jump Back In — Recently Done Flashcards */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-5">Jump back in</h2>
-        <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-hide">
-          {(jumpBackIn.length > 0 ? jumpBackIn : demoJumpBackIn).map((course) => (
-            <div key={course._id} className="min-w-[300px] bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-              <div className="h-36 overflow-hidden relative">
-                <img src={getCourseThumbnail(course)} alt={course.courseTitle} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-3 left-3 right-3">
-                  <h3 className="font-semibold text-white truncate">{course.courseTitle}</h3>
-                  <p className="text-xs text-white/80">{course.lastAccessed}</p>
+        <div className="bg-[#0f0f23] rounded-2xl p-5 md:p-6">
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            {flashcards
+              .slice()
+              .sort((a, b) => new Date(b.lastReviewed || b.createdAt) - new Date(a.lastReviewed || a.createdAt))
+              .slice(0, 6)
+              .map((card) => (
+                <div
+                  key={card._id}
+                  className="min-w-[280px] md:min-w-[320px] bg-[#1a1a2e] rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden shrink-0"
+                >
+                  {/* Decorative shapes */}
+                  <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-[#4b3f8f]/10 rounded-full blur-2xl" />
+                  <div className="absolute top-4 right-4">
+                    <button className="text-white/40 hover:text-white/70 transition-colors">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="6" cy="12" r="2" />
+                        <circle cx="12" cy="12" r="2" />
+                        <circle cx="18" cy="12" r="2" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-1 pr-6 truncate">
+                      {card.front?.length > 40 ? card.front.slice(0, 40) + "..." : card.front || "Flashcard"}
+                    </h3>
+                    <p className="text-sm text-white/50 mb-4">
+                      {card.reviewCount || 0} {card.reviewCount === 1 ? "review" : "reviews"} completed
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="w-full bg-white/10 rounded-full h-2.5 mb-3">
+                      <div
+                        className="bg-gradient-to-r from-emerald-400 to-teal-500 h-2.5 rounded-full transition-all"
+                        style={{ width: `${card.mastery || 0}%` }}
+                      />
+                    </div>
+                    <p className="text-sm text-white/60 mb-4">
+                      {card.mastery || 0}% mastery
+                    </p>
+                    <Link
+                      to="/student/flash-cards"
+                      className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all"
+                    >
+                      Continue
+                    </Link>
+                  </div>
                 </div>
+              ))}
+
+            {flashcards.length === 0 && (
+              <div className="min-w-[280px] md:min-w-[320px] bg-[#1a1a2e] rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
+                <svg className="w-10 h-10 text-white/20 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <p className="text-white/50 text-sm mb-3">No flashcards reviewed yet</p>
+                <Link
+                  to="/student/flash-cards"
+                  className="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all"
+                >
+                  Create Flashcards
+                </Link>
               </div>
-              <div className="p-4">
-                <div className="w-full bg-gray-100 rounded-full h-2 mb-2">
-                  <div className="bg-white h-2 rounded-full transition-all" style={{ width: `${course.progress}%` }} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">{course.progress}%</span>
-                  <Link to={`/course/${course._id}`} className="text-sm font-medium text-[#4b3f8f] hover:text-[#3a3070] transition-colors">
-                    Resume
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
+            )}
+          </div>
         </div>
       </div>
 
@@ -602,4 +623,3 @@ const StudentAnalytics = () => {
 };
 
 export default StudentAnalytics;
-
