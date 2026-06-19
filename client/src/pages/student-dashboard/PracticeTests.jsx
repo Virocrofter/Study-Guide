@@ -20,6 +20,10 @@ const PracticeTests = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Added Generator Section State
+  const [activeGenTab, setActiveGenTab] = useState("upload");
+  const [pastedText, setPastedText] = useState("");
+
   const fetchTests = async () => {
     try {
       const { data } = await axios.get(`${backendUrl}/api/user/practice-tests`, {
@@ -54,7 +58,6 @@ const PracticeTests = () => {
   };
 
   const deleteTest = async (id) => {
-    if (!confirm("Delete this test?")) return;
     try {
       const { data } = await axios.delete(`${backendUrl}/api/user/practice-tests/${id}`, {
         withCredentials: true,
@@ -123,7 +126,7 @@ const PracticeTests = () => {
   }
 
   return (
-    <div className="h-full pb-20 max-w-6xl">
+    <div className="h-full pb-20 max-w-6xl text-left">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Practice Tests</h1>
@@ -138,39 +141,140 @@ const PracticeTests = () => {
         </button>
       </div>
 
-      <div className="grid md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-3xl font-bold text-slate-900">{tests.length}</p>
-          <p className="text-sm text-slate-500">Tests Created</p>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-3xl font-bold text-emerald-600">
-            {tests.reduce((acc, t) => acc + (t.attempts?.length || 0), 0)}
-          </p>
-          <p className="text-sm text-slate-500">Total Attempts</p>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-3xl font-bold text-blue-600">
-            {tests.length > 0
-              ? Math.round(
-                  tests.reduce((acc, t) => {
-                    const last = t.attempts?.[t.attempts.length - 1];
-                    return acc + (last?.percentage || 0);
-                  }, 0) / tests.length
-                )
-              : 0}
-            %
-          </p>
-          <p className="text-sm text-slate-500">Avg Last Score</p>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-3xl font-bold text-violet-600">
-            {tests.filter((t) => t.attempts?.some((a) => a.percentage >= 70)).length}
-          </p>
-          <p className="text-sm text-slate-500">Tests Passed</p>
-        </div>
-      </div>
+      {/* 🟢 GENERATE A PRACTICE TEST MODULE CONTAINER */}
+      {!activeTest && !testResult && (
+        <div className="bg-[#030712] text-white rounded-3xl p-6 md:p-8 border border-slate-800 shadow-xl mb-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold tracking-tight text-white">Generate a practice test</h2>
+            <p className="text-slate-400 text-sm mt-1">
+              Choose or upload materials to generate practice questions designed for you
+            </p>
+          </div>
 
+          {/* Sub Navigation Links */}
+          <div className="flex items-center gap-6 border-b border-slate-800/80 pb-3 mb-6 text-xs md:text-sm font-medium overflow-x-auto">
+            <button
+              onClick={() => setActiveGenTab("flashcards")}
+              className={`pb-2 whitespace-nowrap transition-all ${activeGenTab === "flashcards" ? "text-blue-400 border-b-2 border-blue-500 font-semibold" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              Flashcard sets
+            </button>
+            <button
+              onClick={() => setActiveGenTab("upload")}
+              className={`pb-2 whitespace-nowrap transition-all ${activeGenTab === "upload" ? "text-blue-400 border-b-2 border-blue-500 font-semibold" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              Upload files
+            </button>
+            <button
+              onClick={() => setActiveGenTab("paste")}
+              className={`pb-2 whitespace-nowrap transition-all ${activeGenTab === "paste" ? "text-blue-400 border-b-2 border-blue-500 font-semibold" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              Paste text
+            </button>
+            <button
+              onClick={() => setActiveGenTab("drive")}
+              className={`pb-2 whitespace-nowrap transition-all ${activeGenTab === "drive" ? "text-blue-400 border-b-2 border-blue-500 font-semibold" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              Google Drive
+            </button>
+          </div>
+
+          {/* Dynamic Window Area */}
+          <div className="min-h-[220px]">
+            {activeGenTab === "flashcards" && (
+              <div className="border border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center p-8 text-center bg-slate-900/30 min-h-[220px]">
+                <p className="text-sm text-slate-300 font-medium">Select an active flashcard set from your list</p>
+                <button className="mt-4 bg-slate-800 text-xs px-5 py-2.5 rounded-xl hover:bg-slate-700 transition-all text-white font-medium">
+                  Load Sets
+                </button>
+              </div>
+            )}
+
+            {activeGenTab === "upload" && (
+              <div className="border border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center p-8 text-center bg-slate-900/10 min-h-[220px]">
+                <div className="flex items-center justify-center -space-x-1 mb-4">
+                  <span className="bg-blue-600 text-white font-bold text-[9px] px-2 py-1.5 rounded-md transform -rotate-12">.DOCX</span>
+                  <span className="bg-pink-600 text-white font-bold text-[9px] px-2 py-1.5 rounded-md relative z-10">.PDF</span>
+                  <span className="bg-amber-500 text-white font-bold text-[9px] px-2 py-1.5 rounded-md transform rotate-12">.PPTX</span>
+                </div>
+                <p className="text-sm text-slate-200 font-medium">Drag and drop notes, readings, lecture slides, etc.</p>
+                <p className="text-[11px] text-slate-500 mt-1">Supported file types are .docx, .pdf, .pptx</p>
+                <button className="mt-5 bg-slate-800 border border-slate-700 text-xs font-semibold px-6 py-2.5 rounded-xl hover:bg-slate-700 transition-all text-slate-200">
+                  Browse files
+                </button>
+              </div>
+            )}
+
+            {activeGenTab === "paste" && (
+              <div className="w-full">
+                <textarea
+                  value={pastedText}
+                  onChange={(e) => setPastedText(e.target.value)}
+                  placeholder="Paste text here or drop a file"
+                  className="w-full min-h-[200px] bg-transparent text-slate-200 placeholder-slate-600 text-sm p-4 rounded-2xl border border-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                />
+              </div>
+            )}
+
+            {activeGenTab === "drive" && (
+              <div className="border border-slate-800/80 rounded-2xl flex flex-col items-center justify-center p-8 text-center bg-slate-900/20 min-h-[220px]">
+                <div className="w-10 h-10 mb-4 flex items-center justify-center bg-slate-900 rounded-full border border-slate-800">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                    <path d="M8.5 4.5L2.5 15L5.5 20.5L11.5 10L8.5 4.5Z" fill="#0066DA" />
+                    <path d="M21.5 15L15.5 4.5H9.5L15.5 15H21.5Z" fill="#00AA47" />
+                    <path d="M15.5 15L12.5 20.5H2.5L5.5 15H15.5Z" fill="#FFBA00" />
+                  </svg>
+                </div>
+                <p className="text-sm text-slate-200 font-medium">Select a doc or presentation from your Google Drive</p>
+                <p className="text-[11px] text-slate-500 mt-1 max-w-xs mx-auto">
+                  Allow pop-up windows on the site before connecting your Google account.
+                </p>
+                <button className="mt-5 bg-[#161b30] border border-slate-800 text-xs font-semibold px-5 py-2.5 rounded-xl hover:bg-[#1f2642] transition-all text-slate-200">
+                  Select file
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Analytics Dashboard Grid Metrics */}
+      {!activeTest && !testResult && (
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+            <p className="text-3xl font-bold text-slate-900">{tests.length}</p>
+            <p className="text-sm text-slate-500">Tests Created</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+            <p className="text-3xl font-bold text-emerald-600">
+              {tests.reduce((acc, t) => acc + (t.attempts?.length || 0), 0)}
+            </p>
+            <p className="text-sm text-slate-500">Total Attempts</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+            <p className="text-3xl font-bold text-blue-600">
+              {tests.length > 0
+                ? Math.round(
+                    tests.reduce((acc, t) => {
+                      const last = t.attempts?.[t.attempts.length - 1];
+                      return acc + (last?.percentage || 0);
+                    }, 0) / tests.length
+                  )
+                : 0}
+              %
+            </p>
+            <p className="text-sm text-slate-500">Avg Last Score</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+            <p className="text-3xl font-bold text-violet-600">
+              {tests.filter((t) => t.attempts?.some((a) => a.percentage >= 70)).length}
+            </p>
+            <p className="text-sm text-slate-500">Tests Passed</p>
+          </div>
+        </div>
+      )}
+
+      {/* Active Run Test Window Panel */}
       {activeTest && !testResult && (
         <div className="bg-emerald-50 rounded-3xl p-8 border border-emerald-200 mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -178,9 +282,7 @@ const PracticeTests = () => {
               <h3 className="text-xl font-bold text-slate-800">{activeTest.title}</h3>
               <p className="text-sm text-slate-500">{activeTest.questions.length} questions</p>
             </div>
-            <div className={`px-4 py-2 rounded-full text-sm font-bold ${
-              timer < 60 ? "bg-red-100 text-red-700" : "bg-white text-slate-700"
-            }`}>
+            <div className={`px-4 py-2 rounded-full text-sm font-bold ${timer < 60 ? "bg-red-100 text-red-700" : "bg-white text-slate-700"}`}>
               ⏱ {formatTime(timer)}
             </div>
           </div>
@@ -194,11 +296,7 @@ const PracticeTests = () => {
                     <button
                       key={optIdx}
                       onClick={() => setAnswers({ ...answers, [idx]: optIdx })}
-                      className={`text-left px-4 py-3 rounded-lg text-sm transition-colors ${
-                        answers[idx] === optIdx
-                          ? "bg-emerald-600 text-white"
-                          : "bg-slate-50 text-slate-700 hover:bg-slate-100"
-                      }`}
+                      className={`text-left px-4 py-3 rounded-lg text-sm transition-colors ${answers[idx] === optIdx ? "bg-emerald-600 text-white" : "bg-slate-50 text-slate-700 hover:bg-slate-100"}`}
                     >
                       {String.fromCharCode(65 + optIdx)}. {opt}
                     </button>
@@ -218,6 +316,7 @@ const PracticeTests = () => {
         </div>
       )}
 
+      {/* Results Review Section Panel */}
       {testResult && (
         <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm mb-8">
           <div className="text-center mb-6">
@@ -231,9 +330,7 @@ const PracticeTests = () => {
           </div>
           <div className="space-y-4">
             {activeTest.questions.map((q, idx) => (
-              <div key={idx} className={`rounded-xl p-4 ${
-                answers[idx] === q.correctAnswer ? "bg-emerald-50 border border-emerald-200" : "bg-red-50 border border-red-200"
-              }`}>
+              <div key={idx} className={`rounded-xl p-4 ${answers[idx] === q.correctAnswer ? "bg-emerald-50 border border-emerald-200" : "bg-red-50 border border-red-200"}`}>
                 <p className="font-medium text-slate-800 mb-2">{idx + 1}. {q.questionText}</p>
                 <p className="text-sm">
                   Your answer: <span className={answers[idx] === q.correctAnswer ? "text-emerald-700 font-bold" : "text-red-700 font-bold"}>
@@ -256,6 +353,7 @@ const PracticeTests = () => {
         </div>
       )}
 
+      {/* Tests Showcase Grid / Fallback State Row */}
       {!activeTest && (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {tests.map((test) => {
@@ -279,9 +377,7 @@ const PracticeTests = () => {
                 <p className="text-sm text-slate-500 mb-3">{test.questions.length} questions • {test.timeLimit} min</p>
                 {lastAttempt && (
                   <div className="flex items-center gap-2 mb-3">
-                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                      lastAttempt.percentage >= 70 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                    }`}>
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${lastAttempt.percentage >= 70 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                       Last: {lastAttempt.percentage}%
                     </span>
                     <span className="text-xs text-slate-400">{test.attempts.length} attempts</span>
@@ -310,6 +406,7 @@ const PracticeTests = () => {
         </div>
       )}
 
+      {/* Standard Popup Modal (For Creating Manual/Custom Written Tests) */}
       {showAdd && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl my-8">
