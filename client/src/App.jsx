@@ -15,6 +15,7 @@ import Loading from "./components/student/Loading";
 import StudentAnalytics from "./pages/student-dashboard/StudentAnalytics";
 import StudentEnrollments from "./pages/student-dashboard/StudentEnrollments";
 import StudentAssignments from "./pages/student-dashboard/StudentAssignments";
+import BrowseCourses from "./pages/student-dashboard/BrowseCourses";
 
 // ─── Study Buddy Pages ───
 import Library from "./pages/student-dashboard/Library";
@@ -65,6 +66,8 @@ const App = () => {
         <Route index element={<StudentAnalytics />} />
         <Route path="enrollments" element={<StudentEnrollments />} />
         <Route path="assignments" element={<StudentAssignments />} />
+        <Route path="browse" element={<BrowseCourses />} />
+        <Route path="browse/:input" element={<BrowseCourses />} />
 
         <Route path="library" element={<Library />} />
         <Route path="flash-cards" element={<FlashCards />} />
