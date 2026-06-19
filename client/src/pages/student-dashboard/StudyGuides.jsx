@@ -18,6 +18,10 @@ const StudyGuides = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // AI Generator Tab State
+  const [activeGenTab, setActiveGenTab] = useState("upload");
+  const [pastedText, setPastedText] = useState("");
+
   const fetchGuides = async () => {
     try {
       const { data } = await axios.get(`${backendUrl}/api/user/study-guides`, {
@@ -81,7 +85,7 @@ const StudyGuides = () => {
   }
 
   return (
-    <div className="h-full pb-20 max-w-6xl">
+    <div className="h-full pb-20 max-w-6xl text-left">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Study Guides</h1>
@@ -96,6 +100,85 @@ const StudyGuides = () => {
         </button>
       </div>
 
+      {/* AI GENERATE STUDY GUIDE MODULE */}
+      <div className="bg-[#030712] text-white rounded-3xl p-6 md:p-8 border border-slate-800 shadow-xl mb-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold tracking-tight text-white">Generate a study guide</h2>
+          <p className="text-slate-400 text-sm mt-1">
+            Transform disparate notes, textbook sections, or summaries into highly organized dynamic documentation
+          </p>
+        </div>
+
+        <div className="flex items-center gap-6 border-b border-slate-800/80 pb-3 mb-6 text-xs md:text-sm font-medium overflow-x-auto">
+          <button
+            onClick={() => setActiveGenTab("upload")}
+            className={`pb-2 whitespace-nowrap transition-all ${activeGenTab === "upload" ? "text-blue-400 border-b-2 border-blue-500 font-semibold" : "text-slate-400 hover:text-slate-200"}`}
+          >
+            Upload files
+          </button>
+          <button
+            onClick={() => setActiveGenTab("paste")}
+            className={`pb-2 whitespace-nowrap transition-all ${activeGenTab === "paste" ? "text-blue-400 border-b-2 border-blue-500 font-semibold" : "text-slate-400 hover:text-slate-200"}`}
+          >
+            Paste text
+          </button>
+          <button
+            onClick={() => setActiveGenTab("drive")}
+            className={`pb-2 whitespace-nowrap transition-all ${activeGenTab === "drive" ? "text-blue-400 border-b-2 border-blue-500 font-semibold" : "text-slate-400 hover:text-slate-200"}`}
+          >
+            Google Drive
+          </button>
+        </div>
+
+        <div className="min-h-[220px]">
+          {activeGenTab === "upload" && (
+            <div className="border border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center p-8 text-center bg-slate-900/10 min-h-[220px]">
+              <div className="flex items-center justify-center -space-x-1 mb-4">
+                <span className="bg-blue-600 text-white font-bold text-[9px] px-2 py-1.5 rounded-md transform -rotate-12">.DOCX</span>
+                <span className="bg-pink-600 text-white font-bold text-[9px] px-2 py-1.5 rounded-md relative z-10">.PDF</span>
+                <span className="bg-amber-500 text-white font-bold text-[9px] px-2 py-1.5 rounded-md transform rotate-12">.PPTX</span>
+              </div>
+              <p className="text-sm text-slate-200 font-medium">Drag and drop raw readings, raw summaries, or research reports</p>
+              <p className="text-[11px] text-slate-500 mt-1">Supported file types are .docx, .pdf, .pptx</p>
+              <button className="mt-5 bg-slate-800 border border-slate-700 text-xs font-semibold px-6 py-2.5 rounded-xl hover:bg-slate-700 transition-all text-slate-200">
+                Browse files
+              </button>
+            </div>
+          )}
+
+          {activeGenTab === "paste" && (
+            <div className="w-full">
+              <textarea
+                value={pastedText}
+                onChange={(e) => setPastedText(e.target.value)}
+                placeholder="Paste unorganized text or lecture scripts here..."
+                className="w-full min-h-[200px] bg-transparent text-slate-200 placeholder-slate-600 text-sm p-4 rounded-2xl border border-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+              />
+            </div>
+          )}
+
+          {activeGenTab === "drive" && (
+            <div className="border border-slate-800/80 rounded-2xl flex flex-col items-center justify-center p-8 text-center bg-slate-900/20 min-h-[220px]">
+              <div className="w-10 h-10 mb-4 flex items-center justify-center bg-slate-900 rounded-full border border-slate-800">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                  <path d="M8.5 4.5L2.5 15L5.5 20.5L11.5 10L8.5 4.5Z" fill="#0066DA" />
+                  <path d="M21.5 15L15.5 4.5H9.5L15.5 15H21.5Z" fill="#00AA47" />
+                  <path d="M15.5 15L12.5 20.5H2.5L5.5 15H15.5Z" fill="#FFBA00" />
+                </svg>
+              </div>
+              <p className="text-sm text-slate-200 font-medium">Select a shared directory or lecture document from Google Drive</p>
+              <p className="text-[11px] text-slate-500 mt-1 max-w-xs mx-auto">
+                Pop-up parameters must match your configuration properties to authorize login.
+              </p>
+              <button className="mt-5 bg-[#161b30] border border-slate-800 text-xs font-semibold px-5 py-2.5 rounded-xl hover:bg-[#1f2642] transition-all text-slate-200">
+                Select file
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Analytics Matrix Grid Dashboard */}
       <div className="grid md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
           <p className="text-3xl font-bold text-slate-900">{guides.length}</p>
@@ -115,6 +198,7 @@ const StudyGuides = () => {
         </div>
       </div>
 
+      {/* Collection Grid Container with Fallback Conditional States */}
       {guides.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
           <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -123,7 +207,7 @@ const StudyGuides = () => {
             </svg>
           </div>
           <h3 className="text-xl font-bold text-slate-800 mb-2">No study guides yet</h3>
-          <p className="text-slate-400 mb-4">Create your first guide to organize your learning.</p>
+          <p className="text-slate-400 mb-4">Create your first structured guide manually or let AI draft one above.</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -162,6 +246,7 @@ const StudyGuides = () => {
         </div>
       )}
 
+      {/* Manual Input Modals */}
       {showAdd && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl my-8">
