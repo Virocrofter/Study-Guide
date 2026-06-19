@@ -538,7 +538,7 @@ const StudentAnalytics = () => {
                   className="min-w-[280px] md:min-w-[320px] bg-[#1a1a2e] rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden shrink-0"
                 >
                   {/* Decorative shapes */}
-                  <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-[#4b3f8f]/10 rounded-full blur-2xl" />
+                  <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-full blur-2xl" />
                   <div className="absolute top-4 right-4">
                     <button className="text-white/40 hover:text-white/70 transition-colors">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -579,7 +579,7 @@ const StudentAnalytics = () => {
               ))}
 
             {flashcards.length === 0 && (
-              <div className="min-w-[280px] md:min-w-[320px] bg-[#1a1a2e] rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
+              <div className="min-w-70 md:min-w-[320px] bg-[#1a1a2e] rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
                 <svg className="w-10 h-10 text-white/20 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
