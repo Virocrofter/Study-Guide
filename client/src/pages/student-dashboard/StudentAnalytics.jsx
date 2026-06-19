@@ -523,6 +523,7 @@ const StudentAnalytics = () => {
         </div>
       </div>
 
+
 {/* Jump Back In — Recently Done Flashcards */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-5">Jump back in</h2>
@@ -595,7 +596,6 @@ const StudentAnalytics = () => {
           </div>
         </div>
       </div>
-
 
       {/* Recents */}
       <div className="mb-8">
