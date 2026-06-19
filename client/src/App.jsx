@@ -15,7 +15,7 @@ import Loading from "./components/student/Loading";
 import StudentAnalytics from "./pages/student-dashboard/StudentAnalytics";
 import StudentEnrollments from "./pages/student-dashboard/StudentEnrollments";
 import StudentAssignments from "./pages/student-dashboard/StudentAssignments";
-import BrowseCourses from "./pages/student-dashboard/BrowseCourses";
+import BrowseCourses from "./pages/student-dashboard/CoursesList";
 
 // ─── Study Buddy Pages ───
 import Library from "./pages/student-dashboard/Library";
