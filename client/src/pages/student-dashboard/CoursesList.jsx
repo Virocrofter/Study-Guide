@@ -4,7 +4,6 @@ import { AppContext } from '../../context/AppContext';
 import { useParams, useNavigate } from 'react-router-dom';  // ← ADDED: useNavigate
 import CourseCard from '../../components/student/CourseCard'
 import { useState } from 'react';
-import Footer from '../../components/student/Footer';
 import Searchbar from '../../components/student/Searchbar';
 import { assets } from '../../assets/assets';  // ← ADDED: assets for search icon
 
@@ -73,7 +72,6 @@ const BrowseCourses = () => {
           </div>
         )}
       </div>
-      <Footer />
     </>
   )
 }
