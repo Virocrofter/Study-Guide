@@ -102,7 +102,6 @@ export const authConfig = {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      // ─── FIX: Allow auto-linking OAuth accounts with the same email ───
       allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
