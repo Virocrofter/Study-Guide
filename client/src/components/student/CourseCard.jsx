@@ -17,7 +17,7 @@ const CourseCard = ({ course }) => {
   return (
     <Link
       ref={cardRef}
-      to={`/course/${course._id}`}
+      to={`/student/player/${course._id}`}
       onClick={() => scrollTo(0, 0)}
       className="reveal-scale hover-lift group relative bg-white rounded-2xl overflow-hidden border border-slate-200 flex flex-col"
     >

@@ -16,6 +16,7 @@ import StudentAnalytics from "./pages/student-dashboard/StudentAnalytics";
 import StudentEnrollments from "./pages/student-dashboard/StudentEnrollments";
 import StudentAssignments from "./pages/student-dashboard/StudentAssignments";
 import BrowseCourses from "./pages/student-dashboard/CoursesList";
+import CoursePlayer from "./pages/student/CoursePlayer";
 
 // ─── Study Buddy Pages ───
 import Library from "./pages/student-dashboard/Library";
@@ -84,6 +85,8 @@ const App = () => {
         <Route path="past-questions" element={<PastQuestions />} />
         <Route path="hall-of-fame" element={<HallOfFame />} />
         <Route path="exam-session" element={<ExamSession />} />
+        
+        <Route path="player/:id" element={<CoursePlayer />} />
       </Route>
 
       <Route path="/educator" element={<Educator />}>

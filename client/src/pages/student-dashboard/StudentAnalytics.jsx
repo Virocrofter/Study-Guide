@@ -726,7 +726,7 @@ const StudentAnalytics = () => {
                       {progress}% complete
                     </span>
                     <Link
-                      to={`/course/${course._id}`}
+                      to={`/student/player/${course._id}`}
                       className="flex items-center gap-1 text-sm font-medium text-[#4b3f8f] hover:text-[#3a3070] transition-colors"
                     >
                       <svg
