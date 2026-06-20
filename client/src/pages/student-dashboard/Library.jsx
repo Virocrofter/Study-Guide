@@ -1,145 +1,404 @@
-import React, { useContext, useEffect, useState } from "react";
-import { AppContext } from "../../context/AppContext";
-import axios from "axios";
-import { toast } from "react-toastify";
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
-const Library = () => {
-  const { backendUrl, userData } = useContext(AppContext);
-  const [items, setItems] = useState([]);
-  const [filter, setFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
+/* ─── FAKE DATA ─── */
+const FAKE_FLASHCARD_SETS = [
+  {
+    _id: "fc1",
+    title: "General trivia",
+    termCount: 7,
+    author: "Quizlet",
+    authorAvatar: "Q",
+    authorColor: "bg-blue-500",
+    verified: true,
+    isDraft: false,
+    isPrivate: false,
+    dateGroup: "THIS WEEK",
+    accentColor: "border-b-4 border-blue-400",
+  },
+  {
+    _id: "fc2",
+    title: "Nothing Phone (2a) 12GB/256GB Specs & Features Overview",
+    termCount: 18,
+    author: "Vincent_Okpeku",
+    authorAvatar: "V",
+    authorColor: "bg-emerald-500",
+    verified: false,
+    isDraft: false,
+    isPrivate: false,
+    dateGroup: "IN MARCH 2026",
+    accentColor: "",
+  },
+  {
+    _id: "fc3",
+    title: "JavaScript ES6+ Features",
+    termCount: 24,
+    author: "DevMastery",
+    authorAvatar: "D",
+    authorColor: "bg-purple-500",
+    verified: true,
+    isDraft: false,
+    isPrivate: false,
+    dateGroup: "IN MARCH 2026",
+    accentColor: "",
+  },
+  {
+    _id: "fc4",
+    title: "React Hooks Deep Dive",
+    termCount: 15,
+    author: "CodeWithMosh",
+    authorAvatar: "C",
+    authorColor: "bg-orange-500",
+    verified: false,
+    isDraft: false,
+    isPrivate: false,
+    dateGroup: "IN MARCH 2026",
+    accentColor: "",
+  },
+  {
+    _id: "fc5",
+    title: "Untitled set",
+    termCount: 0,
+    author: "You",
+    authorAvatar: "Y",
+    authorColor: "bg-gray-500",
+    verified: false,
+    isDraft: true,
+    isPrivate: true,
+    dateGroup: "IN PROGRESS",
+    accentColor: "",
+  },
+];
 
-  const fetchLibrary = async () => {
-    try {
-      const { data } = await axios.get(`${backendUrl}/api/user/library`, {
-        withCredentials: true,
-      });
-      if (data.success) setItems(data.items);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+const FAKE_FOLDERS = [
+  { _id: "f1", name: "Web Development", setCount: 3, color: "bg-blue-500" },
+  { _id: "f2", name: "Exam Prep", setCount: 5, color: "bg-emerald-500" },
+  { _id: "f3", name: "Random Facts", setCount: 2, color: "bg-purple-500" },
+];
 
-  const removeItem = async (itemId) => {
-    try {
-      const { data } = await axios.delete(`${backendUrl}/api/user/library/${itemId}`, {
-        withCredentials: true,
-      });
-      if (data.success) {
-        setItems(items.filter((i) => i._id !== itemId));
-        toast.success("Removed from library");
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || err.message);
-    }
-  };
+const FAKE_PRACTICE_TESTS = [
+  { _id: "pt1", title: "JavaScript Basics", questionCount: 20, score: 85, author: "Quizlet" },
+  { _id: "pt2", title: "React Fundamentals", questionCount: 15, score: 92, author: "DevMastery" },
+];
 
-  useEffect(() => {
-    if (userData) fetchLibrary();
-  }, [userData]);
+const FAKE_STUDY_GUIDES = [
+  { _id: "sg1", title: "Frontend Interview Prep", pageCount: 12, author: "TechLead" },
+  { _id: "sg2", title: "System Design Notes", pageCount: 8, author: "EngineeringDaily" },
+];
 
-  const filteredItems = filter === "all" ? items : items.filter((i) => i.type === filter);
+/* ─── COMPONENTS ─── */
 
-  const typeColors = {
-    course: "bg-blue-100 text-blue-700",
-    material: "bg-emerald-100 text-emerald-700",
-    flashcard: "bg-amber-100 text-amber-700",
-    guide: "bg-violet-100 text-violet-700",
-  };
+const VerifiedBadge = () => (
+  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-400 text-white text-[10px] font-bold ml-1">
+    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+    </svg>
+  </span>
+);
 
-  const typeIcons = {
-    course: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-      </svg>
-    ),
-    material: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    ),
-    flashcard: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-      </svg>
-    ),
-    guide: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-      </svg>
-    ),
-  };
+const LockIcon = () => (
+  <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+  </svg>
+);
 
-  if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
+const FlashcardSetCard = ({ set, onClick }) => (
+  <div
+    onClick={onClick}
+    className={`bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors ${set.accentColor}`}
+  >
+    {set.isDraft ? (
+      <div className="flex items-center gap-2">
+        <span className="text-white font-bold text-lg">(Draft)</span>
+        <LockIcon />
       </div>
-    );
-  }
+    ) : (
+      <>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-gray-300 text-sm">{set.termCount} terms</span>
+          <span className="text-gray-500">|</span>
+          <div className="flex items-center gap-1">
+            <span className={`w-5 h-5 rounded-full ${set.authorColor} flex items-center justify-center text-white text-[10px] font-bold`}>
+              {set.authorAvatar}
+            </span>
+            <span className="text-gray-300 text-sm">{set.author}</span>
+            {set.verified && <VerifiedBadge />}
+          </div>
+        </div>
+        <h3 className="text-white font-bold text-lg leading-tight">{set.title}</h3>
+      </>
+    )}
+  </div>
+);
+
+const FolderCard = ({ folder }) => (
+  <div className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors">
+    <div className={`w-10 h-10 rounded-lg ${folder.color} flex items-center justify-center mb-3`}>
+      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      </svg>
+    </div>
+    <h3 className="text-white font-bold">{folder.name}</h3>
+    <p className="text-gray-400 text-sm">{folder.setCount} sets</p>
+  </div>
+);
+
+const PracticeTestCard = ({ test }) => (
+  <div className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors">
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-gray-300 text-sm">{test.questionCount} questions</span>
+      <span className="text-gray-500">|</span>
+      <span className="text-gray-300 text-sm">{test.author}</span>
+    </div>
+    <h3 className="text-white font-bold text-lg">{test.title}</h3>
+    <div className="mt-2 flex items-center gap-2">
+      <div className="flex-1 bg-gray-600 rounded-full h-2">
+        <div
+          className="bg-emerald-400 h-2 rounded-full"
+          style={{ width: `${test.score}%` }}
+        />
+      </div>
+      <span className="text-emerald-400 text-sm font-bold">{test.score}%</span>
+    </div>
+  </div>
+);
+
+const StudyGuideCard = ({ guide }) => (
+  <div className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors">
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-gray-300 text-sm">{guide.pageCount} pages</span>
+      <span className="text-gray-500">|</span>
+      <span className="text-gray-300 text-sm">{guide.author}</span>
+    </div>
+    <h3 className="text-white font-bold text-lg">{guide.title}</h3>
+  </div>
+);
+
+/* ─── MAIN PAGE ─── */
+const Library = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("flashcards");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("Recent");
+  const [sortOpen, setSortOpen] = useState(false);
+
+  const tabs = [
+    { id: "flashcards", label: "Flashcard sets" },
+    { id: "folders", label: "Folders" },
+    { id: "practice", label: "Practice Tests" },
+    { id: "guides", label: "Study guides" },
+  ];
+
+  const filteredFlashcards = useMemo(() => {
+    let sets = [...FAKE_FLASHCARD_SETS];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      sets = sets.filter((s) => s.title.toLowerCase().includes(q));
+    }
+    return sets;
+  }, [searchQuery]);
+
+  const groupedFlashcards = useMemo(() => {
+    const groups = {};
+    filteredFlashcards.forEach((set) => {
+      if (!groups[set.dateGroup]) groups[set.dateGroup] = [];
+      groups[set.dateGroup].push(set);
+    });
+    // Order groups: IN PROGRESS first, then THIS WEEK, then date-based
+    const order = ["IN PROGRESS", "THIS WEEK", "IN MARCH 2026", "OLDER"];
+    const ordered = {};
+    order.forEach((key) => {
+      if (groups[key]) ordered[key] = groups[key];
+    });
+    Object.keys(groups).forEach((key) => {
+      if (!ordered[key]) ordered[key] = groups[key];
+    });
+    return ordered;
+  }, [filteredFlashcards]);
+
+  const filteredFolders = useMemo(() => {
+    if (!searchQuery.trim()) return FAKE_FOLDERS;
+    const q = searchQuery.toLowerCase();
+    return FAKE_FOLDERS.filter((f) => f.name.toLowerCase().includes(q));
+  }, [searchQuery]);
+
+  const filteredPractice = useMemo(() => {
+    if (!searchQuery.trim()) return FAKE_PRACTICE_TESTS;
+    const q = searchQuery.toLowerCase();
+    return FAKE_PRACTICE_TESTS.filter((t) => t.title.toLowerCase().includes(q));
+  }, [searchQuery]);
+
+  const filteredGuides = useMemo(() => {
+    if (!searchQuery.trim()) return FAKE_STUDY_GUIDES;
+    const q = searchQuery.toLowerCase();
+    return FAKE_STUDY_GUIDES.filter((g) => g.title.toLowerCase().includes(q));
+  }, [searchQuery]);
+
+  const handleCardClick = (id) => {
+    if (activeTab === "flashcards") {
+      navigate(`/student/flash-cards?set=${id}`);
+    } else if (activeTab === "folders") {
+      navigate(`/student/flash-cards/folder/${id}`);
+    }
+  };
+
+  const getSearchPlaceholder = () => {
+    switch (activeTab) {
+      case "flashcards": return "Search flashcards";
+      case "folders": return "Search folders";
+      case "practice": return "Search practice tests";
+      case "guides": return "Search study guides";
+      default: return "Search";
+    }
+  };
 
   return (
-    <div className="h-full pb-20 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Library</h1>
-        <p className="text-slate-500 mt-1">Your saved courses, materials, and study resources.</p>
-      </div>
+    <div className="min-h-full bg-[#0f0f23] text-white p-6 md:p-8">
+      {/* Header */}
+      <h1 className="text-4xl font-bold mb-10">Your library</h1>
 
-      <div className="flex gap-2 mb-6">
-        {["all", "course", "material", "flashcard", "guide"].map((f) => (
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-3 mb-8">
+        {tabs.map((tab) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              filter === f
-                ? "bg-emerald-600 text-white shadow-lg"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-emerald-50"
+            key={tab.id}
+            onClick={() => {
+              setActiveTab(tab.id);
+              setSearchQuery("");
+            }}
+            className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+              activeTab === tab.id
+                ? "bg-transparent border-2 border-white text-white"
+                : "bg-gray-700 text-white hover:bg-gray-600 border-2 border-transparent"
             }`}
           >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {filteredItems.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-          <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      {/* Filters & Search */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        {/* Sort Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setSortOpen(!sortOpen)}
+            className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-full text-sm font-medium transition-colors"
+          >
+            {sortBy}
+            <svg className={`w-4 h-4 transition-transform ${sortOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
-          </div>
-          <h3 className="text-xl font-bold text-slate-800 mb-2">Your library is empty</h3>
-          <p className="text-slate-400 mb-4">Save courses, materials, and guides to access them here.</p>
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredItems.map((item) => (
-            <div key={item._id} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-shadow group">
-              <div className="flex items-start justify-between mb-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${typeColors[item.type] || "bg-slate-100 text-slate-600"}`}>
-                  {typeIcons[item.type] || typeIcons.guide}
-                </div>
+          </button>
+          {sortOpen && (
+            <div className="absolute top-full left-0 mt-2 bg-gray-700 rounded-xl shadow-xl py-2 z-10 min-w-[140px]">
+              {["Recent", "Alphabetical", "Created by me"].map((opt) => (
                 <button
-                  onClick={() => removeItem(item._id)}
-                  className="text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                  key={opt}
+                  onClick={() => { setSortBy(opt); setSortOpen(false); }}
+                  className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-600 transition-colors ${
+                    sortBy === opt ? "text-emerald-400 font-medium" : "text-white"
+                  }`}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  {opt}
                 </button>
-              </div>
-              <h4 className="font-bold text-slate-800 mb-1">{item.title}</h4>
-              <p className="text-sm text-slate-500 mb-3">{item.description || "Saved resource"}</p>
-              <div className="flex items-center gap-2">
-                <span className={`px-2 py-1 rounded-lg text-xs font-bold ${typeColors[item.type]}`}>
-                  {item.type.toUpperCase()}
-                </span>
-                <span className="text-xs text-slate-400">{new Date(item.createdAt).toLocaleDateString()}</span>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
+        </div>
+
+        {/* Search */}
+        <div className="relative w-full sm:w-96">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={getSearchPlaceholder()}
+            className="w-full bg-gray-700 text-white placeholder-gray-400 px-5 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 pr-12"
+          />
+          <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* ─── FLASHCARDS TAB ─── */}
+      {activeTab === "flashcards" && (
+        <div className="space-y-10">
+          {Object.keys(groupedFlashcards).length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-400 text-lg">No flashcard sets found.</p>
+            </div>
+          ) : (
+            Object.entries(groupedFlashcards).map(([groupName, sets]) => (
+              <div key={groupName}>
+                <div className="flex items-center gap-4 mb-4">
+                  <h2 className="text-gray-400 text-sm font-bold tracking-wider uppercase">{groupName}</h2>
+                  <div className="flex-1 h-px bg-gray-700" />
+                </div>
+                <div className="space-y-3">
+                  {sets.map((set) => (
+                    <FlashcardSetCard
+                      key={set._id}
+                      set={set}
+                      onClick={() => handleCardClick(set._id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* ─── FOLDERS TAB ─── */}
+      {activeTab === "folders" && (
+        <div>
+          {filteredFolders.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-400 text-lg">No folders found.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredFolders.map((folder) => (
+                <FolderCard key={folder._id} folder={folder} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── PRACTICE TESTS TAB ─── */}
+      {activeTab === "practice" && (
+        <div>
+          {filteredPractice.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-400 text-lg">No practice tests found.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredPractice.map((test) => (
+                <PracticeTestCard key={test._id} test={test} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── STUDY GUIDES TAB ─── */}
+      {activeTab === "guides" && (
+        <div>
+          {filteredGuides.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-400 text-lg">No study guides found.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredGuides.map((guide) => (
+                <StudyGuideCard key={guide._id} guide={guide} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
