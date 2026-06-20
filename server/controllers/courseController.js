@@ -10,7 +10,7 @@ export const addCourse = async (req, res) => {
     try {
         const { courseData } = req.body;
         const thumbnailFile = req.file;
-        const educatorId = req.auth?.().userId;  // ← FIXED: was req.auth.userId
+        const educatorId = req.auth?.userId;;  // ← FIXED: was req.auth.userId
 
         if (!educatorId) {
             return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -59,34 +59,24 @@ export const addCourse = async (req, res) => {
     }
 };
 
-export const getAllCourse = async (req, res) => {
-    try {
-        await connectDB();
-        const courses = await Course.find({}).lean();
-        return res.json({ success: true, courses });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
-    }
+export const getAllCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({ isPublished: true }).select("-courseContent");
+    return res.json({ success: true, courses });
+  } catch (error) {
+    return res.json({ success: false, message: error.message });
+  }
 };
 
 export const getCourseId = async (req, res) => {
-    try {
-        await connectDB();
-        const { id } = req.params;
-
-        if (!id || !mongoose.isValidObjectId(id)) {
-            return res.status(400).json({ success: false, message: "Invalid Course ID format" });
-        }
-
-        const course = await Course.findById(id).populate('educator').lean();
-
-        if (!course) {
-            return res.status(404).json({ success: false, message: "Course not found" });
-        }
-
-        return res.json({ success: true, course });
-    } catch (error) {
-        console.error("Get Course Error:", error);
-        return res.status(500).json({ success: false, message: error.message });
+  try {
+    const { id } = req.params;
+    const course = await Course.findById(id);
+    if (!course) {
+      return res.json({ success: false, message: "Course not found" });
     }
+    return res.json({ success: true, course });
+  } catch (error) {
+    return res.json({ success: false, message: error.message });
+  }
 };

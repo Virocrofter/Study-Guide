@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -14,7 +15,6 @@ const FAKE_FLASHCARD_SETS = [
     isDraft: false,
     isPrivate: false,
     dateGroup: "THIS WEEK",
-    accentColor: "border-b-4 border-blue-400",
   },
   {
     _id: "fc2",
@@ -27,7 +27,6 @@ const FAKE_FLASHCARD_SETS = [
     isDraft: false,
     isPrivate: false,
     dateGroup: "IN MARCH 2026",
-    accentColor: "",
   },
   {
     _id: "fc3",
@@ -40,7 +39,6 @@ const FAKE_FLASHCARD_SETS = [
     isDraft: false,
     isPrivate: false,
     dateGroup: "IN MARCH 2026",
-    accentColor: "",
   },
   {
     _id: "fc4",
@@ -53,7 +51,6 @@ const FAKE_FLASHCARD_SETS = [
     isDraft: false,
     isPrivate: false,
     dateGroup: "IN MARCH 2026",
-    accentColor: "",
   },
   {
     _id: "fc5",
@@ -66,25 +63,68 @@ const FAKE_FLASHCARD_SETS = [
     isDraft: true,
     isPrivate: true,
     dateGroup: "IN PROGRESS",
-    accentColor: "",
   },
 ];
 
 const FAKE_FOLDERS = [
-  { _id: "f1", name: "Web Development", setCount: 3, color: "bg-blue-500" },
-  { _id: "f2", name: "Exam Prep", setCount: 5, color: "bg-emerald-500" },
-  { _id: "f3", name: "Random Facts", setCount: 2, color: "bg-purple-500" },
+  { _id: "f1", name: "Web Development", setCount: 3, color: "bg-blue-500", dateGroup: "THIS WEEK" },
+  { _id: "f2", name: "Exam Prep", setCount: 5, color: "bg-emerald-500", dateGroup: "THIS WEEK" },
+  { _id: "f3", name: "Random Facts", setCount: 2, color: "bg-purple-500", dateGroup: "IN MARCH 2026" },
+  { _id: "f4", name: "Old Notes", setCount: 8, color: "bg-gray-500", dateGroup: "OLDER" },
 ];
 
 const FAKE_PRACTICE_TESTS = [
-  { _id: "pt1", title: "JavaScript Basics", questionCount: 20, score: 85, author: "Quizlet" },
-  { _id: "pt2", title: "React Fundamentals", questionCount: 15, score: 92, author: "DevMastery" },
+  { _id: "pt1", title: "JavaScript Basics", questionCount: 20, score: 85, author: "Quizlet", dateGroup: "THIS WEEK" },
+  { _id: "pt2", title: "React Fundamentals", questionCount: 15, score: 92, author: "DevMastery", dateGroup: "THIS WEEK" },
+  { _id: "pt3", title: "CSS Grid & Flexbox", questionCount: 12, score: 78, author: "CSSWizard", dateGroup: "IN MARCH 2026" },
+  { _id: "pt4", title: "TypeScript Essentials", questionCount: 18, score: 88, author: "TypeMaster", dateGroup: "OLDER" },
 ];
 
 const FAKE_STUDY_GUIDES = [
-  { _id: "sg1", title: "Frontend Interview Prep", pageCount: 12, author: "TechLead" },
-  { _id: "sg2", title: "System Design Notes", pageCount: 8, author: "EngineeringDaily" },
+  { _id: "sg1", title: "Frontend Interview Prep", pageCount: 12, author: "TechLead", dateGroup: "THIS WEEK" },
+  { _id: "sg2", title: "System Design Notes", pageCount: 8, author: "EngineeringDaily", dateGroup: "THIS WEEK" },
+  { _id: "sg3", title: "React Patterns 2026", pageCount: 15, author: "ReactTeam", dateGroup: "IN MARCH 2026" },
+  { _id: "sg4", title: "MongoDB Cheatsheet", pageCount: 5, author: "DBAdmin", dateGroup: "OLDER" },
 ];
+
+/* ─── GROUP ORDER ─── */
+const GROUP_ORDER = ["IN PROGRESS", "THIS WEEK", "IN MARCH 2026", "OLDER"];
+
+/* ─── HELPERS ─── */
+const groupByDate = (items) => {
+  const groups = {};
+  items.forEach((item) => {
+    const key = item.dateGroup || "OLDER";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+  const ordered = {};
+  GROUP_ORDER.forEach((key) => {
+    if (groups[key]) ordered[key] = groups[key];
+  });
+  Object.keys(groups).forEach((key) => {
+    if (!ordered[key]) ordered[key] = groups[key];
+  });
+  return ordered;
+};
+
+/* ─── SHARED CARD WRAPPER ─── */
+const CardWrapper = ({ children, onClick }) => (
+  <div
+    onClick={onClick}
+    className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-all border-b-4 border-transparent hover:border-blue-400"
+  >
+    {children}
+  </div>
+);
+
+/* ─── SECTION HEADER ─── */
+const SectionHeader = ({ title }) => (
+  <div className="flex items-center gap-4 mb-4">
+    <h2 className="text-gray-400 text-sm font-bold tracking-wider uppercase whitespace-nowrap">{title}</h2>
+    <div className="flex-1 h-px bg-gray-700" />
+  </div>
+);
 
 /* ─── COMPONENTS ─── */
 
@@ -102,11 +142,19 @@ const LockIcon = () => (
   </svg>
 );
 
+const AuthorMeta = ({ avatar, color, name, verified }) => (
+  <div className="flex items-center gap-1.5">
+    <span className={`w-5 h-5 rounded-full ${color} flex items-center justify-center text-white text-[10px] font-bold`}>
+      {avatar}
+    </span>
+    <span className="text-gray-300 text-sm">{name}</span>
+    {verified && <VerifiedBadge />}
+  </div>
+);
+
+/* ─── FLASHCARD CARD ─── */
 const FlashcardSetCard = ({ set, onClick }) => (
-  <div
-    onClick={onClick}
-    className={`bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors ${set.accentColor}`}
-  >
+  <CardWrapper onClick={onClick}>
     {set.isDraft ? (
       <div className="flex items-center gap-2">
         <span className="text-white font-bold text-lg">(Draft)</span>
@@ -117,62 +165,84 @@ const FlashcardSetCard = ({ set, onClick }) => (
         <div className="flex items-center gap-2 mb-2">
           <span className="text-gray-300 text-sm">{set.termCount} terms</span>
           <span className="text-gray-500">|</span>
-          <div className="flex items-center gap-1">
-            <span className={`w-5 h-5 rounded-full ${set.authorColor} flex items-center justify-center text-white text-[10px] font-bold`}>
-              {set.authorAvatar}
-            </span>
-            <span className="text-gray-300 text-sm">{set.author}</span>
-            {set.verified && <VerifiedBadge />}
-          </div>
+          <AuthorMeta avatar={set.authorAvatar} color={set.authorColor} name={set.author} verified={set.verified} />
         </div>
         <h3 className="text-white font-bold text-lg leading-tight">{set.title}</h3>
       </>
     )}
-  </div>
+  </CardWrapper>
 );
 
-const FolderCard = ({ folder }) => (
-  <div className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors">
-    <div className={`w-10 h-10 rounded-lg ${folder.color} flex items-center justify-center mb-3`}>
-      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-      </svg>
+/* ─── FOLDER CARD ─── */
+const FolderCard = ({ folder, onClick }) => (
+  <CardWrapper onClick={onClick}>
+    <div className="flex items-center gap-4">
+      <div className={`w-12 h-12 rounded-xl ${folder.color} flex items-center justify-center flex-shrink-0`}>
+        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+        </svg>
+      </div>
+      <div>
+        <h3 className="text-white font-bold text-lg">{folder.name}</h3>
+        <p className="text-gray-400 text-sm">{folder.setCount} sets</p>
+      </div>
     </div>
-    <h3 className="text-white font-bold">{folder.name}</h3>
-    <p className="text-gray-400 text-sm">{folder.setCount} sets</p>
-  </div>
+  </CardWrapper>
 );
 
-const PracticeTestCard = ({ test }) => (
-  <div className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors">
+/* ─── PRACTICE TEST CARD ─── */
+const PracticeTestCard = ({ test, onClick }) => (
+  <CardWrapper onClick={onClick}>
     <div className="flex items-center gap-2 mb-2">
       <span className="text-gray-300 text-sm">{test.questionCount} questions</span>
       <span className="text-gray-500">|</span>
       <span className="text-gray-300 text-sm">{test.author}</span>
     </div>
-    <h3 className="text-white font-bold text-lg">{test.title}</h3>
-    <div className="mt-2 flex items-center gap-2">
+    <h3 className="text-white font-bold text-lg mb-2">{test.title}</h3>
+    <div className="flex items-center gap-3">
       <div className="flex-1 bg-gray-600 rounded-full h-2">
-        <div
-          className="bg-emerald-400 h-2 rounded-full"
-          style={{ width: `${test.score}%` }}
-        />
+        <div className="bg-emerald-400 h-2 rounded-full" style={{ width: `${test.score}%` }} />
       </div>
       <span className="text-emerald-400 text-sm font-bold">{test.score}%</span>
     </div>
-  </div>
+  </CardWrapper>
 );
 
-const StudyGuideCard = ({ guide }) => (
-  <div className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors">
+/* ─── STUDY GUIDE CARD ─── */
+const StudyGuideCard = ({ guide, onClick }) => (
+  <CardWrapper onClick={onClick}>
     <div className="flex items-center gap-2 mb-2">
       <span className="text-gray-300 text-sm">{guide.pageCount} pages</span>
       <span className="text-gray-500">|</span>
       <span className="text-gray-300 text-sm">{guide.author}</span>
     </div>
     <h3 className="text-white font-bold text-lg">{guide.title}</h3>
-  </div>
+  </CardWrapper>
 );
+
+/* ─── GROUPED LIST RENDERER ─── */
+const GroupedList = ({ groupedItems, renderCard, emptyMessage }) => {
+  const keys = Object.keys(groupedItems);
+  if (keys.length === 0) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-gray-400 text-lg">{emptyMessage}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-10">
+      {keys.map((groupName) => (
+        <div key={groupName}>
+          <SectionHeader title={groupName} />
+          <div className="space-y-3">
+            {groupedItems[groupName].map((item) => renderCard(item))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 /* ─── MAIN PAGE ─── */
 const Library = () => {
@@ -189,57 +259,22 @@ const Library = () => {
     { id: "guides", label: "Study guides" },
   ];
 
-  const filteredFlashcards = useMemo(() => {
-    let sets = [...FAKE_FLASHCARD_SETS];
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      sets = sets.filter((s) => s.title.toLowerCase().includes(q));
-    }
-    return sets;
-  }, [searchQuery]);
-
-  const groupedFlashcards = useMemo(() => {
-    const groups = {};
-    filteredFlashcards.forEach((set) => {
-      if (!groups[set.dateGroup]) groups[set.dateGroup] = [];
-      groups[set.dateGroup].push(set);
-    });
-    // Order groups: IN PROGRESS first, then THIS WEEK, then date-based
-    const order = ["IN PROGRESS", "THIS WEEK", "IN MARCH 2026", "OLDER"];
-    const ordered = {};
-    order.forEach((key) => {
-      if (groups[key]) ordered[key] = groups[key];
-    });
-    Object.keys(groups).forEach((key) => {
-      if (!ordered[key]) ordered[key] = groups[key];
-    });
-    return ordered;
-  }, [filteredFlashcards]);
-
-  const filteredFolders = useMemo(() => {
-    if (!searchQuery.trim()) return FAKE_FOLDERS;
+  const filterBySearch = (items, searchField) => {
+    if (!searchQuery.trim()) return items;
     const q = searchQuery.toLowerCase();
-    return FAKE_FOLDERS.filter((f) => f.name.toLowerCase().includes(q));
-  }, [searchQuery]);
+    return items.filter((item) => item[searchField].toLowerCase().includes(q));
+  };
 
-  const filteredPractice = useMemo(() => {
-    if (!searchQuery.trim()) return FAKE_PRACTICE_TESTS;
-    const q = searchQuery.toLowerCase();
-    return FAKE_PRACTICE_TESTS.filter((t) => t.title.toLowerCase().includes(q));
-  }, [searchQuery]);
-
-  const filteredGuides = useMemo(() => {
-    if (!searchQuery.trim()) return FAKE_STUDY_GUIDES;
-    const q = searchQuery.toLowerCase();
-    return FAKE_STUDY_GUIDES.filter((g) => g.title.toLowerCase().includes(q));
-  }, [searchQuery]);
+  const flashcardSets = useMemo(() => groupByDate(filterBySearch(FAKE_FLASHCARD_SETS, "title")), [searchQuery]);
+  const folders = useMemo(() => groupByDate(filterBySearch(FAKE_FOLDERS, "name")), [searchQuery]);
+  const practiceTests = useMemo(() => groupByDate(filterBySearch(FAKE_PRACTICE_TESTS, "title")), [searchQuery]);
+  const studyGuides = useMemo(() => groupByDate(filterBySearch(FAKE_STUDY_GUIDES, "title")), [searchQuery]);
 
   const handleCardClick = (id) => {
-    if (activeTab === "flashcards") {
-      navigate(`/student/flash-cards?set=${id}`);
-    } else if (activeTab === "folders") {
-      navigate(`/student/flash-cards/folder/${id}`);
-    }
+    if (activeTab === "flashcards") navigate(`/student/flash-cards?set=${id}`);
+    else if (activeTab === "folders") navigate(`/student/flash-cards/folder/${id}`);
+    else if (activeTab === "practice") navigate(`/student/practice-tests/${id}`);
+    else if (activeTab === "guides") navigate(`/student/study-guides/${id}`);
   };
 
   const getSearchPlaceholder = () => {
@@ -262,10 +297,7 @@ const Library = () => {
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => {
-              setActiveTab(tab.id);
-              setSearchQuery("");
-            }}
+            onClick={() => { setActiveTab(tab.id); setSearchQuery(""); }}
             className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
               activeTab === tab.id
                 ? "bg-transparent border-2 border-white text-white"
@@ -324,82 +356,46 @@ const Library = () => {
 
       {/* ─── FLASHCARDS TAB ─── */}
       {activeTab === "flashcards" && (
-        <div className="space-y-10">
-          {Object.keys(groupedFlashcards).length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-gray-400 text-lg">No flashcard sets found.</p>
-            </div>
-          ) : (
-            Object.entries(groupedFlashcards).map(([groupName, sets]) => (
-              <div key={groupName}>
-                <div className="flex items-center gap-4 mb-4">
-                  <h2 className="text-gray-400 text-sm font-bold tracking-wider uppercase">{groupName}</h2>
-                  <div className="flex-1 h-px bg-gray-700" />
-                </div>
-                <div className="space-y-3">
-                  {sets.map((set) => (
-                    <FlashcardSetCard
-                      key={set._id}
-                      set={set}
-                      onClick={() => handleCardClick(set._id)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))
+        <GroupedList
+          groupedItems={flashcardSets}
+          emptyMessage="No flashcard sets found."
+          renderCard={(set) => (
+            <FlashcardSetCard key={set._id} set={set} onClick={() => handleCardClick(set._id)} />
           )}
-        </div>
+        />
       )}
 
       {/* ─── FOLDERS TAB ─── */}
       {activeTab === "folders" && (
-        <div>
-          {filteredFolders.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-gray-400 text-lg">No folders found.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredFolders.map((folder) => (
-                <FolderCard key={folder._id} folder={folder} />
-              ))}
-            </div>
+        <GroupedList
+          groupedItems={folders}
+          emptyMessage="No folders found."
+          renderCard={(folder) => (
+            <FolderCard key={folder._id} folder={folder} onClick={() => handleCardClick(folder._id)} />
           )}
-        </div>
+        />
       )}
 
       {/* ─── PRACTICE TESTS TAB ─── */}
       {activeTab === "practice" && (
-        <div>
-          {filteredPractice.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-gray-400 text-lg">No practice tests found.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredPractice.map((test) => (
-                <PracticeTestCard key={test._id} test={test} />
-              ))}
-            </div>
+        <GroupedList
+          groupedItems={practiceTests}
+          emptyMessage="No practice tests found."
+          renderCard={(test) => (
+            <PracticeTestCard key={test._id} test={test} onClick={() => handleCardClick(test._id)} />
           )}
-        </div>
+        />
       )}
 
       {/* ─── STUDY GUIDES TAB ─── */}
       {activeTab === "guides" && (
-        <div>
-          {filteredGuides.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-gray-400 text-lg">No study guides found.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredGuides.map((guide) => (
-                <StudyGuideCard key={guide._id} guide={guide} />
-              ))}
-            </div>
+        <GroupedList
+          groupedItems={studyGuides}
+          emptyMessage="No study guides found."
+          renderCard={(guide) => (
+            <StudyGuideCard key={guide._id} guide={guide} onClick={() => handleCardClick(guide._id)} />
           )}
-        </div>
+        />
       )}
     </div>
   );

@@ -12,7 +12,7 @@ export const getUserData = async (req, res) => {
   try {
     await connectDB();
 
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const sessionUser = res.locals.session?.user;
 
     if (!userId) {
@@ -46,7 +46,7 @@ export const becomeEducator = async (req, res) => {
   try {
     await connectDB();
 
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
@@ -82,7 +82,7 @@ export const becomeEducator = async (req, res) => {
 export const userEnrolledCourses = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
 
     if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
 
@@ -121,7 +121,7 @@ export const purchaseCourse = async (req, res) => {
     await connectDB();
     const { courseId } = req.body;
     const origin = req.headers.origin || "http://localhost:5173";
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
 
     const userData = await User.findById(userId);
     const courseData = await Course.findById(courseId);
@@ -171,7 +171,7 @@ export const purchaseCourse = async (req, res) => {
 export const updateUserCourseProgress = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { courseId, lectureId } = req.body;
 
     if (!courseId || !lectureId) {
@@ -207,7 +207,7 @@ export const updateUserCourseProgress = async (req, res) => {
 export const getUserCourseProgress = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { courseId } = req.body;
 
     const courseObjectId = mongoose.isValidObjectId(courseId) 
@@ -224,7 +224,7 @@ export const getUserCourseProgress = async (req, res) => {
 export const addUserRating = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { courseId, rating } = req.body;
 
     if (!courseId || !userId || !rating || rating < 1 || rating > 5) {
@@ -259,7 +259,7 @@ export const addUserRating = async (req, res) => {
 export const getCourseMessages = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { courseId } = req.params;
 
     const user = await User.findById(userId);
@@ -281,7 +281,7 @@ export const getCourseMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { courseId } = req.params;
     const { text, type, fileUrl, fileName, userName, userImage } = req.body;
 
@@ -311,7 +311,7 @@ export const sendMessage = async (req, res) => {
 export const getCourseMaterials = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { courseId } = req.params;
 
     if (!userId) {

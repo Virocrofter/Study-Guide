@@ -7,7 +7,7 @@ import User from "../models/User.js";
 export const getEducatorQuizzes = async (req, res) => {
   try {
     await connectDB();
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
     const { courseId } = req.params;
 
     const course = await Course.findById(courseId);
@@ -25,7 +25,7 @@ export const getEducatorQuizzes = async (req, res) => {
 export const createQuiz = async (req, res) => {
   try {
     await connectDB();
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
     const { courseId } = req.params;
     const { title, lectureId, questions } = req.body;
 
@@ -51,7 +51,7 @@ export const createQuiz = async (req, res) => {
 export const deleteQuiz = async (req, res) => {
   try {
     await connectDB();
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
     const { quizId } = req.params;
 
     const quiz = await Quiz.findById(quizId);
@@ -70,7 +70,7 @@ export const deleteQuiz = async (req, res) => {
 export const getUserQuizzes = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { courseId } = req.params;
 
     const user = await User.findById(userId);
@@ -101,7 +101,7 @@ export const getUserQuizzes = async (req, res) => {
 export const submitQuiz = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { quizId } = req.params;
     const { answers } = req.body;
 
@@ -157,7 +157,7 @@ export const submitQuiz = async (req, res) => {
 export const getUserSubmissions = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
 
     const submissions = await QuizSubmission.find({ userId })
       .populate("quizId", "title")

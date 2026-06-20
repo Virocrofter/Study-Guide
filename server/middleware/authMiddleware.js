@@ -2,7 +2,7 @@
 
 export const protectUser = async (req, res, next) => {
   try {
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized. Please log in." });
     }
@@ -14,7 +14,7 @@ export const protectUser = async (req, res, next) => {
 
 export const protectEducator = async (req, res, next) => {
   try {
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized. Please log in." });
     }

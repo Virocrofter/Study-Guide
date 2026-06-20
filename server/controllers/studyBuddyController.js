@@ -9,7 +9,7 @@ import { PracticeTest } from "../models/PracticeTest.js";
 export const getFlashCards = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const flashcards = await FlashCard.find({ userId }).sort({ createdAt: -1 });
     return res.json({ success: true, flashcards });
   } catch (error) {
@@ -20,7 +20,7 @@ export const getFlashCards = async (req, res) => {
 export const createFlashCard = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { front, back, tags, folderId, courseId } = req.body;
     const flashcard = await FlashCard.create({
       userId,
@@ -40,7 +40,7 @@ export const createFlashCard = async (req, res) => {
 export const updateFlashCard = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { id } = req.params;
     const flashcard = await FlashCard.findOneAndUpdate(
       { _id: id, userId },
@@ -56,7 +56,7 @@ export const updateFlashCard = async (req, res) => {
 export const deleteFlashCard = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { id } = req.params;
     await FlashCard.findOneAndDelete({ _id: id, userId });
     return res.json({ success: true, message: "Deleted" });
@@ -68,7 +68,7 @@ export const deleteFlashCard = async (req, res) => {
 export const reviewFlashCard = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { id } = req.params;
     const { quality } = req.body;
 
@@ -99,7 +99,7 @@ export const reviewFlashCard = async (req, res) => {
 export const getFolders = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const folders = await StudyFolder.find({ userId }).sort({ createdAt: -1 });
     return res.json({ success: true, folders });
   } catch (error) {
@@ -110,7 +110,7 @@ export const getFolders = async (req, res) => {
 export const createFolder = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { name, color } = req.body;
     const folder = await StudyFolder.create({ userId, name, color: color || "#10b981" });
     return res.json({ success: true, folder });
@@ -122,7 +122,7 @@ export const createFolder = async (req, res) => {
 export const deleteFolder = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { id } = req.params;
     await StudyFolder.findOneAndDelete({ _id: id, userId });
     await FlashCard.updateMany({ folderId: id, userId }, { folderId: null });
@@ -137,7 +137,7 @@ export const deleteFolder = async (req, res) => {
 export const getStudyGuides = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const guides = await StudyGuide.find({ userId }).sort({ createdAt: -1 });
     return res.json({ success: true, guides });
   } catch (error) {
@@ -148,7 +148,7 @@ export const getStudyGuides = async (req, res) => {
 export const createStudyGuide = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { title, courseId, content, sections, tags, isPublic } = req.body;
     const guide = await StudyGuide.create({
       userId,
@@ -168,7 +168,7 @@ export const createStudyGuide = async (req, res) => {
 export const updateStudyGuide = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { id } = req.params;
     const guide = await StudyGuide.findOneAndUpdate({ _id: id, userId }, req.body, { new: true });
     return res.json({ success: true, guide });
@@ -180,7 +180,7 @@ export const updateStudyGuide = async (req, res) => {
 export const deleteStudyGuide = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { id } = req.params;
     await StudyGuide.findOneAndDelete({ _id: id, userId });
     return res.json({ success: true, message: "Deleted" });
@@ -194,7 +194,7 @@ export const deleteStudyGuide = async (req, res) => {
 export const getPracticeTests = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const tests = await PracticeTest.find({ userId }).sort({ createdAt: -1 });
     return res.json({ success: true, tests });
   } catch (error) {
@@ -205,7 +205,7 @@ export const getPracticeTests = async (req, res) => {
 export const createPracticeTest = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { title, courseId, questions, timeLimit } = req.body;
     const test = await PracticeTest.create({
       userId,
@@ -224,7 +224,7 @@ export const createPracticeTest = async (req, res) => {
 export const deletePracticeTest = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { id } = req.params;
     await PracticeTest.findOneAndDelete({ _id: id, userId });
     return res.json({ success: true, message: "Deleted" });
@@ -236,7 +236,7 @@ export const deletePracticeTest = async (req, res) => {
 export const attemptPracticeTest = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
     const { id } = req.params;
     const { answers, duration } = req.body;
 

@@ -1,5 +1,6 @@
 import StudySession from "../models/StudySession.js";
 import { checkAndAwardAchievements } from "./achievementController.js";
+import StudySession from "../models/StudySession.js";
 
 export const getStudySessions = async (req, res) => {
   try {
@@ -11,19 +12,6 @@ export const getStudySessions = async (req, res) => {
     }
     const sessions = await StudySession.find(query).sort({ startTime: -1 });
     res.json({ success: true, sessions });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-export const createStudySession = async (req, res) => {
-  try {
-    const userId = req.auth?.userId;
-    const { title, description, startTime, endTime, courseId, type } = req.body;
-    const session = await StudySession.create({
-      userId, title, description, startTime: new Date(startTime), endTime: new Date(endTime), courseId, type,
-    });
-    res.json({ success: true, session });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -76,5 +64,29 @@ export const getStudyStats = async (req, res) => {
     res.json({ success: true, weekly, totalMinutes: totalMinutes[0]?.total || 0 });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const createStudySession = async (req, res) => {
+  try {
+    // FIXED: Changed from req.auth?.().userId to req.auth?.userId per Section 9 
+    const userId = req.auth?.userId; 
+    if (!userId) {
+      return res.json({ success: false, message: "Unauthorized credentials" });
+    }
+
+    const { title, description, startTime, endTime, type } = req.body;
+    const newSession = await StudySession.create({
+      userId,
+      title,
+      description,
+      startTime,
+      endTime,
+      type
+    });
+
+    return res.json({ success: true, session: newSession });
+  } catch (error) {
+    return res.json({ success: false, message: error.message });
   }
 };

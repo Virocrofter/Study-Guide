@@ -9,7 +9,7 @@ import { Material } from "../models/Material.js";
 export const updateRoleToEducator = async (req, res) => {
   try {
     await connectDB();
-    const userId = req.auth?.().userId;
+    const userId = req.auth?.userId;;
 
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -35,7 +35,7 @@ export const addCourse = async (req, res) => {
   try {
     const { courseData } = req.body;
     const thumbnailFile = req.file;
-    const educatorId = req.auth?.().userId;
+    const educatorId = req.auth?.userId;;
 
     if (!educatorId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -86,7 +86,7 @@ export const addCourse = async (req, res) => {
 
 export const getEducatorCourses = async (req, res) => {
   try {
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
     const courses = await Course.find({ educator });
     return res.json({ success: true, courses });
   } catch (error) {
@@ -96,7 +96,7 @@ export const getEducatorCourses = async (req, res) => {
 
 export const educatorDashboardData = async (req, res) => {
   try {
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
 
     const courses = await Course.find({ educator });
     const totalCourses = courses.length;
@@ -127,7 +127,7 @@ export const educatorDashboardData = async (req, res) => {
 
 export const getEnrolledStudentsData = async (req, res) => {
   try {
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
     const courses = await Course.find({ educator });
     const courseIds = courses.map((course) => course._id);
 
@@ -152,7 +152,7 @@ export const getEnrolledStudentsData = async (req, res) => {
 
 export const getCourseMessages = async (req, res) => {
   try {
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
     const { courseId } = req.params;
 
     const course = await Course.findById(courseId);
@@ -172,7 +172,7 @@ export const getCourseMessages = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
     const { courseId } = req.params;
     const { text, type, fileUrl, fileName } = req.body;
 
@@ -200,7 +200,7 @@ export const sendMessage = async (req, res) => {
 
 export const getCourseMaterials = async (req, res) => {
   try {
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
     const { courseId } = req.params;
 
     const course = await Course.findById(courseId);
@@ -217,7 +217,7 @@ export const getCourseMaterials = async (req, res) => {
 
 export const addMaterial = async (req, res) => {
   try {
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
     const { courseId } = req.params;
     const { title, type, url, fileName, fileSize, duration, lectureId } = req.body;
 
@@ -249,7 +249,7 @@ export const addMaterial = async (req, res) => {
 
 export const deleteMaterial = async (req, res) => {
   try {
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
     const { materialId } = req.params;
 
     const material = await Material.findById(materialId);
@@ -270,7 +270,7 @@ export const deleteMaterial = async (req, res) => {
 
 export const getCourseStructure = async (req, res) => {
   try {
-    const educator = req.auth?.().userId;
+    const educator = req.auth?.userId;;
     const { courseId } = req.params;
 
     const course = await Course.findById(courseId);
