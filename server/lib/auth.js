@@ -106,6 +106,7 @@ export const authConfig = {
 
         const allowedOrigins = [
           "https://study-guide-frontend-gray.vercel.app",
+          "https://study-guide-frontend-traurorous-projects.vercel.app",  // ← ADDED
           "http://localhost:5173",
         ];
 
