@@ -46,10 +46,13 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // ─── FRONTEND URL CONFIG ───
+if (!process.env.FRONTEND_URL) {
+  console.warn("FRONTEND_URL not set. Using default fallback. Set this env var to your deployed frontend URL.");
+}
 const FRONTEND_URL = process.env.FRONTEND_URL || (
   process.env.NODE_ENV === "development"
     ? "http://localhost:5173"
-    : "https://study-guide-frontend-gray.vercel.app"
+    : "https://study-guide-frontend-traurorous-projects.vercel.app"
 );
 
 const useSecureCookies = process.env.NODE_ENV === "production";
@@ -123,7 +126,21 @@ export const authConfig = {
     },
 
     async redirect({ url, baseUrl }) {
-      return `${FRONTEND_URL}/student`;
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      try {
+        const urlOrigin = new URL(url).origin;
+        const baseOrigin = new URL(baseUrl).origin;
+        if (urlOrigin === baseOrigin) return url;
+        const allowedOrigins = [
+          "https://study-guide-frontend-gray.vercel.app",
+          "https://study-guide-frontend-traurorous-projects.vercel.app",
+          "http://localhost:5173",
+        ];
+        if (allowedOrigins.includes(urlOrigin)) return url;
+      } catch {
+        // Invalid URL format, fall through to default
+      }
+      return FRONTEND_URL;
     },
   },
 

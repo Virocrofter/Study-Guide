@@ -68,6 +68,9 @@ export const getAllCourses = async (req, res) => {
   }
 };
 
+// Backward-compatible export for routes/courseRoutes.js (expects `getAllCourse`)
+export const getAllCourse = getAllCourses;
+
 export const getCourseId = async (req, res) => {
   try {
     const { id } = req.params;
