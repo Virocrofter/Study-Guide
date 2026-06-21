@@ -1,7 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
+/* @see https://tailwindcss.com/docs/functions-and-directives#tailwind */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@import "tailwindcss";
+/* stylelint-disable-line */
 
 * {
   font-family: 'Outfit', sans-serif;

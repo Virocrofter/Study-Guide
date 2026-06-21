@@ -55,4 +55,9 @@
       ]
     }
   ]
+  {
+  "buildCommand": "npm run build",
+  "framework": "vite",
+  "installCommand": "npm install && npm rebuild @tailwindcss/oxidess"}
 }
+
