@@ -31,6 +31,57 @@ const postNavigate = (url, fields = {}) => {
   form.remove();
 };
 
+/**
+ * Check if an error is CORS-related
+ */
+const isCorsError = (error) => {
+  if (!error) return false;
+  const message = error.message || "";
+  const code = error.code || "";
+  return (
+    code === "ERR_NETWORK" ||
+    code === "ECONNABORTED" ||
+    message.includes("Network Error") ||
+    message.includes("CORS") ||
+    message.includes("Cross-Origin")
+  );
+};
+
+/**
+ * Handle API errors with proper CORS detection
+ */
+const handleApiError = (error, contextMessage) => {
+  if (isCorsError(error)) {
+    console.error(`CORS Error in ${contextMessage}:`, error);
+    toast.error(
+      `Connection blocked by CORS policy. Please check that your backend URL (${sanitizeEnvUrl(import.meta.env.VITE_BACKEND_URL)}) has CORS enabled for this frontend origin (${window.location.origin}).`,
+      { autoClose: 8000 }
+    );
+    return { isCors: true, error };
+  }
+
+  const serverMessage = error.response?.data?.message;
+  const statusCode = error.response?.status;
+
+  if (statusCode === 401) {
+    toast.error("Session expired. Please sign in again.");
+    return { isAuthError: true, error };
+  }
+
+  if (statusCode === 403) {
+    toast.error("Access denied. You don't have permission.");
+    return { isAuthError: true, error };
+  }
+
+  if (serverMessage) {
+    toast.error(serverMessage);
+  } else {
+    toast.error(error.message || `${contextMessage} failed`);
+  }
+
+  return { error };
+};
+
 export const AppContextProvider = (props) => {
   const backendUrl = sanitizeEnvUrl(import.meta.env.VITE_BACKEND_URL);
   const currency = (import.meta.env.VITE_CURRENCY || "").replace(/[`'"]/g, "");
@@ -42,25 +93,57 @@ export const AppContextProvider = (props) => {
   const [userData, setUserData] = useState(null);
   const [session, setSession] = useState(null);
   const [isEducator, setIsEducator] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [corsError, setCorsError] = useState(false);
 
   // Global Axios config for cookie sessions
   useEffect(() => {
     axios.defaults.withCredentials = true;
+
+    // Add a response interceptor to catch CORS errors globally
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (isCorsError(error)) {
+          console.error("Global CORS Error:", error);
+          setCorsError(true);
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
   }, []);
 
   // --- Auth Actions ---
 
   const fetchSession = async () => {
-    if (!backendUrl) return;
+    if (!backendUrl) {
+      console.error("VITE_BACKEND_URL is not set");
+      setIsLoading(false);
+      return;
+    }
     try {
+      setIsLoading(true);
       const { data } = await axios.get(`${backendUrl}/api/auth/session`, {
         withCredentials: true,
+        // Add timeout to avoid hanging on CORS-blocked requests
+        timeout: 10000,
       });
       setSession(data || null);
       setIsEducator(data?.user?.role === "educator");
-    } catch {
+      setCorsError(false);
+    } catch (error) {
+      console.error("fetchSession error:", error.message);
+      if (isCorsError(error)) {
+        setCorsError(true);
+      }
       setSession(null);
       setIsEducator(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -69,10 +152,15 @@ export const AppContextProvider = (props) => {
     try {
       const { data } = await axios.get(`${backendUrl}/api/auth/csrf`, {
         withCredentials: true,
+        timeout: 10000,
       });
       return data?.csrfToken || null;
     } catch (error) {
       console.error("CSRF fetch failed:", error.message);
+      if (isCorsError(error)) {
+        setCorsError(true);
+        toast.error("Cannot connect to authentication server. CORS issue detected.");
+      }
       return null;
     }
   };
@@ -80,7 +168,7 @@ export const AppContextProvider = (props) => {
   const signInWithGoogle = async () => {
     try {
       if (!backendUrl) {
-        return toast.error("Missing VITE_BACKEND_URL");
+        return toast.error("Missing VITE_BACKEND_URL environment variable");
       }
 
       const csrfToken = await getCsrfToken();
@@ -128,7 +216,11 @@ export const AppContextProvider = (props) => {
         return signInWithGoogle();
       }
 
-      const { data } = await axios.post(`${backendUrl}/api/user/become-educator`, {});
+      const { data } = await axios.post(
+        `${backendUrl}/api/user/become-educator`,
+        {},
+        { withCredentials: true, timeout: 15000 }
+      );
 
       if (!data?.success) return toast.error(data?.message || "Could not upgrade account");
 
@@ -136,7 +228,7 @@ export const AppContextProvider = (props) => {
       await fetchSession();
       navigate("/educator");
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
+      handleApiError(error, "Become educator");
     }
   };
 
@@ -145,33 +237,41 @@ export const AppContextProvider = (props) => {
   const fetchAllCourses = async () => {
     if (!backendUrl) return;
     try {
-      const { data } = await axios.get(`${backendUrl}/api/course/all`);
+      const { data } = await axios.get(`${backendUrl}/api/course/all`, {
+        timeout: 15000,
+      });
       if (data.success) setAllCourses(data.courses);
       else toast.error(data.message);
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
+      handleApiError(error, "Fetch courses");
     }
   };
 
   const fetchUserData = async () => {
     if (!session?.user || !backendUrl) return;
     try {
-      const { data } = await axios.get(`${backendUrl}/api/user/data`);
+      const { data } = await axios.get(`${backendUrl}/api/user/data`, {
+        withCredentials: true,
+        timeout: 15000,
+      });
       if (data.success) setUserData(data.user);
       else toast.error(data.message);
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
+      handleApiError(error, "Fetch user data");
     }
   };
 
   const fetchUserEnrolledCourses = async () => {
     if (!session?.user || !backendUrl) return;
     try {
-      const { data } = await axios.get(`${backendUrl}/api/user/enrolled-courses`);
+      const { data } = await axios.get(`${backendUrl}/api/user/enrolled-courses`, {
+        withCredentials: true,
+        timeout: 15000,
+      });
       if (data.success) setEnrolledCourses(data.enrolledCourses.reverse());
       else toast.error(data.message);
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
+      handleApiError(error, "Fetch enrolled courses");
     }
   };
 
@@ -209,6 +309,7 @@ export const AppContextProvider = (props) => {
   useEffect(() => {
     fetchAllCourses();
     fetchSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -219,6 +320,7 @@ export const AppContextProvider = (props) => {
       setUserData(null);
       setEnrolledCourses([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   const value = {
@@ -242,7 +344,26 @@ export const AppContextProvider = (props) => {
     calculateNoOfLectures,
     calculateCourseDuration,
     calculateChapterTime,
+    isLoading,
+    corsError,
   };
 
-  return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={value}>
+      {corsError && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white px-4 py-3 text-center text-sm">
+          <strong>CORS Error:</strong> Cannot connect to backend. Please check that{" "}
+          <code className="bg-red-800 px-1 py-0.5 rounded">{backendUrl}</code> allows requests from{" "}
+          <code className="bg-red-800 px-1 py-0.5 rounded">{window.location.origin}</code>.
+          <button
+            onClick={() => fetchSession()}
+            className="ml-4 underline hover:no-underline font-semibold"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      {props.children}
+    </AppContext.Provider>
+  );
 };

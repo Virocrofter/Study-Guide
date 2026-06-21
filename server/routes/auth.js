@@ -46,6 +46,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // ─── FRONTEND URL CONFIG ───
+// Set FRONTEND_URL env var to your deployed frontend URL
 if (!process.env.FRONTEND_URL) {
   console.warn("FRONTEND_URL not set. Using default fallback. Set this env var to your deployed frontend URL.");
 }
@@ -64,6 +65,7 @@ const cookieOptions = {
   sameSite: useSecureCookies ? "none" : "lax",
   path: "/",
   secure: useSecureCookies,
+  // Trust proxy is set in server.js, so we can use the standard cookie options
 };
 
 // ─── AUTH CONFIG ───
@@ -120,33 +122,73 @@ export const authConfig = {
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
+        // Fetch role from the user object stored in database
         session.user.role = user.role || "student";
       }
       return session;
     },
 
     async redirect({ url, baseUrl }) {
+      // Default: allow relative URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`;
+      
       try {
         const urlOrigin = new URL(url).origin;
         const baseOrigin = new URL(baseUrl).origin;
+        // Same-origin redirect
         if (urlOrigin === baseOrigin) return url;
+        
+        // Allowed frontend origins
         const allowedOrigins = [
           "https://study-guide-frontend-gray.vercel.app",
           "https://study-guide-frontend-traurorous-projects.vercel.app",
+          "https://study-guide-frontend-git-main-traurorous-projects.vercel.app",
+          "https://study-guide-frontend.vercel.app",
           "http://localhost:5173",
+          "http://localhost:3000",
         ];
+
         if (allowedOrigins.includes(urlOrigin)) return url;
+
+        // Allow any Vercel preview deployment
+        if (/^https:\/\/[^\/]+\.vercel\.app$/.test(urlOrigin)) return url;
       } catch {
         // Invalid URL format, fall through to default
       }
+
+      // Fallback to frontend URL
       return FRONTEND_URL;
+    },
+
+    async signIn({ user, account, profile }) {
+      // Allow all sign-ins (Google handles verification)
+      return true;
     },
   },
 
-  pages: {
-    signIn: `${FRONTEND_URL}/`,
-    error: `${FRONTEND_URL}/`,
+  // Use relative paths for pages - Auth.js handles baseUrl automatically
+  // Only override if you need custom pages
+  // pages: {
+  //   signIn: "/",
+  //   error: "/",
+  // },
+
+  // Debug mode for development
+  debug: process.env.NODE_ENV === "development",
+
+  // Custom logger to suppress verbose logs in production
+  logger: {
+    error(code, ...message) {
+      console.error(`[Auth] ${code}:`, ...message);
+    },
+    warn(code, ...message) {
+      console.warn(`[Auth] ${code}:`, ...message);
+    },
+    debug(code, ...message) {
+      if (process.env.NODE_ENV === "development") {
+        console.log(`[Auth] ${code}:`, ...message);
+      }
+    },
   },
 };
 
