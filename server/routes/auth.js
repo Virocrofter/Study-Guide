@@ -15,14 +15,11 @@ if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) {
 }
 
 // ─── SHARED MONGOOSE CONNECTION ───
-// Reuse the Mongoose connection instead of creating a separate MongoClient.
-// This ensures Auth.js and your API use the SAME connection.
 const getMongoClient = async () => {
   if (mongoose.connection.readyState === 1 && mongoose.connection.getClient) {
     return mongoose.connection.getClient();
   }
   
-  // Wait for connection (max 10 seconds)
   const maxWait = 10000;
   const start = Date.now();
   while (mongoose.connection.readyState !== 1) {
@@ -119,12 +116,12 @@ export const authConfig = {
 
     async redirect({ url, baseUrl }) {
       if (url.startsWith("/")) return `${baseUrl}${url}`;
-      
+
       try {
         const urlOrigin = new URL(url).origin;
         const baseOrigin = new URL(baseUrl).origin;
         if (urlOrigin === baseOrigin) return url;
-        
+
         const allowedOrigins = [
           "https://study-guide-frontend-gray.vercel.app",
           "https://study-guide-frontend-traurorous-projects.vercel.app",

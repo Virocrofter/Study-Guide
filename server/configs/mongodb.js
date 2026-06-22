@@ -6,7 +6,6 @@ if (!MONGODB_URI) {
   throw new Error("Please define the MONGODB_URI environment variable");
 }
 
-// Global cache for serverless environments
 const cached = global.mongoose || { conn: null, promise: null };
 global.mongoose = cached;
 
@@ -19,7 +18,7 @@ const connectDB = async () => {
     const opts = {
       bufferCommands: false,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 5000,  // Fail fast if MongoDB unreachable
       socketTimeoutMS: 45000,
     };
 
