@@ -1,55 +1,46 @@
 import { ExpressAuth } from "@auth/express";
 import Google from "@auth/express/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
-import { MongoClient, ServerApiVersion } from "mongodb";
+import mongoose from "mongoose";
 
 // ─── ENV GUARD ───
 if (!process.env.MONGODB_URI) {
-  console.error('Missing environment variable: "MONGODB_URI"');
+  throw new Error('Missing environment variable: "MONGODB_URI"');
 }
 if (!process.env.AUTH_SECRET) {
-  console.error('Missing environment variable: "AUTH_SECRET"');
+  throw new Error('Missing environment variable: "AUTH_SECRET"');
 }
 if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) {
-  console.error("Missing Google OAuth credentials");
+  throw new Error("Missing Google OAuth credentials in environment variables");
 }
 
-const uri = process.env.MONGODB_URI || "";
-const options = {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
+// ─── SHARED MONGOOSE CONNECTION ───
+// Reuse the Mongoose connection instead of creating a separate MongoClient.
+// This ensures Auth.js and your API use the SAME connection.
+const getMongoClient = async () => {
+  if (mongoose.connection.readyState === 1 && mongoose.connection.getClient) {
+    return mongoose.connection.getClient();
+  }
+  
+  // Wait for connection (max 10 seconds)
+  const maxWait = 10000;
+  const start = Date.now();
+  while (mongoose.connection.readyState !== 1) {
+    if (Date.now() - start > maxWait) {
+      throw new Error("MongoDB connection timeout — cannot initialize Auth.js adapter");
+    }
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  
+  return mongoose.connection.getClient();
 };
 
-// ─── CACHED CLIENT (required for Vercel serverless) ───
-let client;
-let clientPromise;
-
-if (process.env.NODE_ENV === "development") {
-  let globalWithMongo = globalThis;
-  if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri, options);
-    globalWithMongo._mongoClientPromise = client.connect().catch((err) => {
-      console.error("MongoDB connection failed:", err.message);
-      return null;
-    });
-  }
-  clientPromise = globalWithMongo._mongoClientPromise;
-} else {
-  client = new MongoClient(uri, options);
-  clientPromise = client.connect().catch((err) => {
-    console.error("MongoDB connection failed:", err.message);
-    return null;
-  });
-}
+const clientPromise = getMongoClient().catch((err) => {
+  console.error("Failed to get MongoClient for Auth.js adapter:", err.message);
+  throw err;
+});
 
 // ─── FRONTEND URL CONFIG ───
-// Set FRONTEND_URL env var to your deployed frontend URL
-if (!process.env.FRONTEND_URL) {
-  console.warn("FRONTEND_URL not set. Using default fallback. Set this env var to your deployed frontend URL.");
-}
 const FRONTEND_URL = process.env.FRONTEND_URL || (
   process.env.NODE_ENV === "development"
     ? "http://localhost:5173"
@@ -65,7 +56,6 @@ const cookieOptions = {
   sameSite: useSecureCookies ? "none" : "lax",
   path: "/",
   secure: useSecureCookies,
-  // Trust proxy is set in server.js, so we can use the standard cookie options
 };
 
 // ─── AUTH CONFIG ───
@@ -122,23 +112,19 @@ export const authConfig = {
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
-        // Fetch role from the user object stored in database
         session.user.role = user.role || "student";
       }
       return session;
     },
 
     async redirect({ url, baseUrl }) {
-      // Default: allow relative URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       
       try {
         const urlOrigin = new URL(url).origin;
         const baseOrigin = new URL(baseUrl).origin;
-        // Same-origin redirect
         if (urlOrigin === baseOrigin) return url;
         
-        // Allowed frontend origins
         const allowedOrigins = [
           "https://study-guide-frontend-gray.vercel.app",
           "https://study-guide-frontend-traurorous-projects.vercel.app",
@@ -149,34 +135,21 @@ export const authConfig = {
         ];
 
         if (allowedOrigins.includes(urlOrigin)) return url;
-
-        // Allow any Vercel preview deployment
         if (/^https:\/\/[^\/]+\.vercel\.app$/.test(urlOrigin)) return url;
       } catch {
-        // Invalid URL format, fall through to default
+        // Invalid URL format
       }
 
-      // Fallback to frontend URL
       return FRONTEND_URL;
     },
 
     async signIn({ user, account, profile }) {
-      // Allow all sign-ins (Google handles verification)
       return true;
     },
   },
 
-  // Use relative paths for pages - Auth.js handles baseUrl automatically
-  // Only override if you need custom pages
-  // pages: {
-  //   signIn: "/",
-  //   error: "/",
-  // },
-
-  // Debug mode for development
   debug: process.env.NODE_ENV === "development",
 
-  // Custom logger to suppress verbose logs in production
   logger: {
     error(code, ...message) {
       console.error(`[Auth] ${code}:`, ...message);
