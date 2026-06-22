@@ -1,130 +1,68 @@
-import { ExpressAuth } from "@auth/express";
-import Google from "@auth/express/providers/google";
-import { MongoDBAdapter } from "@auth/mongodb-adapter";
-import mongoose from "mongoose";
+import express from 'express';
+import User from '../models/User.js';
 
-if (!process.env.MONGODB_URI) throw new Error('Missing MONGODB_URI');
-if (!process.env.AUTH_SECRET) throw new Error('Missing AUTH_SECRET');
-if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) {
-  throw new Error("Missing Google OAuth credentials");
-}
+const router = express.Router();
 
-// ─── LAZY MONGODB CLIENT ───
-// Vercel serverless: mongoose connects AFTER module load, so we can't eagerly create clientPromise.
-// MongoDBAdapter accepts a function that returns a Promise<MongoClient> for lazy evaluation.
-let cachedClient = null;
+// ─── Custom auth endpoints (OAuth is handled by @auth/express in server.js) ───
 
-const getMongoClient = async () => {
-  if (cachedClient) return cachedClient;
-
-  // Wait for mongoose to connect (server.js calls connectDB() before mounting routes)
-  const maxWait = 15000;
-  const start = Date.now();
-  while (mongoose.connection.readyState !== 1) {
-    if (Date.now() - start > maxWait) {
-      throw new Error("MongoDB connection timeout — cannot initialize Auth.js adapter");
+// Get current user profile (populated by @auth/express session)
+router.get('/profile', async (req, res) => {
+  try {
+    if (!req.auth?.user?.id) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
     }
-    await new Promise((r) => setTimeout(r, 200));
+
+    const user = await User.findById(req.auth.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
+});
 
-  // Mongoose 6+ provides getClient() on the connection
-  if (!mongoose.connection.getClient) {
-    throw new Error("Mongoose connection does not expose getClient()");
+// Update user role (student / educator)
+router.put('/role', async (req, res) => {
+  try {
+    if (!req.auth?.user?.id) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+
+    const { role } = req.body;
+    if (!['student', 'educator'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.auth.user.id,
+      { role },
+      { new: true }
+    );
+
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('Error updating role:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
+});
 
-  cachedClient = mongoose.connection.getClient();
-  return cachedClient;
-};
+// Check auth status
+router.get('/status', (req, res) => {
+  if (req.auth?.user) {
+    res.json({
+      success: true,
+      authenticated: true,
+      user: req.auth.user,
+    });
+  } else {
+    res.json({
+      success: true,
+      authenticated: false,
+    });
+  }
+});
 
-const FRONTEND_URL = process.env.FRONTEND_URL || (
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:5173"
-    : "https://study-guide-frontend-traurorous-projects.vercel.app"
-);
-
-const useSecureCookies = process.env.NODE_ENV === "production";
-const cookiePrefix = useSecureCookies ? "__Secure-" : "";
-const csrfPrefix = useSecureCookies ? "__Host-" : "";
-
-const cookieOptions = {
-  httpOnly: true,
-  sameSite: useSecureCookies ? "none" : "lax",
-  path: "/",
-  secure: useSecureCookies,
-};
-
-export const authConfig = {
-  // Pass the FUNCTION, not the promise — Auth.js calls it lazily per-request
-  adapter: MongoDBAdapter(getMongoClient),
-  secret: process.env.AUTH_SECRET,
-  trustHost: true,
-  basePath: "/api/auth",
-  session: { strategy: "database" },
-
-  cookies: {
-    sessionToken: {
-      name: `${cookiePrefix}authjs.session-token`,
-      options: cookieOptions,
-    },
-    callbackUrl: {
-      name: `${cookiePrefix}authjs.callback-url`,
-      options: { ...cookieOptions, httpOnly: false },
-    },
-    csrfToken: {
-      name: `${csrfPrefix}authjs.csrf-token`,
-      options: cookieOptions,
-    },
-    pkceCodeVerifier: {
-      name: `${cookiePrefix}authjs.pkce.code_verifier`,
-      options: cookieOptions,
-    },
-  },
-
-  providers: [
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      allowDangerousEmailAccountLinking: true,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
-      },
-    }),
-  ],
-
-  callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-        session.user.role = user.role || "student";
-      }
-      return session;
-    },
-    async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      try {
-        const urlOrigin = new URL(url).origin;
-        const allowedOrigins = [
-          "https://study-guide-frontend-gray.vercel.app",
-          "https://study-guide-frontend-traurorous-projects.vercel.app",
-          "https://study-guide-frontend-git-main-traurorous-projects.vercel.app",
-          "https://study-guide-frontend.vercel.app",
-          "https://study-guide-beta.vercel.app",
-          "http://localhost:5173",
-          "http://localhost:3000",
-        ];
-        if (allowedOrigins.includes(urlOrigin)) return url;
-        if (/^https:\/\/[^\/]+\.vercel\.app$/.test(urlOrigin)) return url;
-      } catch {}
-      return FRONTEND_URL;
-    },
-    async signIn() { return true; },
-  },
-
-  debug: process.env.NODE_ENV === "development",
-};
-
-export default ExpressAuth(authConfig);
+export default router;

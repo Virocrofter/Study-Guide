@@ -1,91 +1,68 @@
-import Achievement from "../models/Achievement.js";
-import { CourseProgress } from "../models/CourseProgress.js";
-import { Purchase } from "../models/Purchase.js";
-import { QuizSubmission } from "../models/QuizSubmission.js";
-// REMOVED: import StudySession from "../models/StudySession.js";
-// Using getStudyStreak from studySessionController instead to avoid duplicate model import
-import { getStudyStreak } from "./studySessionController.js";
-import { createNotification } from "./notificationController.js";
+import Achievement from '../models/Achievement.js';
+import User from '../models/User.js';
+import StudySession from '../models/StudySession.js';
 
-export const getUserAchievements = async (req, res) => {
+export const getAchievements = async (req, res) => {
   try {
     const userId = req.auth?.userId;
-    const achievements = await Achievement.find({ userId }).sort({ unlockedAt: -1 });
-    const totalPoints = achievements.reduce((sum, a) => sum + a.points, 0);
-    res.json({ success: true, achievements, totalPoints });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const achievements = await Achievement.find({ userId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ success: true, achievements });
+  } catch (error) {
+    console.error('Error fetching achievements:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const checkAndAwardAchievements = async (userId) => {
+export const checkAndAwardAchievements = async (req, res) => {
   try {
-    const existing = await Achievement.find({ userId }).select("badge");
-    const has = (b) => existing.some((e) => e.badge === b);
+    const userId = req.auth?.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
 
-    const enrollments = await Purchase.countDocuments({ userId });
-    if (enrollments >= 1 && !has("first_course")) await award(userId, "first_course", 100);
-    if (enrollments >= 5 && !has("enrollment_5")) await award(userId, "enrollment_5", 250);
-    if (enrollments >= 10 && !has("enrollment_10")) await award(userId, "enrollment_10", 500);
+    const sessions = await StudySession.find({ userId });
+    const totalStudyTime = sessions.reduce((acc, s) => acc + (s.duration || 0), 0);
+    
+    const user = await User.findById(userId);
+    const newAchievements = [];
 
-    const quizzes = await QuizSubmission.find({ userId });
-    const avgScore = quizzes.length ? quizzes.reduce((s, q) => s + (q.score || 0), 0) / quizzes.length : 0;
-    if (quizzes.length >= 5 && avgScore >= 90 && !has("quiz_master")) await award(userId, "quiz_master", 300);
-    if (quizzes.length >= 10 && !has("practice_makes_perfect")) await award(userId, "practice_makes_perfect", 200);
+    if (totalStudyTime >= 3600 && !user.achievements?.includes('first_hour')) {
+      newAchievements.push({
+        userId,
+        type: 'study_time',
+        title: 'First Hour',
+        description: 'Completed your first hour of study time',
+        icon: '⏱️'
+      });
+    }
 
-    // Use getStudyStreak from studySessionController instead of direct StudySession query
-    const { streak } = await getStudyStreak(userId);
-    if (streak >= 7 && !has("study_streak_7")) await award(userId, "study_streak_7", 150);
-    if (streak >= 30 && !has("study_streak_30")) await award(userId, "study_streak_30", 1000);
+    if (totalStudyTime >= 36000 && !user.achievements?.includes('ten_hours')) {
+      newAchievements.push({
+        userId,
+        type: 'study_time',
+        title: 'Dedicated Learner',
+        description: 'Completed 10 hours of study time',
+        icon: '📚'
+      });
+    }
 
-    const topScore = quizzes.some((q) => q.score === 100);
-    if (topScore && !has("perfect_score")) await award(userId, "perfect_score", 500);
+    if (newAchievements.length > 0) {
+      await Achievement.insertMany(newAchievements);
+      await User.findByIdAndUpdate(userId, {
+        $push: { achievements: { $each: newAchievements.map(a => a.type) } }
+      });
+    }
 
-    const courses = await CourseProgress.find({ userId, completed: true });
-    if (courses.length >= 1 && !has("course_complete")) await award(userId, "course_complete", 200);
-    if (courses.length >= 5 && !has("course_complete_5")) await award(userId, "course_complete_5", 1000);
-
-    return { success: true };
-  } catch (err) {
-    console.error("Achievement check error:", err);
-    return { success: false, message: err.message };
-  }
-};
-
-const award = async (userId, badge, points) => {
-  const title = badge.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-  await Achievement.create({ userId, badge, title, points, unlockedAt: new Date() });
-  await createNotification(userId, `🏆 Achievement unlocked: ${title}!`, "achievement");
-};
-
-export const getLeaderboard = async (req, res) => {
-  try {
-    const leaderboard = await Achievement.aggregate([
-      { $group: { _id: "$userId", totalPoints: { $sum: "$points" }, count: { $sum: 1 } } },
-      { $sort: { totalPoints: -1 } },
-      { $limit: 50 },
-      {
-        $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "user",
-        },
-      },
-      { $unwind: "$user" },
-      {
-        $project: {
-          _id: 0,
-          userId: "$_id",
-          name: "$user.name",
-          image: "$user.imageUrl",
-          points: "$totalPoints",
-          achievements: "$count",
-        },
-      },
-    ]);
-    res.json({ success: true, leaderboard });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.json({ success: true, newAchievements });
+  } catch (error) {
+    console.error('Error checking achievements:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

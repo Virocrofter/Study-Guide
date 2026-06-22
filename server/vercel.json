@@ -1,8 +1,29 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/api/auth/(.*)", "destination": "/server.js" },
-    { "source": "/api/(.*)", "destination": "/server.js" },
-    { "source": "/(.*)", "destination": "/server.js" }
-  ]
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["lib/**", "controllers/**", "models/**", "routes/**", "middleware/**", "configs/**"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/auth/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }

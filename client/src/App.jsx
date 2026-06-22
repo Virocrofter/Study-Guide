@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate, useParams } from "react-router-dom";
 
 // ─── Layouts ───
 import Educator from "./pages/educator/Educator";
@@ -13,7 +13,7 @@ import Loading from "./components/student/Loading";
 
 // ─── Student Dashboard Pages ───
 import StudentAnalytics from "./pages/student-dashboard/StudentAnalytics";
-import MyEnrollments from "./pages/student/MyEnrollments";          // ← CHANGED: was StudentEnrollments
+import MyEnrollments from "./pages/student/MyEnrollments";
 import StudentAssignments from "./pages/student-dashboard/StudentAssignments";
 import BrowseCourses from "./pages/student-dashboard/CoursesList";
 import CoursePlayer from "./pages/student/CoursePlayer";
@@ -45,6 +45,12 @@ import EducatorMessages from "./pages/educator/EducatorMessages";
 import EducatorMaterials from "./pages/educator/EducatorMaterials";
 import EducatorQuizzes from "./pages/educator/EducatorQuizzes";
 
+// ─── Redirect wrapper for /player/:id → /student/player/:id ───
+const PlayerRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/student/player/${id}`} replace />;
+};
+
 const App = () => {
   const location = useLocation();
 
@@ -64,11 +70,11 @@ const App = () => {
       <Route path="/loading/:path" element={<Loading />} />
 
       {/* Redirect old /player/:id links to dashboard player */}
-      <Route path="/player/:id" element={<Navigate to="/student/player/:id" replace />} />
+      <Route path="/player/:id" element={<PlayerRedirect />} />
 
       <Route path="/student" element={<StudentDashboardLayout />}>
         <Route index element={<StudentAnalytics />} />
-        <Route path="enrollments" element={<MyEnrollments />} />     {/* ← CHANGED: was StudentEnrollments */}
+        <Route path="enrollments" element={<MyEnrollments />} />
         <Route path="assignments" element={<StudentAssignments />} />
         <Route path="browse" element={<BrowseCourses />} />
         <Route path="browse/:input" element={<BrowseCourses />} />
@@ -88,7 +94,7 @@ const App = () => {
         <Route path="past-questions" element={<PastQuestions />} />
         <Route path="hall-of-fame" element={<HallOfFame />} />
         <Route path="exam-session" element={<ExamSession />} />
-        
+
         <Route path="player/:id" element={<CoursePlayer />} />
       </Route>
 
