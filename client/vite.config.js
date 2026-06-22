@@ -1,15 +1,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  build: {
-    // Add this rollup option
-    rollupOptions: {
-      external: [
-        /@tailwindcss\/oxide.*/,
-      ],
+  plugins: [react()],
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_BACKEND_URL || 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
     },
+    cors: {
+      origin: true,
+      credentials: true,
+    },
+  },
+  build: {
+    sourcemap: true,
   },
 })
