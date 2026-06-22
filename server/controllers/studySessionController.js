@@ -1,6 +1,6 @@
 import StudySession from "../models/StudySession.js";
-import { checkAndAwardAchievements } from "./achievementController.js";
-import StudySession from "../models/StudySession.js";
+// REMOVED: import { checkAndAwardAchievements } from "./achievementController.js";
+// REMOVED: duplicate import StudySession
 
 export const getStudySessions = async (req, res) => {
   try {
@@ -30,7 +30,7 @@ export const updateStudySession = async (req, res) => {
       }
     }
     const session = await StudySession.findOneAndUpdate({ _id: id, userId }, updates, { new: true });
-    if (updates.completed) await checkAndAwardAchievements(userId);
+    // REMOVED: if (updates.completed) await checkAndAwardAchievements(userId);
     res.json({ success: true, session });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -69,7 +69,6 @@ export const getStudyStats = async (req, res) => {
 
 export const createStudySession = async (req, res) => {
   try {
-    // FIXED: Changed from req.auth?.().userId to req.auth?.userId per Section 9 
     const userId = req.auth?.userId; 
     if (!userId) {
       return res.json({ success: false, message: "Unauthorized credentials" });
