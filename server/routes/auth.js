@@ -32,10 +32,8 @@ const getMongoClient = async () => {
   return mongoose.connection.getClient();
 };
 
-const clientPromise = getMongoClient().catch((err) => {
-  console.error("Failed to get MongoClient for Auth.js adapter:", err.message);
-  throw err;
-});
+// Remove the .catch() — let the rejection propagate naturally
+const clientPromise = getMongoClient();
 
 // ─── FRONTEND URL CONFIG ───
 const FRONTEND_URL = process.env.FRONTEND_URL || (
