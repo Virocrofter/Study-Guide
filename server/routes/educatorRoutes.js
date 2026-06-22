@@ -1,5 +1,5 @@
 import express from "express";
-import { protectEducator } from "../middleware/authMiddleware.js";
+import { requireEducator } from "../middleware/authMiddleware.js";
 import upload from "../configs/multer.js";
 import { getCourseStructure } from "../controllers/educatorController.js";
 import {
@@ -23,22 +23,22 @@ import {
 const educatorRouter = express.Router();
 
 educatorRouter.get("/update-role", updateRoleToEducator);
-educatorRouter.post("/add-course", upload.single("thumbnailImage"), protectEducator, addCourse);
-educatorRouter.get("/courses", protectEducator, getEducatorCourses);
-educatorRouter.get("/dashboard", protectEducator, educatorDashboardData);
-educatorRouter.get("/enrolled-students", protectEducator, getEnrolledStudentsData);
+educatorRouter.post("/add-course", upload.single("thumbnailImage"), requireEducator, addCourse);
+educatorRouter.get("/courses", requireEducator, getEducatorCourses);
+educatorRouter.get("/dashboard", requireEducator, educatorDashboardData);
+educatorRouter.get("/enrolled-students", requireEducator, getEnrolledStudentsData);
 
-educatorRouter.get("/messages/:courseId", protectEducator, getCourseMessages);
-educatorRouter.post("/messages/:courseId", protectEducator, sendMessage);
+educatorRouter.get("/messages/:courseId", requireEducator, getCourseMessages);
+educatorRouter.post("/messages/:courseId", requireEducator, sendMessage);
 
-educatorRouter.get("/materials/:courseId", protectEducator, getCourseMaterials);
-educatorRouter.post("/materials/:courseId", protectEducator, addMaterial);
-educatorRouter.delete("/materials/:materialId", protectEducator, deleteMaterial);
+educatorRouter.get("/materials/:courseId", requireEducator, getCourseMaterials);
+educatorRouter.post("/materials/:courseId", requireEducator, addMaterial);
+educatorRouter.delete("/materials/:materialId", requireEducator, deleteMaterial);
 
-educatorRouter.get("/course-structure/:courseId", protectEducator, getCourseStructure);
+educatorRouter.get("/course-structure/:courseId", requireEducator, getCourseStructure);
 
-educatorRouter.get("/quizzes/:courseId", protectEducator, getEducatorQuizzes);
-educatorRouter.post("/quizzes/:courseId", protectEducator, createQuiz);
-educatorRouter.delete("/quizzes/:quizId", protectEducator, deleteQuiz);
+educatorRouter.get("/quizzes/:courseId", requireEducator, getEducatorQuizzes);
+educatorRouter.post("/quizzes/:courseId", requireEducator, createQuiz);
+educatorRouter.delete("/quizzes/:quizId", requireEducator, deleteQuiz);
 
 export default educatorRouter;
