@@ -34,44 +34,44 @@ import {
   deletePracticeTest,
   attemptPracticeTest,
 } from "../controllers/studyBuddyController.js";
-import { protectUser } from "../middleware/authMiddleware.js";
+import { requireAuth } from "../middleware/authMiddleware.js";
 
 const userRouter = express.Router();
 
-userRouter.get("/data", protectUser, getUserData);
-userRouter.get("/enrolled-courses", protectUser, userEnrolledCourses);
-userRouter.post("/purchase", protectUser, purchaseCourse);
-userRouter.post("/update-course-progress", protectUser, updateUserCourseProgress);
-userRouter.post("/get-course-progress", protectUser, getUserCourseProgress);
-userRouter.post("/add-rating", protectUser, addUserRating);
-userRouter.post("/become-educator", protectUser, becomeEducator);
+userRouter.get("/data", requireAuth, getUserData);
+userRouter.get("/enrolled-courses", requireAuth, userEnrolledCourses);
+userRouter.post("/purchase", requireAuth, purchaseCourse);
+userRouter.post("/update-course-progress", requireAuth, updateUserCourseProgress);
+userRouter.post("/get-course-progress", requireAuth, getUserCourseProgress);
+userRouter.post("/add-rating", requireAuth, addUserRating);
+userRouter.post("/become-educator", requireAuth, becomeEducator);
 
-userRouter.get("/messages/:courseId", protectUser, getCourseMessages);
-userRouter.post("/messages/:courseId", protectUser, sendMessage);
-userRouter.get("/materials/:courseId", protectUser, getCourseMaterials);
+userRouter.get("/messages/:courseId", requireAuth, getCourseMessages);
+userRouter.post("/messages/:courseId", requireAuth, sendMessage);
+userRouter.get("/materials/:courseId", requireAuth, getCourseMaterials);
 
-userRouter.get("/quizzes/:courseId", protectUser, getUserQuizzes);
-userRouter.post("/quizzes/:quizId/submit", protectUser, submitQuiz);
-userRouter.get("/quiz-submissions", protectUser, getUserSubmissions);
+userRouter.get("/quizzes/:courseId", requireAuth, getUserQuizzes);
+userRouter.post("/quizzes/:quizId/submit", requireAuth, submitQuiz);
+userRouter.get("/quiz-submissions", requireAuth, getUserSubmissions);
 
-userRouter.get("/flashcards", protectUser, getFlashCards);
-userRouter.post("/flashcards", protectUser, createFlashCard);
-userRouter.put("/flashcards/:id", protectUser, updateFlashCard);
-userRouter.delete("/flashcards/:id", protectUser, deleteFlashCard);
-userRouter.post("/flashcards/:id/review", protectUser, reviewFlashCard);
+userRouter.get("/flashcards", requireAuth, getFlashCards);
+userRouter.post("/flashcards", requireAuth, createFlashCard);
+userRouter.put("/flashcards/:id", requireAuth, updateFlashCard);
+userRouter.delete("/flashcards/:id", requireAuth, deleteFlashCard);
+userRouter.post("/flashcards/:id/review", requireAuth, reviewFlashCard);
 
-userRouter.get("/folders", protectUser, getFolders);
-userRouter.post("/folders", protectUser, createFolder);
-userRouter.delete("/folders/:id", protectUser, deleteFolder);
+userRouter.get("/folders", requireAuth, getFolders);
+userRouter.post("/folders", requireAuth, createFolder);
+userRouter.delete("/folders/:id", requireAuth, deleteFolder);
 
-userRouter.get("/study-guides", protectUser, getStudyGuides);
-userRouter.post("/study-guides", protectUser, createStudyGuide);
-userRouter.put("/study-guides/:id", protectUser, updateStudyGuide);
-userRouter.delete("/study-guides/:id", protectUser, deleteStudyGuide);
+userRouter.get("/study-guides", requireAuth, getStudyGuides);
+userRouter.post("/study-guides", requireAuth, createStudyGuide);
+userRouter.put("/study-guides/:id", requireAuth, updateStudyGuide);
+userRouter.delete("/study-guides/:id", requireAuth, deleteStudyGuide);
 
-userRouter.get("/practice-tests", protectUser, getPracticeTests);
-userRouter.post("/practice-tests", protectUser, createPracticeTest);
-userRouter.delete("/practice-tests/:id", protectUser, deletePracticeTest);
-userRouter.post("/practice-tests/:id/attempt", protectUser, attemptPracticeTest);
+userRouter.get("/practice-tests", requireAuth, getPracticeTests);
+userRouter.post("/practice-tests", requireAuth, createPracticeTest);
+userRouter.delete("/practice-tests/:id", requireAuth, deletePracticeTest);
+userRouter.post("/practice-tests/:id/attempt", requireAuth, attemptPracticeTest);
 
 export default userRouter;

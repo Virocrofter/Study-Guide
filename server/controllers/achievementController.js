@@ -29,7 +29,7 @@ export const checkAndAwardAchievements = async (req, res) => {
 
     const sessions = await StudySession.find({ userId });
     const totalStudyTime = sessions.reduce((acc, s) => acc + (s.duration || 0), 0);
-    
+
     const user = await User.findById(userId);
     const newAchievements = [];
 
