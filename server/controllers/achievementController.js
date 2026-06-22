@@ -2,7 +2,9 @@ import Achievement from "../models/Achievement.js";
 import { CourseProgress } from "../models/CourseProgress.js";
 import { Purchase } from "../models/Purchase.js";
 import { QuizSubmission } from "../models/QuizSubmission.js";
-import StudySession from "../models/StudySession.js";  // ← ADDED THIS
+// REMOVED: import StudySession from "../models/StudySession.js";
+// Using getStudyStreak from studySessionController instead to avoid duplicate model import
+import { getStudyStreak } from "./studySessionController.js";
 import { createNotification } from "./notificationController.js";
 
 export const getUserAchievements = async (req, res) => {
@@ -31,43 +33,56 @@ export const checkAndAwardAchievements = async (userId) => {
     if (quizzes.length >= 5 && avgScore >= 90 && !has("quiz_master")) await award(userId, "quiz_master", 300);
     if (quizzes.length >= 10 && !has("practice_makes_perfect")) await award(userId, "practice_makes_perfect", 200);
 
-    const sessions = await StudySession.find({ userId, completed: true });
-    const streak = calculateStreak(sessions);
+    // Use getStudyStreak from studySessionController instead of direct StudySession query
+    const { streak } = await getStudyStreak(userId);
     if (streak >= 7 && !has("study_streak_7")) await award(userId, "study_streak_7", 150);
     if (streak >= 30 && !has("study_streak_30")) await award(userId, "study_streak_30", 1000);
 
     const topScore = quizzes.some((q) => q.score === 100);
-    if (topScore && !has("top_scorer")) await award(userId, "top_scorer", 200);
-  } catch (e) {
-    console.error("Achievement check failed:", e.message);
+    if (topScore && !has("perfect_score")) await award(userId, "perfect_score", 500);
+
+    const courses = await CourseProgress.find({ userId, completed: true });
+    if (courses.length >= 1 && !has("course_complete")) await award(userId, "course_complete", 200);
+    if (courses.length >= 5 && !has("course_complete_5")) await award(userId, "course_complete_5", 1000);
+
+    return { success: true };
+  } catch (err) {
+    console.error("Achievement check error:", err);
+    return { success: false, message: err.message };
   }
 };
 
 const award = async (userId, badge, points) => {
-  await Achievement.create({ userId, badge, points });
-  await createNotification(userId, "achievement", "Achievement Unlocked!", `You earned the ${badge.replace(/_/g, " ")} badge.`, "/dashboard/leaderboard");
-};
-
-const calculateStreak = (sessions) => {
-  if (!sessions.length) return 0;
-  const dates = [...new Set(sessions.map((s) => new Date(s.startTime).toDateString()))].sort();
-  let streak = 1, maxStreak = 1;
-  for (let i = 1; i < dates.length; i++) {
-    const prev = new Date(dates[i - 1]);
-    const curr = new Date(dates[i]);
-    const diff = (curr - prev) / (1000 * 60 * 60 * 24);
-    if (diff === 1) { streak++; maxStreak = Math.max(maxStreak, streak); }
-    else streak = 1;
-  }
-  return maxStreak;
+  const title = badge.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  await Achievement.create({ userId, badge, title, points, unlockedAt: new Date() });
+  await createNotification(userId, `🏆 Achievement unlocked: ${title}!`, "achievement");
 };
 
 export const getLeaderboard = async (req, res) => {
   try {
     const leaderboard = await Achievement.aggregate([
-      { $group: { _id: "$userId", totalPoints: { $sum: "$points" }, badges: { $sum: 1 } } },
+      { $group: { _id: "$userId", totalPoints: { $sum: "$points" }, count: { $sum: 1 } } },
       { $sort: { totalPoints: -1 } },
       { $limit: 50 },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $project: {
+          _id: 0,
+          userId: "$_id",
+          name: "$user.name",
+          image: "$user.imageUrl",
+          points: "$totalPoints",
+          achievements: "$count",
+        },
+      },
     ]);
     res.json({ success: true, leaderboard });
   } catch (err) {

@@ -3,41 +3,39 @@ import Google from "@auth/express/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import mongoose from "mongoose";
 
-// ─── ENV GUARD ───
-if (!process.env.MONGODB_URI) {
-  throw new Error('Missing environment variable: "MONGODB_URI"');
-}
-if (!process.env.AUTH_SECRET) {
-  throw new Error('Missing environment variable: "AUTH_SECRET"');
-}
+if (!process.env.MONGODB_URI) throw new Error('Missing MONGODB_URI');
+if (!process.env.AUTH_SECRET) throw new Error('Missing AUTH_SECRET');
 if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) {
-  throw new Error("Missing Google OAuth credentials in environment variables");
+  throw new Error("Missing Google OAuth credentials");
 }
 
-// ─── SHARED MONGOOSE CONNECTION ───
+// ─── LAZY MONGODB CLIENT ───
+// Vercel serverless: mongoose connects AFTER module load, so we can't eagerly create clientPromise.
+// MongoDBAdapter accepts a function that returns a Promise<MongoClient> for lazy evaluation.
+let cachedClient = null;
+
 const getMongoClient = async () => {
-  if (mongoose.connection.readyState === 1 && mongoose.connection.getClient) {
-    return mongoose.connection.getClient();
-  }
-  
-  const maxWait = 10000;
+  if (cachedClient) return cachedClient;
+
+  // Wait for mongoose to connect (server.js calls connectDB() before mounting routes)
+  const maxWait = 15000;
   const start = Date.now();
   while (mongoose.connection.readyState !== 1) {
     if (Date.now() - start > maxWait) {
       throw new Error("MongoDB connection timeout — cannot initialize Auth.js adapter");
     }
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 200));
   }
-  
-  return mongoose.connection.getClient();
+
+  // Mongoose 6+ provides getClient() on the connection
+  if (!mongoose.connection.getClient) {
+    throw new Error("Mongoose connection does not expose getClient()");
+  }
+
+  cachedClient = mongoose.connection.getClient();
+  return cachedClient;
 };
 
-const clientPromise = getMongoClient().catch((err) => {
-  console.error("Failed to get MongoClient for Auth.js adapter:", err.message);
-  throw err;
-});
-
-// ─── FRONTEND URL CONFIG ───
 const FRONTEND_URL = process.env.FRONTEND_URL || (
   process.env.NODE_ENV === "development"
     ? "http://localhost:5173"
@@ -55,9 +53,9 @@ const cookieOptions = {
   secure: useSecureCookies,
 };
 
-// ─── AUTH CONFIG ───
 export const authConfig = {
-  adapter: MongoDBAdapter(clientPromise),
+  // Pass the FUNCTION, not the promise — Auth.js calls it lazily per-request
+  adapter: MongoDBAdapter(getMongoClient),
   secret: process.env.AUTH_SECRET,
   trustHost: true,
   basePath: "/api/auth",
@@ -78,14 +76,6 @@ export const authConfig = {
     },
     pkceCodeVerifier: {
       name: `${cookiePrefix}authjs.pkce.code_verifier`,
-      options: cookieOptions,
-    },
-    state: {
-      name: `${cookiePrefix}authjs.state`,
-      options: cookieOptions,
-    },
-    nonce: {
-      name: `${cookiePrefix}authjs.nonce`,
       options: cookieOptions,
     },
   },
@@ -113,53 +103,28 @@ export const authConfig = {
       }
       return session;
     },
-
     async redirect({ url, baseUrl }) {
       if (url.startsWith("/")) return `${baseUrl}${url}`;
-
       try {
         const urlOrigin = new URL(url).origin;
-        const baseOrigin = new URL(baseUrl).origin;
-        if (urlOrigin === baseOrigin) return url;
-
         const allowedOrigins = [
           "https://study-guide-frontend-gray.vercel.app",
           "https://study-guide-frontend-traurorous-projects.vercel.app",
           "https://study-guide-frontend-git-main-traurorous-projects.vercel.app",
           "https://study-guide-frontend.vercel.app",
+          "https://study-guide-beta.vercel.app",
           "http://localhost:5173",
           "http://localhost:3000",
         ];
-
         if (allowedOrigins.includes(urlOrigin)) return url;
         if (/^https:\/\/[^\/]+\.vercel\.app$/.test(urlOrigin)) return url;
-      } catch {
-        // Invalid URL format
-      }
-
+      } catch {}
       return FRONTEND_URL;
     },
-
-    async signIn({ user, account, profile }) {
-      return true;
-    },
+    async signIn() { return true; },
   },
 
   debug: process.env.NODE_ENV === "development",
-
-  logger: {
-    error(code, ...message) {
-      console.error(`[Auth] ${code}:`, ...message);
-    },
-    warn(code, ...message) {
-      console.warn(`[Auth] ${code}:`, ...message);
-    },
-    debug(code, ...message) {
-      if (process.env.NODE_ENV === "development") {
-        console.log(`[Auth] ${code}:`, ...message);
-      }
-    },
-  },
 };
 
 export default ExpressAuth(authConfig);
